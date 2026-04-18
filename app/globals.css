@@ -2,26 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #F8FAFC;
+    --foreground: #1B2A3B;
+  }
+  .dark {
+    --background: #0D1520;
+    --foreground: #E2E8F0;
+  }
+  html { scroll-behavior: smooth; }
+  body { @apply transition-colors duration-300 font-body; }
+  h1,h2,h3,h4,h5,h6 { @apply font-heading; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-accent text-primary font-bold px-6 py-3 rounded-xl
+           hover:bg-accent/90 active:scale-95 transition-all duration-150 shadow-md shadow-accent/25;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 border-2 border-primary/20 dark:border-white/10 text-primary
+           dark:text-white font-semibold px-6 py-3 rounded-xl hover:border-accent hover:text-accent
+           active:scale-95 transition-all duration-150;
+  }
+  .card {
+    @apply bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm
+           border border-slate-100 dark:border-slate-700/50 backdrop-blur-sm;
+  }
+  .amazon-btn {
+    @apply inline-flex items-center justify-center gap-2 bg-amazon text-white font-bold
+           px-5 py-2.5 rounded-xl hover:brightness-110 active:scale-95 transition-all duration-150
+           shadow-md shadow-amazon/30;
+  }
+  .section-title {
+    @apply font-heading text-3xl md:text-4xl font-bold text-primary dark:text-white;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700
+           bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2
+           focus:ring-accent/50 focus:border-accent transition-all duration-150
+           placeholder:text-slate-400 dark:text-white;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold
+           bg-accent/10 text-accent border border-accent/20;
+  }
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent to-teal-400 bg-clip-text text-transparent;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* Tiptap editor */
+.tiptap-editor .ProseMirror {
+  outline: none;
+  min-height: 400px;
+  padding: 1.25rem;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+  float: left;
+  height: 0;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* ── Editor images (dashboard Tiptap) ─────────────────────────── */
+.tiptap-editor .ProseMirror img {
+  max-width: 85% !important;
+  max-height: 480px !important;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+  margin: 1.5rem auto !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  border: none !important;
 }
+
+.tiptap-editor .ProseMirror img.ProseMirror-selectednode {
+  outline: 3px solid #2DD4BF !important;
+  outline-offset: 3px !important;
+}
+
+/* ── Frontend blog post images ────────────────────────────────── */
+.prose img {
+  max-height: 560px !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  display: block !important;
+  margin: 2rem auto !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+.dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(45,212,191,0.3); }
+  50% { box-shadow: 0 0 40px rgba(45,212,191,0.6); }
+}
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
