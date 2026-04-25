@@ -7,6 +7,7 @@ import TableOfContents from "@/components/public/TableOfContents";
 import ReadingProgress from "@/components/public/ReadingProgress";
 import AmazonProductBox from "@/components/public/AmazonProductBox";
 import RelatedPosts from "@/components/public/RelatedPosts";
+import AuthorCard from "@/components/public/AuthorCard";
 import { buildCanonical } from "@/lib/utils/seo";
 
 export const revalidate = 3600;
@@ -192,6 +193,9 @@ export default async function SinglePostPage({
               className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-heading prose-a:text-accent prose-img:rounded-xl"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
+
+            {/* Author card */}
+            {post.author && <AuthorCard author={post.author} />}
 
           </article>
 

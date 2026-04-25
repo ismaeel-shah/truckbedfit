@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
   const [posts, total] = await Promise.all([
     Post.find(query)
       .populate("category", "name slug icon")
-      .populate("author", "name")
+      .populate("author", "name bio photo twitter website")
       .sort({ publishedAt: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)

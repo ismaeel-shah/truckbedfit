@@ -13,7 +13,7 @@ export async function GET(
   await connectDB();
   const post = await Post.findById(params.id)
     .populate("category", "name slug icon")
-    .populate("author", "name")
+    .populate("author", "name bio photo twitter website")
     .lean();
   if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(post);

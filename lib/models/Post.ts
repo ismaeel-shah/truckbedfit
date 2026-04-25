@@ -94,7 +94,7 @@ const PostSchema = new Schema<IPost>(
         _id: false,
       },
     ],
-    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    author: { type: Schema.Types.ObjectId, ref: "Author", default: null },
   },
   { timestamps: true }
 );

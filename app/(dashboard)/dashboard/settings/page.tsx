@@ -45,11 +45,11 @@ const FIELD_HINTS: Record<string, string> = {
 
 export default function SettingsPage() {
   const { data: session } = useSession();
-  const [password, setPassword]   = useState({ current: "", next: "", confirm: "" });
-  const [saving, setSaving]        = useState(false);
-  const [openPage, setOpenPage]    = useState<string | null>(null);
-  const [pageData, setPageData]    = useState<Record<string, Record<string, string>>>({});
-  const [pageSaving, setPageSaving] = useState<string | null>(null);
+  const [password, setPassword]     = useState({ current: "", next: "", confirm: "" });
+  const [saving, setSaving]          = useState(false);
+  const [openPage, setOpenPage]      = useState<string | null>(null);
+  const [pageData, setPageData]      = useState<Record<string, Record<string, string>>>({});
+  const [pageSaving, setPageSaving]  = useState<string | null>(null);
 
   /* Load current page settings */
   useEffect(() => {

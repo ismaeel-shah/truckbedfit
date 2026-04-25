@@ -15,6 +15,12 @@ interface Category {
   icon: string;
 }
 
+interface Author {
+  _id: string;
+  name: string;
+  photo?: string;
+}
+
 interface AffiliateProduct {
   name: string;
   amazonUrl: string;
@@ -49,6 +55,7 @@ interface PostData {
   ogImage: string;
   affiliateProducts: AffiliateProduct[];
   faqs: FAQ[];
+  author: string;
 }
 
 const emptyProduct = (): AffiliateProduct => ({
@@ -65,14 +72,18 @@ const emptyProduct = (): AffiliateProduct => ({
 export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [authors, setAuthors]       = useState<Author[]>([]);
   const [saving, setSaving] = useState(false);
   const [altStatus, setAltStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [activeTab, setActiveTab] = useState<"write" | "seo" | "products" | "faqs">("write");
 
   const normaliseInitial = (init?: Partial<PostData>) => {
     if (!init) return {};
-    const tags = Array.isArray(init.tags) ? (init.tags as string[]).join(", ") : (init.tags ?? "");
-    return { ...init, tags };
+    const tags   = Array.isArray(init.tags) ? (init.tags as string[]).join(", ") : (init.tags ?? "");
+    const author = typeof init.author === "object" && init.author !== null
+      ? (init.author as { _id: string })._id
+      : (init.author ?? "");
+    return { ...init, tags, author };
   };
 
   const [form, setForm] = useState<PostData>({
@@ -92,11 +103,13 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     ogImage: "",
     affiliateProducts: [],
     faqs: [],
+    author: "",
     ...normaliseInitial(initial),
   });
 
   useEffect(() => {
     fetch("/api/categories").then((r) => r.json()).then(setCategories);
+    fetch("/api/authors").then((r) => r.json()).then(setAuthors);
   }, []);
 
   const set = (field: string, value: unknown) =>
@@ -519,6 +532,21 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
               className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
+        </div>
+
+        {/* Author */}
+        <div className="card p-5 space-y-3">
+          <h3 className="font-semibold text-primary dark:text-white">Author</h3>
+          <select
+            value={form.author}
+            onChange={(e) => set("author", e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            <option value="">Select author…</option>
+            {authors.map((a) => (
+              <option key={a._id} value={a._id}>{a.name}</option>
+            ))}
+          </select>
         </div>
 
         {/* Featured image */}
