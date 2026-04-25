@@ -94,7 +94,7 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
   };
 
   const exitCodeView = () => {
-    editor.commands.setContent(rawHtml, false);
+    editor.commands.setContent(rawHtml);
     onChange(rawHtml);
     setCodeView(false);
   };
