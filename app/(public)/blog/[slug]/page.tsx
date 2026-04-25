@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { format } from "date-fns";
 import { Clock, Calendar, Tag } from "lucide-react";
 import { Metadata } from "next";

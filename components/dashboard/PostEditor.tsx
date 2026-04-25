@@ -227,7 +227,7 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
           {/* View toggle — always visible */}
           <button
             type="button"
-            onMouseDown={(e) => { e.preventDefault(); codeView ? exitCodeView() : enterCodeView(); }}
+            onMouseDown={(e) => { e.preventDefault(); if (codeView) exitCodeView(); else enterCodeView(); }}
             title={codeView ? "Visual view" : "HTML source"}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               codeView
