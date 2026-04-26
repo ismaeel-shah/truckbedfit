@@ -126,7 +126,11 @@ export default function MediaUploader({ value, onChange, label = "Image" }: Medi
             type="text"
             placeholder="Or paste image URL (https://...)"
             value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
+            onChange={(e) => {
+              setUrlInput(e.target.value);
+              if (isValidUrl(e.target.value)) onChange(e.target.value);
+            }}
+            onBlur={handleUrlCommit}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleUrlCommit(); } }}
             className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent/50 text-slate-700 dark:text-slate-200"
           />
