@@ -43,14 +43,20 @@ export async function PATCH(
     }
   }
 
-  const { _id, __v, createdAt, ...updateFields } = body;
-  const post = await Post.findByIdAndUpdate(
-    params.id,
-    { $set: updateFields },
-    { new: true, runValidators: false }
-  ).populate("category", "name slug icon").lean();
-  if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(post);
+  try {
+    const { _id, __v, createdAt, updatedAt, ...updateFields } = body;
+    const post = await Post.findByIdAndUpdate(
+      params.id,
+      { $set: updateFields },
+      { new: true, runValidators: false }
+    ).populate("category", "name slug icon").lean();
+    if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(post);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    console.error("PATCH /api/posts/[id] error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
 
 // DELETE /api/posts/[id]
