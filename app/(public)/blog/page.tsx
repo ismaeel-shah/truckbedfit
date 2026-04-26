@@ -7,7 +7,7 @@ import { buildCanonical } from "@/lib/utils/seo";
 import { Search } from "lucide-react";
 import Link from "next/link";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   searchParams,
@@ -47,9 +47,9 @@ async function getData(searchParams: { page?: string; search?: string; category?
   const [postsRes, catsRes] = await Promise.all([
     fetch(
       `${base}/api/posts?page=${page}&limit=9&status=published${search ? `&search=${search}` : ""}${category ? `&category=${category}` : ""}`,
-      { next: { revalidate: 3600 } }
+      { cache: "no-store" }
     ),
-    fetch(`${base}/api/categories`, { next: { revalidate: 3600 } }),
+    fetch(`${base}/api/categories`, { cache: "no-store" }),
   ]);
 
   const [{ posts, total, pages }, categories] = await Promise.all([
