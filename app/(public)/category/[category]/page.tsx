@@ -3,11 +3,11 @@ import { Metadata } from "next";
 import BlogCard from "@/components/public/BlogCard";
 import { buildCanonical } from "@/lib/utils/seo";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 async function getCategory(slug: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const res = await fetch(`${base}/api/categories`, { next: { revalidate: 3600 } });
+  const res = await fetch(`${base}/api/categories`, { cache: "no-store" });
   if (!res.ok) return null;
   const cats = await res.json();
   return cats.find((c: { slug: string }) => c.slug === slug) ?? null;
@@ -17,7 +17,7 @@ async function getPosts(categoryId: string, page = 1) {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const res = await fetch(
     `${base}/api/posts?category=${categoryId}&page=${page}&limit=9&status=published`,
-    { next: { revalidate: 3600 } }
+    { cache: "no-store" }
   );
   if (!res.ok) return { posts: [], pages: 1 };
   return res.json();
