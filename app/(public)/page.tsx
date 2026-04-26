@@ -10,7 +10,7 @@ import { getPageMeta } from "@/lib/utils/pageSettings";
 import { buildCanonical } from "@/lib/utils/seo";
 import { Metadata } from "next";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const meta  = await getPageMeta("page_home");
