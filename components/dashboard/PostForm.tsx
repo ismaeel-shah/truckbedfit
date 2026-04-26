@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import PostEditor from "./PostEditor";
 import SEOPanel from "./SEOPanel";
+import MediaUploader from "./MediaUploader";
 import { slugify } from "@/lib/utils/slugify";
-import { Plus, Trash2, GripVertical, Check, Loader2, X } from "lucide-react";
+import { Plus, Trash2, GripVertical, Check, Loader2 } from "lucide-react";
 
 interface Category {
   _id: string;
@@ -128,13 +129,10 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     if (!form.category) { toast.error("Category is required"); return; }
 
     setSaving(true);
-    const isUrl = (u: string) => { try { const x = new URL(u); return x.protocol === "http:" || x.protocol === "https:"; } catch { return false; } };
     const payload = {
       ...form,
       status: status ?? form.status,
       tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
-      featuredImage: isUrl(form.featuredImage) ? form.featuredImage : "",
-      ogImage: isUrl(form.ogImage) ? form.ogImage : "",
     };
 
     const url = initial?._id ? `/api/posts/${initial._id}` : "/api/posts";
@@ -554,77 +552,63 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
         {/* Featured image */}
         <div className="card p-5 space-y-3">
           <h3 className="font-semibold text-primary dark:text-white">Featured Image</h3>
-          <input
-            type="text"
+          <MediaUploader
             value={form.featuredImage}
-            onChange={(e) => set("featuredImage", e.target.value)}
-            placeholder="Paste image URL (https://...)"
-            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
+            onChange={(url) => set("featuredImage", url)}
+            label=""
           />
           {form.featuredImage && (
-            <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={form.featuredImage} alt="preview" className="w-full h-44 object-cover" />
-              <button type="button" onClick={() => set("featuredImage", "")}
-                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow">
-                <X size={13} />
-              </button>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-medium text-slate-500">Alt Text</label>
+                {initial?._id && (
+                  <span className={`flex items-center gap-1 text-xs transition-all duration-300 ${
+                    altStatus === "saving" ? "text-slate-400" :
+                    altStatus === "saved"  ? "text-green-500" : "text-transparent"
+                  }`}>
+                    {altStatus === "saving" && <Loader2 size={11} className="animate-spin" />}
+                    {altStatus === "saved"  && <Check size={11} />}
+                    {altStatus === "saving" ? "Saving…" : altStatus === "saved" ? "Saved" : "·"}
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={form.featuredImageAlt ?? ""}
+                  onChange={(e) => { set("featuredImageAlt", e.target.value); setAltStatus("idle"); }}
+                  onBlur={handleAltSave}
+                  placeholder="Describe the image for accessibility…"
+                  className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+                {initial?._id && (
+                  <button
+                    type="button"
+                    onClick={handleAltSave}
+                    disabled={altStatus === "saving"}
+                    title="Save alt text"
+                    className="px-3 py-2 rounded-lg bg-accent/10 hover:bg-accent hover:text-primary text-accent text-xs font-semibold transition-all disabled:opacity-50"
+                  >
+                    {altStatus === "saving" ? <Loader2 size={13} className="animate-spin" /> : "Save"}
+                  </button>
+                )}
+              </div>
+              {!initial?._id && (
+                <p className="text-xs text-slate-400 mt-1">Alt text will save when you publish or save draft.</p>
+              )}
             </div>
           )}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-medium text-slate-500">Alt Text</label>
-              {initial?._id && (
-                <span className={`flex items-center gap-1 text-xs transition-all duration-300 ${
-                  altStatus === "saving" ? "text-slate-400" :
-                  altStatus === "saved"  ? "text-green-500" : "text-transparent"
-                }`}>
-                  {altStatus === "saving" && <Loader2 size={11} className="animate-spin" />}
-                  {altStatus === "saved"  && <Check size={11} />}
-                  {altStatus === "saving" ? "Saving…" : altStatus === "saved" ? "Saved" : "·"}
-                </span>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={form.featuredImageAlt ?? ""}
-                onChange={(e) => { set("featuredImageAlt", e.target.value); setAltStatus("idle"); }}
-                onBlur={handleAltSave}
-                placeholder="Describe the image for accessibility…"
-                className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
-              />
-              {initial?._id && (
-                <button type="button" onClick={handleAltSave} disabled={altStatus === "saving"}
-                  className="px-3 py-2 rounded-lg bg-accent/10 hover:bg-accent hover:text-primary text-accent text-xs font-semibold transition-all disabled:opacity-50">
-                  {altStatus === "saving" ? <Loader2 size={13} className="animate-spin" /> : "Save"}
-                </button>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* OG Image */}
-        <div className="card p-5 space-y-3">
-          <h3 className="font-semibold text-primary dark:text-white">OG Image</h3>
-          <p className="text-xs text-slate-400">Used for social sharing (1200×630px)</p>
-          <input
-            type="text"
+        <div className="card p-5">
+          <h3 className="font-semibold text-primary dark:text-white mb-3">OG Image</h3>
+          <p className="text-xs text-slate-400 mb-3">Used for social sharing (1200×630px)</p>
+          <MediaUploader
             value={form.ogImage}
-            onChange={(e) => set("ogImage", e.target.value)}
-            placeholder="Paste OG image URL (https://...)"
-            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
+            onChange={(url) => set("ogImage", url)}
+            label=""
           />
-          {form.ogImage && (
-            <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={form.ogImage} alt="og preview" className="w-full h-32 object-cover" />
-              <button type="button" onClick={() => set("ogImage", "")}
-                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow">
-                <X size={13} />
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -41,9 +41,12 @@ export async function PATCH(
     }
   }
 
-  const post = await Post.findByIdAndUpdate(params.id, body, { new: true })
-    .populate("category", "name slug icon")
-    .lean();
+  const { _id, __v, createdAt, ...updateFields } = body;
+  const post = await Post.findByIdAndUpdate(
+    params.id,
+    { $set: updateFields },
+    { new: true, runValidators: false }
+  ).populate("category", "name slug icon").lean();
   if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(post);
 }
