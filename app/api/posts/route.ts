@@ -77,12 +77,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
   }
 
-  const userId = (session.user as { id?: string }).id;
   const post = await Post.create({
     ...body,
     slug,
     readingTime,
-    author: userId,
+    author: body.author || null,
     publishedAt: body.status === "published" ? new Date() : null,
   });
 

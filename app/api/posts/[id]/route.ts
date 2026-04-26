@@ -45,6 +45,7 @@ export async function PATCH(
 
   try {
     const { _id, __v, createdAt, updatedAt, ...updateFields } = body;
+    if (!updateFields.author) updateFields.author = null;
     const post = await Post.findByIdAndUpdate(
       params.id,
       { $set: updateFields },
