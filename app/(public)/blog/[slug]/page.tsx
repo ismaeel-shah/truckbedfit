@@ -9,12 +9,12 @@ import RelatedPosts from "@/components/public/RelatedPosts";
 import AuthorCard from "@/components/public/AuthorCard";
 import { buildCanonical } from "@/lib/utils/seo";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 async function getPost(slug: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const res = await fetch(`${base}/api/posts?slug=${slug}&status=published`, {
-    next: { revalidate: 3600 },
+    cache: "no-store",
   });
   if (!res.ok) return null;
   const { posts } = await res.json();
@@ -25,7 +25,7 @@ async function getRelated(categoryId: string, excludeSlug: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const res = await fetch(
     `${base}/api/posts?category=${categoryId}&limit=3&status=published`,
-    { next: { revalidate: 3600 } }
+    { cache: "no-store" }
   );
   if (!res.ok) return [];
   const { posts } = await res.json();
