@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, TrendingUp } from "lucide-react";
 
 interface Post {
@@ -51,11 +50,11 @@ export default function TrendingSection({ posts }: { posts: Post[] }) {
               {/* Thumbnail */}
               {post.featuredImage && (
                 <div className="relative h-32 rounded-xl overflow-hidden bg-white/5">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={post.featuredImage}
                     alt={post.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100"
                   />
                 </div>
               )}

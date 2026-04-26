@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Clock, ArrowRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -38,11 +37,11 @@ export default function MagazineSection({
     <article className="group card overflow-hidden h-full flex flex-col hover:shadow-card-hover transition-all duration-300">
       <div className="relative h-64 md:h-80 overflow-hidden bg-slate-100 dark:bg-slate-700 flex-shrink-0">
         {big.featuredImage ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={big.featuredImage}
             alt={big.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-accent/30 flex items-center justify-center">
@@ -94,11 +93,11 @@ export default function MagazineSection({
           {/* Thumbnail */}
           <div className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700">
             {post.featuredImage ? (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={post.featuredImage}
                 alt={post.title}
-                fill
-                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-primary/60 to-accent/20 flex items-center justify-center">
