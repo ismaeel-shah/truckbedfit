@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import Post from "@/lib/models/Post";
+import "@/lib/models/Category";
+import "@/lib/models/Author";
 import { calculateReadingTime } from "@/lib/utils/readingTime";
 
 // GET /api/posts/[id]
