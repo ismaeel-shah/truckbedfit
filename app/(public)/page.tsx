@@ -34,7 +34,7 @@ const base = () => process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 async function fetchPosts(params: string) {
   try {
     const res = await fetch(`${base()}/api/posts?status=published&${params}`, {
-      next: { revalidate: 3600 },
+      cache: "no-store",
     });
     if (!res.ok) return [];
     const { posts } = await res.json();
@@ -44,7 +44,7 @@ async function fetchPosts(params: string) {
 
 async function fetchCategories() {
   try {
-    const res = await fetch(`${base()}/api/categories`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${base()}/api/categories`, { cache: "no-store" });
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }
