@@ -14,9 +14,9 @@ function createTransporter() {
 export async function sendContactEmail({
   name, email, message,
 }: { name: string; email: string; message: string }) {
-  const siteName = process.env.NEXT_PUBLIC_SITE_NAME ?? "WorkNest";
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME ?? "Home Desk Essentials";
   const to       = process.env.EMAIL_SERVER_USER!;
-  const from     = process.env.EMAIL_FROM ?? `"${siteName}" <noreply@worknest.com>`;
+  const from     = process.env.EMAIL_FROM ?? `"${siteName}" <noreply@homedeskessentials.com>`;
 
   const transporter = createTransporter();
   await transporter.verify();
@@ -43,8 +43,8 @@ export async function sendContactEmail({
 }
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
-  const siteName    = process.env.NEXT_PUBLIC_SITE_NAME ?? "WorkNest";
-  const from        = process.env.EMAIL_FROM ?? `"${siteName}" <noreply@worknest.com>`;
+  const siteName    = process.env.NEXT_PUBLIC_SITE_NAME ?? "Home Desk Essentials";
+  const from        = process.env.EMAIL_FROM ?? `"${siteName}" <noreply@homedeskessentials.com>`;
   const transporter = createTransporter();
   await transporter.verify();
 

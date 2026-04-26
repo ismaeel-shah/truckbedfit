@@ -15,18 +15,18 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://worknest.example.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://homedeskessentials.com";
 
 export const metadata: Metadata = {
   title: {
-    default: "WorkNest — Home Office Blog",
-    template: "%s | WorkNest",
+    default: "Home Desk Essentials — Home Office Blog",
+    template: "%s | Home Desk Essentials",
   },
   description:
     "Expert reviews and guides for home office equipment — ergonomic chairs, standing desks, monitors, keyboards, and more.",
   metadataBase: new URL(siteUrl),
   openGraph: {
-    siteName: "WorkNest",
+    siteName: "Home Desk Essentials",
     locale:   "en_US",
     type:     "website",
   },
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type":    "Organization",
-  name:        "WorkNest",
+  name:        "Home Desk Essentials",
   url:         siteUrl,
   description: "Expert reviews and buying guides for home office equipment.",
 };
@@ -47,7 +47,7 @@ const organizationSchema = {
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type":    "WebSite",
-  name:       "WorkNest",
+  name:       "Home Desk Essentials",
   url:        siteUrl,
   potentialAction: {
     "@type":       "SearchAction",

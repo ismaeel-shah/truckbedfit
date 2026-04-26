@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: meta.metaTitle
       ? { absolute: meta.metaTitle }
       : "Contact",
-    description: meta.metaDescription || "Get in touch with the WorkNest team.",
+    description: meta.metaDescription || "Get in touch with the Home Desk Essentials team.",
   };
 }
 

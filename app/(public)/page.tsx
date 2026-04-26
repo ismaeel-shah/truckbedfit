@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const meta  = await getPageMeta("page_home");
-  const title = meta.metaTitle || "WorkNest — Home Office Equipment Reviews & Guides";
+  const title = meta.metaTitle || "Home Desk Essentials — Home Office Equipment Reviews & Guides";
   const desc  = meta.metaDescription || "Expert reviews and buying guides for ergonomic chairs, standing desks, monitors, and more.";
   return {
     title:       { absolute: title },

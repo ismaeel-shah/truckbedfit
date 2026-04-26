@@ -4,7 +4,7 @@ export function truncate(str: string, max: number): string {
 
 export function buildCanonical(path: string): string {
   const base =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://worknest.example.com";
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://homedeskessentials.com";
   return `${base}${path}`;
 }
 

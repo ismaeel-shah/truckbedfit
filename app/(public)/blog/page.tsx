@@ -16,7 +16,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const meta  = await getPageMeta("page_blog");
   const title = meta.metaTitle || "Blog";
-  const desc  = meta.metaDescription || "All home office buying guides, reviews, and tips from WorkNest.";
+  const desc  = meta.metaDescription || "All home office buying guides, reviews, and tips from Home Desk Essentials.";
   const page  = parseInt(searchParams.page ?? "1");
   const isSearch = !!searchParams.search;
 

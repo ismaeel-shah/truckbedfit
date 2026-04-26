@@ -71,7 +71,7 @@ export default async function SinglePostPage({
 
   const related = await getRelated(post.category?._id, params.slug);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://worknest.example.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://homedeskessentials.com";
   const postUrl = `${siteUrl}/blog/${params.slug}`;
 
   const blogPostingSchema = {
@@ -83,8 +83,8 @@ export default async function SinglePostPage({
     image:        post.featuredImage,
     datePublished: post.publishedAt,
     dateModified:  post.updatedAt,
-    author:    { "@type": "Person", name: post.author?.name ?? "WorkNest" },
-    publisher: { "@type": "Organization", name: "WorkNest", url: siteUrl },
+    author:    { "@type": "Person", name: post.author?.name ?? "Home Desk Essentials" },
+    publisher: { "@type": "Organization", name: "Home Desk Essentials", url: siteUrl },
   };
 
   const breadcrumbSchema = {

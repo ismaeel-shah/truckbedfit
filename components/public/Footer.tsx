@@ -103,7 +103,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-slate-500 text-center sm:text-left">
-            © {new Date().getFullYear()} WorkNest. As an Amazon Associate, we earn from qualifying purchases.
+            © {new Date().getFullYear()} Home Desk Essentials. As an Amazon Associate, we earn from qualifying purchases.
           </p>
           <div className="flex items-center gap-4 text-xs text-slate-500">
             <span className="flex items-center gap-1.5">

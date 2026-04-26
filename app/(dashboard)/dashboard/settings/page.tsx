@@ -226,7 +226,7 @@ export default function SettingsPage() {
           <h2 className="font-semibold text-primary dark:text-white mb-4">Site Info</h2>
           <div className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
             <p><span className="font-medium text-primary dark:text-white">Site URL:</span> {process.env.NEXT_PUBLIC_SITE_URL ?? "Not set"}</p>
-            <p><span className="font-medium text-primary dark:text-white">Site Name:</span> {process.env.NEXT_PUBLIC_SITE_NAME ?? "WorkNest"}</p>
+            <p><span className="font-medium text-primary dark:text-white">Site Name:</span> {process.env.NEXT_PUBLIC_SITE_NAME ?? "Home Desk Essentials"}</p>
           </div>
         </div>
 
