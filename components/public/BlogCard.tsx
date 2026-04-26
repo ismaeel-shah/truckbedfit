@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Clock, ArrowRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -29,11 +28,11 @@ export default function BlogCard({ post, featured = false, variant = "default" }
         {/* Image */}
         <div className="relative md:w-80 lg:w-96 flex-shrink-0 h-56 md:h-auto overflow-hidden bg-slate-100 dark:bg-slate-700">
           {post.featuredImage ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src={post.featuredImage}
               alt={post.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent/30 flex items-center justify-center">
@@ -83,11 +82,11 @@ export default function BlogCard({ post, featured = false, variant = "default" }
       {/* Image */}
       <div className="relative h-52 overflow-hidden bg-slate-100 dark:bg-slate-700">
         {post.featuredImage ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={post.featuredImage}
             alt={post.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-accent/20 flex items-center justify-center">
