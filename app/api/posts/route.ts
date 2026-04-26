@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import Post from "@/lib/models/Post";
 import Category from "@/lib/models/Category";
+import "@/lib/models/Author";
 import { slugify } from "@/lib/utils/slugify";
 import { calculateReadingTime } from "@/lib/utils/readingTime";
 
