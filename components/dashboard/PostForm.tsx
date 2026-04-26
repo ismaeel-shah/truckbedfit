@@ -129,10 +129,13 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     if (!form.category) { toast.error("Category is required"); return; }
 
     setSaving(true);
+    const isUrl = (u: string) => { try { const x = new URL(u); return x.protocol === "http:" || x.protocol === "https:"; } catch { return false; } };
     const payload = {
       ...form,
       status: status ?? form.status,
       tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
+      featuredImage: isUrl(form.featuredImage) ? form.featuredImage : "",
+      ogImage: isUrl(form.ogImage) ? form.ogImage : "",
     };
 
     const url = initial?._id ? `/api/posts/${initial._id}` : "/api/posts";

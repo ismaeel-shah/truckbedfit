@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Upload, X, Link as LinkIcon } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -22,12 +22,6 @@ function isValidUrl(url: string) {
 export default function MediaUploader({ value, onChange, label = "Image" }: MediaUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [draft, setDraft] = useState(value || "");
-
-  // Keep draft in sync when parent value changes (e.g. loading existing post)
-  useEffect(() => {
-    setDraft(value || "");
-  }, [value]);
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) { toast.error("Only image files allowed"); return; }
@@ -38,23 +32,17 @@ export default function MediaUploader({ value, onChange, label = "Image" }: Medi
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        toast.error(err.error ?? "Upload failed — check Cloudinary credentials in .env.local");
+        toast.error(err.error ?? "Upload failed");
         return;
       }
       const data = await res.json();
       if (data.url) { onChange(data.url); toast.success("Image uploaded"); }
       else toast.error("Upload failed");
     } catch {
-      toast.error("Upload failed — check Cloudinary credentials in .env.local");
+      toast.error("Upload failed");
     } finally {
       setUploading(false);
     }
-  };
-
-  const commit = (url: string) => {
-    if (!url) { onChange(""); return; }
-    if (!isValidUrl(url)) { toast.error("Enter a valid URL starting with https://"); return; }
-    onChange(url);
   };
 
   const validPreview = isValidUrl(value);
@@ -71,7 +59,7 @@ export default function MediaUploader({ value, onChange, label = "Image" }: Medi
           <img src={value} alt="preview" className="w-full h-full object-cover" />
           <button
             type="button"
-            onClick={() => { onChange(""); setDraft(""); }}
+            onClick={() => onChange("")}
             className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow"
           >
             <X size={13} />
@@ -95,27 +83,19 @@ export default function MediaUploader({ value, onChange, label = "Image" }: Medi
         onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFile(file); e.target.value = ""; }}
       />
 
+      {/* URL input — directly controls parent state */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Or paste image URL (https://...)"
-            value={draft}
-            onChange={(e) => {
-              setDraft(e.target.value);
-              if (isValidUrl(e.target.value)) onChange(e.target.value);
-            }}
-            onBlur={(e) => commit(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(draft); } }}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
             className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent/50 text-slate-700 dark:text-slate-200"
           />
         </div>
-        <button type="button" onClick={() => commit(draft)}
-          className="px-3 py-2 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-accent hover:text-primary transition-all"
-        >
-          Set
-        </button>
       </div>
     </div>
   );
