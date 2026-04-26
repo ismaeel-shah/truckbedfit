@@ -3,13 +3,28 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import Category from "@/lib/models/Category";
+import Post from "@/lib/models/Post";
 import { slugify } from "@/lib/utils/slugify";
 
 // GET /api/categories — public
 export async function GET() {
   await connectDB();
-  const categories = await Category.find().sort({ name: 1 }).lean();
-  return NextResponse.json(categories);
+  const [categories, counts] = await Promise.all([
+    Category.find().sort({ name: 1 }).lean(),
+    Post.aggregate([
+      { $match: { status: "published" } },
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+    ]),
+  ]);
+
+  const countMap = new Map(counts.map((c: { _id: unknown; count: number }) => [String(c._id), c.count]));
+
+  const result = categories.map((cat) => ({
+    ...cat,
+    postCount: countMap.get(String(cat._id)) ?? 0,
+  }));
+
+  return NextResponse.json(result);
 }
 
 // POST /api/categories — auth required

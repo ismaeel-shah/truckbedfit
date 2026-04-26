@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import Post from "@/lib/models/Post";
-import "@/lib/models/Category";
+import Category from "@/lib/models/Category";
 import "@/lib/models/Author";
 import { calculateReadingTime } from "@/lib/utils/readingTime";
 
@@ -71,5 +71,8 @@ export async function DELETE(
   await connectDB();
   const post = await Post.findByIdAndDelete(params.id);
   if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (post.category) {
+    await Category.findByIdAndUpdate(post.category, { $inc: { postCount: -1 } });
+  }
   return NextResponse.json({ success: true });
 }
