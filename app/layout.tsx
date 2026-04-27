@@ -18,6 +18,7 @@ const dmSans = DM_Sans({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://homedeskessentials.com";
 
 export const metadata: Metadata = {
+  verification: { google: "3Qpnog2762ZXbSYtcsrcwlelS3jxo1OaJPaBgm_Zauw" },
   title: {
     default: "Home Desk Essentials — Home Office Blog",
     template: "%s | Home Desk Essentials",
