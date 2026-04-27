@@ -40,12 +40,36 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-accent-gradient flex items-center justify-center shadow-md shadow-accent/30">
-              <span className="text-primary font-heading font-black text-sm">W</span>
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="38" height="38" rx="10" fill="url(#navGrad)"/>
+              {/* Monitor */}
+              <rect x="9" y="8" width="15" height="11" rx="2.5" fill="white" opacity="0.95"/>
+              <rect x="10.5" y="9.5" width="12" height="8" rx="1.5" fill="#0D1520" opacity="0.3"/>
+              {/* Monitor stand */}
+              <rect x="15" y="19" width="3" height="2.5" rx="1" fill="white" opacity="0.85"/>
+              {/* Desk surface */}
+              <rect x="4" y="21.5" width="30" height="3" rx="1.5" fill="white"/>
+              {/* Coffee mug */}
+              <rect x="25" y="16" width="5" height="5.5" rx="2.5" fill="white" opacity="0.8"/>
+              <rect x="30" y="17.5" width="2" height="2.5" rx="1" fill="white" opacity="0.6"/>
+              {/* Desk legs */}
+              <rect x="7" y="24.5" width="2.5" height="5" rx="1.25" fill="white" opacity="0.65"/>
+              <rect x="28.5" y="24.5" width="2.5" height="5" rx="1.25" fill="white" opacity="0.65"/>
+              <defs>
+                <linearGradient id="navGrad" x1="0" y1="0" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#1B2A3B"/>
+                  <stop offset="100%" stopColor="#2DD4BF"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="flex flex-col leading-none">
+              <span className="font-heading font-bold text-[18px] text-primary tracking-tight">
+                Home<span className="text-accent">Desk</span>
+              </span>
+              <span className="text-[9px] font-semibold text-slate-400 tracking-[0.2em] uppercase">
+                Essentials
+              </span>
             </div>
-            <span className="font-heading font-bold text-xl text-primary">
-              Work<span className="text-accent">Nest</span>
-            </span>
           </Link>
 
           {/* Desktop nav */}
