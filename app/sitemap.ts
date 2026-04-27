@@ -4,16 +4,16 @@ const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://worknest.example.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
-    { url: base, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
-    { url: `${base}/blog`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
-    { url: `${base}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
-    { url: `${base}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.4 },
+    { url: base, lastModified: new Date() },
+    { url: `${base}/blog`, lastModified: new Date() },
+    { url: `${base}/about`, lastModified: new Date() },
+    { url: `${base}/contact`, lastModified: new Date() },
   ];
 
   try {
     const [postsRes, catsRes] = await Promise.all([
-      fetch(`${base}/api/posts?limit=1000&status=published`, { next: { revalidate: 3600 } }),
-      fetch(`${base}/api/categories`, { next: { revalidate: 3600 } }),
+      fetch(`${base}/api/posts?limit=1000&status=published`, { cache: "no-store" }),
+      fetch(`${base}/api/categories`, { cache: "no-store" }),
     ]);
 
     const { posts } = await postsRes.json();
@@ -23,8 +23,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       (post: { slug: string; updatedAt: string; featuredImage?: string; title?: string }) => ({
         url: `${base}/blog/${post.slug}`,
         lastModified: new Date(post.updatedAt),
-        changeFrequency: "weekly" as const,
-        priority: 0.8,
         ...(post.featuredImage && {
           images: [{ url: post.featuredImage, title: post.title ?? "" }],
         }),
@@ -35,8 +33,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       (cat: { slug: string; updatedAt: string }) => ({
         url: `${base}/category/${cat.slug}`,
         lastModified: new Date(cat.updatedAt ?? Date.now()),
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
       })
     );
 
