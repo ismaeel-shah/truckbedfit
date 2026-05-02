@@ -5,6 +5,7 @@ import { Pencil, Trash2, Eye } from "lucide-react";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useState, useMemo } from "react";
 
 interface Post {
   _id: string;
@@ -17,8 +18,26 @@ interface Post {
   readingTime: number;
 }
 
+const STATUS_TABS = ["all", "published", "draft", "scheduled"] as const;
+
 export default function PostsTable({ posts }: { posts: Post[] }) {
   const router = useRouter();
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+
+  const categories = useMemo(() => {
+    const seen = new Map<string, { name: string; icon: string }>();
+    posts.forEach((p) => {
+      if (p.category) seen.set(p.category.name, p.category);
+    });
+    return Array.from(seen.values());
+  }, [posts]);
+
+  const filtered = useMemo(() => posts.filter((p) => {
+    const matchStatus = statusFilter === "all" || p.status === statusFilter;
+    const matchCat = categoryFilter === "all" || p.category?.name === categoryFilter;
+    return matchStatus && matchCat;
+  }), [posts, statusFilter, categoryFilter]);
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
@@ -43,6 +62,55 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
   }
 
   return (
+    <div>
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        {/* Status tabs */}
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+          {STATUS_TABS.map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition-all ${
+                statusFilter === s
+                  ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm"
+                  : "text-slate-500 hover:text-primary dark:hover:text-white"
+              }`}
+            >
+              {s === "all" ? `All (${posts.length})` : `${s} (${posts.filter(p => p.status === s).length})`}
+            </button>
+          ))}
+        </div>
+
+        {/* Category dropdown */}
+        {categories.length > 0 && (
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            <option value="all">All Categories</option>
+            {categories.map((c) => (
+              <option key={c.name} value={c.name}>
+                {c.icon} {c.name}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {(statusFilter !== "all" || categoryFilter !== "all") && (
+          <button
+            onClick={() => { setStatusFilter("all"); setCategoryFilter("all"); }}
+            className="text-xs text-accent hover:underline"
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 text-slate-400 text-sm">No posts match the selected filters.</div>
+      ) : (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
@@ -56,7 +124,7 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {posts.map((post) => (
+          {filtered.map((post) => (
             <tr key={post._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
               <td className="py-3 pr-4">
                 <p className="font-medium text-primary dark:text-white truncate max-w-xs">
@@ -106,6 +174,8 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
           ))}
         </tbody>
       </table>
+    </div>
+      )}
     </div>
   );
 }
