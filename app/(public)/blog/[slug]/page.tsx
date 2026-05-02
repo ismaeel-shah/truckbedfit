@@ -24,7 +24,7 @@ async function getPost(slug: string) {
 async function getRelated(categoryId: string, excludeSlug: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const res = await fetch(
-    `${base}/api/posts?category=${categoryId}&limit=3&status=published`,
+    `${base}/api/posts?category=${categoryId}&limit=4&status=published`,
     { cache: "no-store" }
   );
   if (!res.ok) return [];
