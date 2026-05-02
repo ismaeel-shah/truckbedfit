@@ -1,9 +1,9 @@
-import { FileText, Tag, BookOpen, Clock } from "lucide-react";
+import { FileText, CalendarClock, BookOpen, Clock } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import Link from "next/link";
 import { connectDB } from "@/lib/mongodb";
 import Post from "@/lib/models/Post";
-import Category from "@/lib/models/Category";
+import "@/lib/models/Category";
 import "@/lib/models/Author";
 
 export const metadata = { title: "Dashboard" };
@@ -11,15 +11,15 @@ export const metadata = { title: "Dashboard" };
 async function getStats() {
   try {
     await connectDB();
-    const [total, published, drafts, categories] = await Promise.all([
+    const [total, published, drafts, scheduled] = await Promise.all([
       Post.countDocuments(),
       Post.countDocuments({ status: "published" }),
       Post.countDocuments({ status: "draft" }),
-      Category.countDocuments(),
+      Post.countDocuments({ status: "scheduled" }),
     ]);
-    return { total, published, drafts, categories };
+    return { total, published, drafts, scheduled };
   } catch {
-    return { total: 0, published: 0, drafts: 0, categories: 0 };
+    return { total: 0, published: 0, drafts: 0, scheduled: 0 };
   }
 }
 
@@ -56,7 +56,7 @@ export default async function DashboardPage() {
         <StatsCard label="Total Posts" value={stats.total} icon={FileText} />
         <StatsCard label="Published" value={stats.published} icon={BookOpen} color="text-green-500" />
         <StatsCard label="Drafts" value={stats.drafts} icon={Clock} color="text-yellow-500" />
-        <StatsCard label="Categories" value={stats.categories} icon={Tag} color="text-blue-500" />
+        <StatsCard label="Scheduled" value={stats.scheduled} icon={CalendarClock} color="text-blue-500" />
       </div>
 
       {/* Recent posts */}
