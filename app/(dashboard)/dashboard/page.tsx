@@ -1,38 +1,37 @@
-import { FileText, Eye, BookOpen, Clock } from "lucide-react";
+import { FileText, Tag, BookOpen, Clock } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import Link from "next/link";
+import { connectDB } from "@/lib/mongodb";
+import Post from "@/lib/models/Post";
+import Category from "@/lib/models/Category";
+import "@/lib/models/Author";
 
 export const metadata = { title: "Dashboard" };
 
 async function getStats() {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   try {
-    const [allRes, publishedRes, draftRes] = await Promise.all([
-      fetch(`${base}/api/posts?limit=1`, { cache: "no-store" }),
-      fetch(`${base}/api/posts?limit=1&status=published`, { cache: "no-store" }),
-      fetch(`${base}/api/posts?limit=1&status=draft`, { cache: "no-store" }),
+    await connectDB();
+    const [total, published, drafts, categories] = await Promise.all([
+      Post.countDocuments(),
+      Post.countDocuments({ status: "published" }),
+      Post.countDocuments({ status: "draft" }),
+      Category.countDocuments(),
     ]);
-    const [all, published, draft] = await Promise.all([
-      allRes.json(),
-      publishedRes.json(),
-      draftRes.json(),
-    ]);
-    return {
-      total: all.total ?? 0,
-      published: published.total ?? 0,
-      drafts: draft.total ?? 0,
-    };
+    return { total, published, drafts, categories };
   } catch {
-    return { total: 0, published: 0, drafts: 0 };
+    return { total: 0, published: 0, drafts: 0, categories: 0 };
   }
 }
 
 async function getRecentPosts() {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   try {
-    const res = await fetch(`${base}/api/posts?limit=5`, { cache: "no-store" });
-    const { posts } = await res.json();
-    return posts ?? [];
+    await connectDB();
+    const posts = await Post.find()
+      .populate("category", "name")
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+    return posts;
   } catch {
     return [];
   }
@@ -57,7 +56,7 @@ export default async function DashboardPage() {
         <StatsCard label="Total Posts" value={stats.total} icon={FileText} />
         <StatsCard label="Published" value={stats.published} icon={BookOpen} color="text-green-500" />
         <StatsCard label="Drafts" value={stats.drafts} icon={Clock} color="text-yellow-500" />
-        <StatsCard label="Total Views" value="—" icon={Eye} color="text-blue-500" />
+        <StatsCard label="Categories" value={stats.categories} icon={Tag} color="text-blue-500" />
       </div>
 
       {/* Recent posts */}
