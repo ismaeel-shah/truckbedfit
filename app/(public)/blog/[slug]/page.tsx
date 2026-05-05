@@ -161,12 +161,6 @@ export default async function SinglePostPage({
                     {format(new Date(post.publishedAt), "MMM d, yyyy")}
                   </span>
                 )}
-                {post.tags?.length > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <Tag size={14} />
-                    {post.tags.join(", ")}
-                  </span>
-                )}
               </div>
             </header>
 
@@ -192,6 +186,21 @@ export default async function SinglePostPage({
               className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-heading prose-a:text-accent prose-img:rounded-xl"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
+
+            {/* Tags */}
+            {post.tags?.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mt-10 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <Tag size={14} className="text-slate-400 shrink-0" />
+                {post.tags.map((tag: string) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-accent/10 hover:text-accent transition-colors"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Author card */}
             {post.author && <AuthorCard author={post.author} />}
