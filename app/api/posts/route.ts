@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") ?? "10");
   const category = searchParams.get("category");
   const search = searchParams.get("search");
-  const status = searchParams.get("status"); // dashboard only
+  const status = searchParams.get("status");
+  const slug = searchParams.get("slug");
 
   const session = await getServerSession(authOptions);
   const query: Record<string, unknown> = {};
@@ -38,6 +39,10 @@ export async function GET(req: NextRequest) {
       else query.category = null;
     }
   }
+  if (slug) {
+    query.slug = slug;
+  }
+
   if (search) {
     query.$or = [
       { title: { $regex: search, $options: "i" } },
