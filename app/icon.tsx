@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const size = { width: 32, height: 32 };
+export const size = { width: 48, height: 48 };
 export const contentType = "image/png";
 
 export default function Icon() {
@@ -8,9 +8,9 @@ export default function Icon() {
     (
       <div
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: 8,
+          width: 48,
+          height: 48,
+          borderRadius: 12,
           background: "linear-gradient(135deg, #1B2A3B 0%, #2DD4BF 100%)",
           display: "flex",
           alignItems: "center",
@@ -22,20 +22,20 @@ export default function Icon() {
         {/* Monitor */}
         <div
           style={{
-            width: 14,
-            height: 9,
+            width: 20,
+            height: 13,
             background: "rgba(255,255,255,0.95)",
-            borderRadius: 2,
-            marginBottom: 1,
+            borderRadius: 3,
+            marginBottom: 2,
           }}
         />
         {/* Desk */}
         <div
           style={{
-            width: 22,
-            height: 3,
+            width: 32,
+            height: 4,
             background: "white",
-            borderRadius: 1.5,
+            borderRadius: 2,
           }}
         />
       </div>
