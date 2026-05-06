@@ -1,4 +1,4 @@
-import { FileText, CalendarClock, BookOpen, Clock } from "lucide-react";
+import { FileText, CalendarClock, BookOpen, Clock, Pencil, Eye, ArrowRight } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import Link from "next/link";
 import { connectDB } from "@/lib/mongodb";
@@ -27,9 +27,9 @@ async function getRecentPosts() {
   try {
     await connectDB();
     const posts = await Post.find()
-      .populate("category", "name")
+      .populate("category", "name slug icon")
       .sort({ createdAt: -1 })
-      .limit(5)
+      .limit(6)
       .lean();
     return posts;
   } catch {
@@ -60,56 +60,74 @@ export default async function DashboardPage() {
       </div>
 
       {/* Recent posts */}
-      <div className="card p-6">
-        <h2 className="font-heading font-bold text-lg text-primary dark:text-white mb-4">
-          Recent Posts
-        </h2>
+      <div>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-heading font-bold text-xl text-primary dark:text-white">
+            Recent Posts
+          </h2>
+          <Link href="/dashboard/posts" className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:gap-2.5 transition-all">
+            View all <ArrowRight size={14} />
+          </Link>
+        </div>
+
         {recentPosts.length > 0 ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-700 text-left text-slate-500 dark:text-slate-400">
-                <th className="pb-3 font-medium">Title</th>
-                <th className="pb-3 font-medium">Status</th>
-                <th className="pb-3 font-medium">Category</th>
-                <th className="pb-3 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-              {recentPosts.map((post: { _id: string; title: string; status: string; slug: string; category?: { name: string } }) => (
-                <tr key={post._id}>
-                  <td className="py-3 font-medium text-primary dark:text-white truncate max-w-xs">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentPosts.map((post: { _id: string; title: string; status: string; slug: string; featuredImage?: string; readingTime?: number; category?: { name: string; icon: string } }) => (
+              <div key={post._id} className="card p-0 overflow-hidden group hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-300">
+                {/* Thumbnail */}
+                <div className="relative h-36 bg-gradient-to-br from-primary/80 to-accent/30 overflow-hidden flex-shrink-0">
+                  {post.featuredImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-4xl opacity-40">{post.category?.icon ?? "📝"}</span>
+                    </div>
+                  )}
+                  {/* Status badge */}
+                  <span className={`absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide ${
+                    post.status === "published"
+                      ? "bg-green-500 text-white"
+                      : post.status === "scheduled"
+                      ? "bg-yellow-500 text-white"
+                      : "bg-slate-600 text-white"
+                  }`}>
+                    {post.status}
+                  </span>
+                </div>
+
+                {/* Content */}
+                <div className="p-4">
+                  {post.category && (
+                    <p className="text-xs text-accent font-semibold mb-1.5">
+                      {post.category.icon} {post.category.name}
+                    </p>
+                  )}
+                  <h3 className="font-heading font-bold text-sm text-primary dark:text-white leading-snug line-clamp-2 mb-3">
                     {post.title}
-                  </td>
-                  <td className="py-3">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                        post.status === "published"
-                          ? "bg-green-100 text-green-700"
-                          : post.status === "scheduled"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
-                      }`}
-                    >
-                      {post.status}
-                    </span>
-                  </td>
-                  <td className="py-3 text-slate-500 dark:text-slate-400">
-                    {post.category?.name ?? "—"}
-                  </td>
-                  <td className="py-3">
-                    <Link
-                      href={`/dashboard/posts/edit/${post._id}`}
-                      className="text-accent hover:underline text-xs"
-                    >
-                      Edit
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </h3>
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700">
+                    <span className="text-xs text-slate-400">{post.readingTime ?? 0}m read</span>
+                    <div className="flex items-center gap-2">
+                      <Link href={`/blog/${post.slug}`} target="_blank" className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-accent transition-colors">
+                        <Eye size={14} />
+                      </Link>
+                      <Link href={`/dashboard/posts/edit/${post._id}`} className="p-1.5 rounded-lg hover:bg-accent/10 text-slate-400 hover:text-accent transition-colors">
+                        <Pencil size={14} />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
-          <p className="text-slate-400 text-sm">No posts yet.</p>
+          <div className="card p-12 text-center text-slate-400">
+            <p className="text-sm">No posts yet.</p>
+            <Link href="/dashboard/posts/new" className="btn-primary mt-4 inline-block text-sm">
+              Create your first post
+            </Link>
+          </div>
         )}
       </div>
     </div>
