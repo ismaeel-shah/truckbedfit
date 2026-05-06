@@ -1,4 +1,4 @@
-import { FileText, CalendarClock, BookOpen, Clock, Pencil, Eye, ArrowRight } from "lucide-react";
+import { FileText, CalendarClock, BookOpen, Clock, Pencil, Eye } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import Link from "next/link";
 import { connectDB } from "@/lib/mongodb";
@@ -61,13 +61,10 @@ export default async function DashboardPage() {
 
       {/* Recent posts */}
       <div>
-        <div className="flex items-center justify-between mb-5">
+        <div className="mb-5">
           <h2 className="font-heading font-bold text-xl text-primary dark:text-white">
             Recent Posts
           </h2>
-          <Link href="/dashboard/posts" className="inline-flex items-center gap-1.5 text-sm text-accent font-semibold hover:gap-2.5 transition-all">
-            View all <ArrowRight size={14} />
-          </Link>
         </div>
 
         {recentPosts.length > 0 ? (
