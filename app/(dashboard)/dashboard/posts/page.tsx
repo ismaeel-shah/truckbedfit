@@ -1,14 +1,25 @@
 import Link from "next/link";
 import PostsTable from "@/components/dashboard/PostsTable";
+import { connectDB } from "@/lib/mongodb";
+import Post from "@/lib/models/Post";
+import "@/lib/models/Category";
+import "@/lib/models/Author";
 
 export const metadata = { title: "Posts" };
 
 async function getPosts() {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const res = await fetch(`${base}/api/posts?limit=100`, { cache: "no-store" });
-  if (!res.ok) return [];
-  const { posts } = await res.json();
-  return posts ?? [];
+  try {
+    await connectDB();
+    const posts = await Post.find()
+      .populate("category", "name slug icon")
+      .populate("author", "name")
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean();
+    return posts;
+  } catch {
+    return [];
+  }
 }
 
 export default async function PostsPage() {
