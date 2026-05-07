@@ -28,7 +28,7 @@ async function getRecentPosts() {
     await connectDB();
     const posts = await Post.find()
       .populate("category", "name slug icon")
-      .sort({ createdAt: -1 })
+      .sort({ publishedAt: -1, createdAt: -1 })
       .limit(6)
       .lean();
     return posts;
