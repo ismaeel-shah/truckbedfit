@@ -6,6 +6,7 @@ import Post from "@/lib/models/Post";
 import "@/lib/models/Category";
 import "@/lib/models/Author";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard" };
 
 async function getStats() {
