@@ -1,7 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect, permanentRedirect } from "next/navigation";
 import { Metadata } from "next";
 import BlogCard from "@/components/public/BlogCard";
 import { buildCanonical } from "@/lib/utils/seo";
+import { connectDB } from "@/lib/mongodb";
+import RedirectModel from "@/lib/models/Redirect";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +65,15 @@ export default async function CategoryPage({
   searchParams: { page?: string };
 }) {
   const cat = await getCategory(params.category);
-  if (!cat) notFound();
+  if (!cat) {
+    await connectDB();
+    const doc = await RedirectModel.findOne({ source: `/category/${params.category}`, active: true }).lean() as { destination: string; type: number } | null;
+    if (doc) {
+      if (doc.type === 301) permanentRedirect(doc.destination);
+      else redirect(doc.destination);
+    }
+    notFound();
+  }
 
   const page = parseInt(searchParams.page ?? "1");
   const { posts, pages } = await getPosts(cat._id, page);

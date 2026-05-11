@@ -1,14 +1,15 @@
 import RedirectsManager from "@/components/dashboard/RedirectsManager";
+import { connectDB } from "@/lib/mongodb";
+import Redirect from "@/lib/models/Redirect";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Redirects" };
 
 async function getRedirects() {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   try {
-    const res = await fetch(`${base}/api/redirects`, { cache: "no-store" });
-    if (!res.ok) return [];
-    return res.json();
+    await connectDB();
+    const redirects = await Redirect.find().sort({ createdAt: -1 }).lean();
+    return JSON.parse(JSON.stringify(redirects));
   } catch { return []; }
 }
 

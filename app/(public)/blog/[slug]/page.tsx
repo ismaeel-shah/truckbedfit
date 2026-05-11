@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect, permanentRedirect } from "next/navigation";
 import { format } from "date-fns";
 import { Clock, Calendar, Tag } from "lucide-react";
 import { Metadata } from "next";
@@ -8,6 +8,8 @@ import AmazonProductBox from "@/components/public/AmazonProductBox";
 import RelatedPosts from "@/components/public/RelatedPosts";
 import AuthorCard from "@/components/public/AuthorCard";
 import { buildCanonical } from "@/lib/utils/seo";
+import { connectDB } from "@/lib/mongodb";
+import RedirectModel from "@/lib/models/Redirect";
 
 export const dynamic = "force-dynamic";
 
@@ -67,7 +69,15 @@ export default async function SinglePostPage({
   params: { slug: string };
 }) {
   const post = await getPost(params.slug);
-  if (!post) notFound();
+  if (!post) {
+    await connectDB();
+    const doc = await RedirectModel.findOne({ source: `/blog/${params.slug}`, active: true }).lean() as { destination: string; type: number } | null;
+    if (doc) {
+      if (doc.type === 301) permanentRedirect(doc.destination);
+      else redirect(doc.destination);
+    }
+    notFound();
+  }
 
   const related = await getRelated(post.category?._id, params.slug);
 
