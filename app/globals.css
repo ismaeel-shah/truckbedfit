@@ -11,8 +11,8 @@
     --background: #0D1520;
     --foreground: #E2E8F0;
   }
-  html { scroll-behavior: smooth; }
-  body { @apply transition-colors duration-300 font-body; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
+  body { @apply transition-colors duration-300 font-body; overflow-x: hidden; }
   h1,h2,h3,h4,h5,h6 { @apply font-heading; }
 }
 
@@ -104,6 +104,21 @@
   background: rgba(45, 212, 191, 0.08);
   padding-inline: 3px;
   margin-inline: -3px;
+}
+
+/* ── Blog content overflow fixes (mobile) ────────────────────── */
+.prose table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.prose pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.prose iframe {
+  max-width: 100% !important;
+  width: 100% !important;
 }
 
 /* ── Frontend blog post images ────────────────────────────────── */
