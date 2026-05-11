@@ -1,18 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Star, Users, BookOpen } from "lucide-react";
-
-const STATS = [
-  { icon: BookOpen, value: "200+", label: "Buying Guides" },
-  { icon: Star,     value: "4.9★", label: "Avg. Rating"   },
-  { icon: Users,    value: "50K+", label: "Monthly Readers"},
-];
-
-const QUICK_CATS = [
-  { emoji: "🪑", label: "Chairs",   href: "/category/ergonomic-chairs"   },
-  { emoji: "🗂️", label: "Desks",    href: "/category/desks-workstations"  },
-  { emoji: "🖥️", label: "Monitors", href: "/category/monitors-displays"  },
-  { emoji: "⌨️", label: "Keyboards",href: "/category/keyboards-mice"     },
-];
+import { ArrowRight } from "lucide-react";
 
 export default function HeroSection() {
   return (
@@ -59,7 +46,7 @@ export default function HeroSection() {
           </p>
 
           {/* CTA buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/blog" className="btn-primary text-base !px-8 !py-3.5 shadow-accent animate-pulse-glow">
               Explore All Guides <ArrowRight size={18} />
             </Link>
@@ -71,30 +58,6 @@ export default function HeroSection() {
             </Link>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-12">
-            {STATS.map(({ icon: Icon, value, label }) => (
-              <div key={label} className="text-center p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                <Icon size={20} className="text-accent mx-auto mb-1.5" />
-                <p className="font-heading font-bold text-xl text-white">{value}</p>
-                <p className="text-xs text-slate-400">{label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Quick category pills */}
-          <div className="flex flex-wrap gap-2 justify-center">
-            <span className="text-slate-500 text-sm self-center">Browse:</span>
-            {QUICK_CATS.map((c) => (
-              <Link
-                key={c.href}
-                href={c.href}
-                className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-accent hover:text-primary border border-white/10 hover:border-accent text-white text-sm font-medium px-4 py-2 rounded-full transition-all duration-200"
-              >
-                {c.emoji} {c.label}
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
 
