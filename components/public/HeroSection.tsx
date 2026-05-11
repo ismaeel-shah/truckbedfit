@@ -46,15 +46,9 @@ export default function HeroSection() {
           </p>
 
           {/* CTA buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Link href="/blog" className="btn-primary text-base !px-8 !py-3.5 shadow-accent animate-pulse-glow">
               Explore All Guides <ArrowRight size={18} />
-            </Link>
-            <Link
-              href="/category/ergonomic-chairs"
-              className="inline-flex items-center justify-center gap-2 border border-white/20 text-white px-8 py-3.5 rounded-xl hover:bg-white/10 transition-all duration-200 font-semibold text-base"
-            >
-              🪑 Best Chairs
             </Link>
           </div>
 
