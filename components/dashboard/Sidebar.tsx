@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  LayoutDashboard, FileText, FolderOpen, Image, Settings, LogOut, ExternalLink, Users, UserCircle,
+  LayoutDashboard, FileText, FolderOpen, Image, Settings, LogOut, ExternalLink, Users, UserCircle, ArrowLeftRight,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -15,6 +15,7 @@ const NAV = [
   { label: "Authors",    href: "/dashboard/authors",    icon: UserCircle },
   { label: "Media",      href: "/dashboard/media",      icon: Image },
   { label: "Users",      href: "/dashboard/users",      icon: Users },
+  { label: "Redirects",  href: "/dashboard/redirects",  icon: ArrowLeftRight },
   { label: "Settings",   href: "/dashboard/settings",   icon: Settings },
 ];
 
