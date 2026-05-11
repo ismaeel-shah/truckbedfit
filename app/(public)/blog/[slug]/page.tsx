@@ -8,6 +8,7 @@ import AmazonProductBox from "@/components/public/AmazonProductBox";
 import RelatedPosts from "@/components/public/RelatedPosts";
 import AuthorCard from "@/components/public/AuthorCard";
 import { buildCanonical } from "@/lib/utils/seo";
+import { processContent } from "@/lib/utils/processContent";
 import { connectDB } from "@/lib/mongodb";
 import RedirectModel from "@/lib/models/Redirect";
 
@@ -194,7 +195,7 @@ export default async function SinglePostPage({
             {/* Body */}
             <div
               className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-heading prose-a:text-accent prose-img:rounded-xl"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: processContent(post.content) }}
             />
 
             {/* Tags */}

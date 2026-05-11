@@ -11,8 +11,8 @@
     --background: #0D1520;
     --foreground: #E2E8F0;
   }
-  html { scroll-behavior: smooth; overflow-x: hidden; }
-  body { @apply transition-colors duration-300 font-body; overflow-x: hidden; }
+  html { scroll-behavior: smooth; }
+  body { @apply transition-colors duration-300 font-body; overflow-x: clip; }
   h1,h2,h3,h4,h5,h6 { @apply font-heading; }
 }
 
@@ -106,19 +106,51 @@
   margin-inline: -3px;
 }
 
-/* ── Blog content overflow fixes (mobile) ────────────────────── */
+/* ── Blog content — mobile responsive fixes ──────────────────── */
+
+/* Long words / URLs break instead of overflowing */
+.prose {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Tables scroll horizontally inside their own box */
 .prose table {
   display: block;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   max-width: 100%;
+  white-space: nowrap;
 }
+.prose table td,
+.prose table th {
+  white-space: normal;
+}
+
+/* Code / pre blocks scroll instead of breaking layout */
 .prose pre {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   max-width: 100%;
 }
-.prose iframe {
-  max-width: 100% !important;
-  width: 100% !important;
+
+/* Responsive iframe wrapper (YouTube, etc.) — 16:9 */
+.iframe-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+.iframe-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
 /* ── Frontend blog post images ────────────────────────────────── */
