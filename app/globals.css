@@ -270,8 +270,11 @@
     border-spacing: 0 !important;
   }
 
-  /* Hide the header row — labels come from data-label */
+  /* Hide header rows — both <thead> and non-thead rows marked by processContent */
   .prose .table-wrapper thead {
+    display: none !important;
+  }
+  .prose .table-wrapper tr[data-table-header="true"] {
     display: none !important;
   }
 
@@ -328,6 +331,16 @@
   }
   .dark .prose .table-wrapper td::before {
     color: #94a3b8;
+  }
+
+  /* No label column when data-label absent or empty — just show value */
+  .prose .table-wrapper td:not([data-label]),
+  .prose .table-wrapper td[data-label=""] {
+    grid-template-columns: 1fr !important;
+  }
+  .prose .table-wrapper td:not([data-label])::before,
+  .prose .table-wrapper td[data-label=""]::before {
+    display: none !important;
   }
 
   /* Reset alternating / hover that interfere with card layout */

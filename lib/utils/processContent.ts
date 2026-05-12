@@ -7,12 +7,14 @@ export function processContent(html: string): string {
     (_, attrs) => `<div class="iframe-wrapper"><iframe${attrs}></iframe></div>`
   );
 
-  // Process tables: extract header labels → add data-label to each td → wrap
+  // Process tables
   html = html.replace(
     /<table([^>]*)>([\s\S]*?)<\/table>/gi,
     (_, tableAttrs, tableInner) => {
-      // Extract column header texts from <thead> <th> cells
       const headers: string[] = [];
+      let inner = tableInner;
+
+      // Strategy 1: extract headers from <thead> <th> cells
       const theadMatch = tableInner.match(/<thead[^>]*>([\s\S]*?)<\/thead>/i);
       if (theadMatch) {
         for (const m of [...theadMatch[1].matchAll(/<th[^>]*>([\s\S]*?)<\/th>/gi)]) {
@@ -20,13 +22,27 @@ export function processContent(html: string): string {
         }
       }
 
-      // Stamp data-label on every <td> so CSS can show it in card view
-      let inner = tableInner;
+      // Strategy 2: first <tr> that contains <th> elements (no <thead> wrapper)
+      if (headers.length === 0) {
+        const thRowMatch = tableInner.match(/(<tr[^>]*>)([\s\S]*?<\/th>[\s\S]*?)(<\/tr>)/i);
+        if (thRowMatch) {
+          for (const m of [...thRowMatch[0].matchAll(/<th[^>]*>([\s\S]*?)<\/th>/gi)]) {
+            headers.push(m[1].replace(/<[^>]+>/g, "").trim());
+          }
+          // Mark that row so CSS hides it on mobile
+          inner = inner.replace(
+            thRowMatch[0],
+            thRowMatch[0].replace(/<tr([^>]*)>/, '<tr$1 data-table-header="true">')
+          );
+        }
+      }
+
+      // Stamp data-label on every <td> that is NOT in a header row
       if (headers.length > 0) {
         inner = inner.replace(
-          /(<tr[^>]*>)([\s\S]*?)(<\/tr>)/gi,
+          /(<tr(?![^>]*data-table-header)[^>]*>)([\s\S]*?)(<\/tr>)/gi,
           (full, openTr, cells, closeTr) => {
-            if (!cells.includes("<td")) return full; // skip header rows
+            if (!cells.includes("<td")) return full;
             let i = 0;
             const stamped = cells.replace(/<td([^>]*)>/gi, (_, attrs) => {
               const label = (headers[i++] ?? "").replace(/"/g, "&quot;");
