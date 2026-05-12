@@ -249,3 +249,94 @@
 }
 .animate-float { animation: float 4s ease-in-out infinite; }
 .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+
+/* ── Blog tables — mobile card layout (< 640px) ─────────────── */
+@media (max-width: 639px) {
+  /* Remove wrapper scroll — cards don't need it */
+  .table-wrapper {
+    overflow-x: visible;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  /* Table becomes a block so rows stack */
+  .prose .table-wrapper table {
+    display: block !important;
+    min-width: unset !important;
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  /* Hide the header row — labels come from data-label */
+  .prose .table-wrapper thead {
+    display: none !important;
+  }
+
+  /* tbody stacks vertically with gap */
+  .prose .table-wrapper tbody {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Each row = a card */
+  .prose .table-wrapper tbody tr {
+    display: block !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+    background: #ffffff;
+  }
+  .dark .prose .table-wrapper tbody tr {
+    border-color: #334155 !important;
+    background: #1e293b;
+  }
+
+  /* Each cell = a label + value row inside the card */
+  .prose .table-wrapper td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px !important;
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    white-space: normal !important;
+    font-size: 0.875rem !important;
+    color: #374151 !important;
+  }
+  .dark .prose .table-wrapper td {
+    border-bottom-color: #263248 !important;
+    color: #cbd5e1 !important;
+  }
+  .prose .table-wrapper tbody tr td:last-child {
+    border-bottom: none !important;
+  }
+
+  /* Label from data-label attribute */
+  .prose .table-wrapper td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #1B2A3B;
+    flex-shrink: 0;
+    max-width: 45%;
+  }
+  .dark .prose .table-wrapper td::before {
+    color: #94a3b8;
+  }
+
+  /* Reset alternating / hover that interfere with card layout */
+  .prose .table-wrapper tbody tr:nth-child(even) td {
+    background: transparent !important;
+  }
+  .prose .table-wrapper tbody tr:hover td {
+    background: transparent !important;
+    color: inherit !important;
+  }
+}
