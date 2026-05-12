@@ -106,35 +106,21 @@
   margin-inline: -3px;
 }
 
-/* ── Blog content — mobile responsive fixes ──────────────────── */
+/* ── Blog content — mobile / responsive fixes ────────────────── */
 
-/* Long words / URLs break instead of overflowing */
+/* Long words and URLs break instead of overflowing */
 .prose {
   overflow-wrap: break-word;
   word-break: break-word;
 }
 
-/* Tables scroll horizontally inside their own box */
-.prose table {
-  display: block;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  max-width: 100%;
-  white-space: nowrap;
-}
-.prose table td,
-.prose table th {
-  white-space: normal;
-}
-
-/* Code / pre blocks scroll instead of breaking layout */
+/* Pre/code blocks scroll internally */
 .prose pre {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  max-width: 100%;
 }
 
-/* Responsive iframe wrapper (YouTube, etc.) — 16:9 */
+/* Responsive iframe wrapper (YouTube, Vimeo etc.) — 16:9 */
 .iframe-wrapper {
   position: relative;
   width: 100%;
@@ -146,11 +132,86 @@
 }
 .iframe-wrapper iframe {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   border: none;
+}
+
+/* ── Blog tables ──────────────────────────────────────────────── */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin: 2rem 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+.dark .table-wrapper {
+  border-color: #334155;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.prose .table-wrapper table {
+  display: table !important;
+  width: 100% !important;
+  min-width: 480px;
+  border-collapse: collapse !important;
+  margin: 0 !important;
+  font-size: 0.875rem !important;
+}
+
+/* Header row */
+.prose .table-wrapper thead tr {
+  background: #1B2A3B !important;
+}
+.prose .table-wrapper th {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+  padding: 12px 18px !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  border: none !important;
+  background: transparent !important;
+}
+.prose .table-wrapper thead tr th:first-child { border-radius: 11px 0 0 0; }
+.prose .table-wrapper thead tr th:last-child  { border-radius: 0 11px 0 0; }
+
+/* Body cells */
+.prose .table-wrapper td {
+  padding: 11px 18px !important;
+  border: none !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  vertical-align: middle !important;
+  color: #374151 !important;
+  white-space: nowrap;
+}
+.dark .prose .table-wrapper td {
+  border-bottom-color: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+.prose .table-wrapper tbody tr:last-child td { border-bottom: none !important; }
+
+/* Alternating rows */
+.prose .table-wrapper tbody tr:nth-child(even) td {
+  background: #f8fafc !important;
+}
+.dark .prose .table-wrapper tbody tr:nth-child(even) td {
+  background: #1e293b !important;
+}
+
+/* Row hover */
+.prose .table-wrapper tbody tr:hover td {
+  background: #f0fdfa !important;
+  color: #0f766e !important;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.dark .prose .table-wrapper tbody tr:hover td {
+  background: rgba(45, 212, 191, 0.08) !important;
+  color: #2DD4BF !important;
 }
 
 /* ── Frontend blog post images ────────────────────────────────── */
