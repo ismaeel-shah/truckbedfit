@@ -8,7 +8,6 @@ import AmazonProductBox from "@/components/public/AmazonProductBox";
 import RelatedPosts from "@/components/public/RelatedPosts";
 import AuthorCard from "@/components/public/AuthorCard";
 import { buildCanonical } from "@/lib/utils/seo";
-import { processContent } from "@/lib/utils/processContent";
 import { connectDB } from "@/lib/mongodb";
 import RedirectModel from "@/lib/models/Redirect";
 
@@ -134,12 +133,15 @@ export default async function SinglePostPage({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Breadcrumb */}
-        <nav className="text-sm text-slate-500 dark:text-slate-400 mb-6 flex items-center gap-2">
-          <a href="/" className="hover:text-accent">Home</a> /
-          <a href="/blog" className="hover:text-accent">Blog</a> /
+        <nav className="text-sm text-slate-500 dark:text-slate-400 mb-6 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <a href="/" className="hover:text-accent whitespace-nowrap">Home</a>
+          <span>/</span>
+          <a href="/blog" className="hover:text-accent whitespace-nowrap">Blog</a>
+          <span>/</span>
           {post.category && (
             <>
-              <a href={`/category/${post.category.slug}`} className="hover:text-accent">{post.category.name}</a> /
+              <a href={`/category/${post.category.slug}`} className="hover:text-accent whitespace-nowrap">{post.category.name}</a>
+              <span>/</span>
             </>
           )}
           <span className="text-slate-400 truncate max-w-[200px]">{post.title}</span>
@@ -195,7 +197,7 @@ export default async function SinglePostPage({
             {/* Body */}
             <div
               className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-heading prose-a:text-accent prose-img:rounded-xl"
-              dangerouslySetInnerHTML={{ __html: processContent(post.content) }}
+              dangerouslySetInnerHTML={{ __html: post.content }}
             />
 
             {/* Tags */}
