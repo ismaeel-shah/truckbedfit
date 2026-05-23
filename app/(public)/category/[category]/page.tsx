@@ -5,11 +5,11 @@ import { buildCanonical } from "@/lib/utils/seo";
 import { connectDB } from "@/lib/mongodb";
 import RedirectModel from "@/lib/models/Redirect";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 async function getCategory(slug: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const res = await fetch(`${base}/api/categories`, { cache: "no-store" });
+  const res = await fetch(`${base}/api/categories`, { next: { revalidate: 3600 } });
   if (!res.ok) return null;
   const cats = await res.json();
   return cats.find((c: { slug: string }) => c.slug === slug) ?? null;
@@ -19,7 +19,7 @@ async function getPosts(categoryId: string, page = 1) {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const res = await fetch(
     `${base}/api/posts?category=${categoryId}&page=${page}&limit=9&status=published`,
-    { cache: "no-store" }
+    { next: { revalidate: 3600 } }
   );
   if (!res.ok) return { posts: [], pages: 1 };
   return res.json();

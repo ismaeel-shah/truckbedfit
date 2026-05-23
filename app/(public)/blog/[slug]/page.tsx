@@ -12,12 +12,12 @@ import { processContent } from "@/lib/utils/processContent";
 import { connectDB } from "@/lib/mongodb";
 import RedirectModel from "@/lib/models/Redirect";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800;
 
 async function getPost(slug: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const res = await fetch(`${base}/api/posts?slug=${slug}&status=published`, {
-    cache: "no-store",
+    next: { revalidate: 1800 },
   });
   if (!res.ok) return null;
   const { posts } = await res.json();
@@ -28,7 +28,7 @@ async function getRelated(categoryId: string, excludeSlug: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const res = await fetch(
     `${base}/api/posts?category=${categoryId}&limit=4&status=published`,
-    { cache: "no-store" }
+    { next: { revalidate: 1800 } }
   );
   if (!res.ok) return [];
   const { posts } = await res.json();
