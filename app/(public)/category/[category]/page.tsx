@@ -2,27 +2,18 @@ import { notFound, redirect, permanentRedirect } from "next/navigation";
 import { Metadata } from "next";
 import BlogCard from "@/components/public/BlogCard";
 import { buildCanonical } from "@/lib/utils/seo";
-import { connectDB } from "@/lib/mongodb";
-import RedirectModel from "@/lib/models/Redirect";
+import { getD1 } from "@/lib/db/d1";
+import { getCategoryBySlug, listPosts } from "@/lib/db/content";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 async function getCategory(slug: string) {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const res = await fetch(`${base}/api/categories`, { next: { revalidate: 3600 } });
-  if (!res.ok) return null;
-  const cats = await res.json();
-  return cats.find((c: { slug: string }) => c.slug === slug) ?? null;
+  return getCategoryBySlug(slug);
 }
 
 async function getPosts(categoryId: string, page = 1) {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const res = await fetch(
-    `${base}/api/posts?category=${categoryId}&page=${page}&limit=9&status=published`,
-    { next: { revalidate: 3600 } }
-  );
-  if (!res.ok) return { posts: [], pages: 1 };
-  return res.json();
+  return listPosts({ category: categoryId, page, limit: 9, status: "published" });
 }
 
 export async function generateMetadata({
@@ -66,8 +57,11 @@ export default async function CategoryPage({
 }) {
   const cat = await getCategory(params.category);
   if (!cat) {
-    await connectDB();
-    const doc = await RedirectModel.findOne({ source: `/category/${params.category}`, active: true }).lean() as { destination: string; type: number } | null;
+    const db = getD1();
+    const doc = await db
+      .prepare("SELECT destination, type FROM redirects WHERE source = ? AND active = 1")
+      .bind(`/category/${params.category}`)
+      .first<{ destination: string; type: number }>();
     if (doc) {
       if (doc.type === 301) permanentRedirect(doc.destination);
       else redirect(doc.destination);
