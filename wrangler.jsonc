@@ -2,6 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "homedeskessentials",
   "main": ".open-next/worker.js",
+  "workers_dev": true,
   "compatibility_date": "2026-05-24",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
@@ -11,6 +12,16 @@
   "observability": {
     "enabled": true
   },
+  "routes": [
+    {
+      "pattern": "homedeskessentials.com/*",
+      "zone_name": "homedeskessentials.com"
+    },
+    {
+      "pattern": "www.homedeskessentials.com/*",
+      "zone_name": "homedeskessentials.com"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
