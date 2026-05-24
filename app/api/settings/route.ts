@@ -1,33 +1,39 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/mongodb";
-import SiteSettings from "@/lib/models/SiteSettings";
+import { getD1, nowIso, parseJson } from "@/lib/db/d1";
 
-// GET /api/settings  — returns all settings as { key: value, ... }
+type SettingRow = {
+  key: string;
+  value_json: string;
+};
+
 export async function GET() {
-  await connectDB();
-  const rows = await SiteSettings.find().lean();
+  const db = getD1();
+  const { results = [] } = await db.prepare("SELECT key, value_json FROM site_settings").all<SettingRow>();
   const result: Record<string, Record<string, string>> = {};
-  for (const row of rows) {
-    result[row.key] = row.value as Record<string, string>;
+
+  for (const row of results) {
+    result[row.key] = parseJson<Record<string, string>>(row.value_json, {});
   }
+
   return NextResponse.json(result);
 }
 
-// PATCH /api/settings  — body: { key: string, value: object }
 export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  await connectDB();
-  const { key, value } = await req.json();
+  const db = getD1();
+  const { key, value } = await req.json() as { key?: string; value?: Record<string, string> };
   if (!key) return NextResponse.json({ error: "key required" }, { status: 400 });
 
-  await SiteSettings.findOneAndUpdate(
-    { key },
-    { value },
-    { upsert: true, new: true }
-  );
+  const now = nowIso();
+  await db.prepare(`
+    INSERT INTO site_settings (key, value_json, created_at, updated_at)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, updated_at = excluded.updated_at
+  `).bind(key, JSON.stringify(value ?? {}), now, now).run();
+
   return NextResponse.json({ ok: true });
 }

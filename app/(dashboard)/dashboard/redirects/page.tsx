@@ -1,16 +1,19 @@
 import RedirectsManager from "@/components/dashboard/RedirectsManager";
-import { connectDB } from "@/lib/mongodb";
-import Redirect from "@/lib/models/Redirect";
+import { getD1, mapRedirect, RedirectRow } from "@/lib/db/d1";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Redirects" };
 
 async function getRedirects() {
   try {
-    await connectDB();
-    const redirects = await Redirect.find().sort({ createdAt: -1 }).lean();
-    return JSON.parse(JSON.stringify(redirects));
-  } catch { return []; }
+    const db = getD1();
+    const { results = [] } = await db
+      .prepare("SELECT * FROM redirects ORDER BY created_at DESC")
+      .all<RedirectRow>();
+    return results.map(mapRedirect);
+  } catch {
+    return [];
+  }
 }
 
 export default async function RedirectsPage() {

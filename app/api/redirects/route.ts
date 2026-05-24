@@ -1,49 +1,82 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/mongodb";
-import Redirect from "@/lib/models/Redirect";
+import { getD1, mapRedirect, nowIso, RedirectRow } from "@/lib/db/d1";
+
+function normalizeSource(source: string) {
+  return source.startsWith("/") ? source : `/${source}`;
+}
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await connectDB();
-  const redirects = await Redirect.find().sort({ createdAt: -1 }).lean();
-  return NextResponse.json(redirects);
+
+  const db = getD1();
+  const { results = [] } = await db
+    .prepare("SELECT * FROM redirects ORDER BY created_at DESC")
+    .all<RedirectRow>();
+  return NextResponse.json(results.map(mapRedirect));
 }
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await connectDB();
-  const body = await req.json();
 
-  // Ensure source starts with /
-  if (!body.source.startsWith("/")) body.source = `/${body.source}`;
+  const db = getD1();
+  const body = await req.json() as { source?: string; destination?: string; type?: 301 | 302; active?: boolean };
+  if (!body.source || !body.destination) return NextResponse.json({ error: "Source and destination are required" }, { status: 400 });
 
-  const existing = await Redirect.findOne({ source: body.source });
+  const source = normalizeSource(body.source);
+  const existing = await db.prepare("SELECT id FROM redirects WHERE source = ?").bind(source).first();
   if (existing) return NextResponse.json({ error: "A redirect for this source already exists" }, { status: 409 });
 
-  const redirect = await Redirect.create(body);
-  return NextResponse.json(redirect, { status: 201 });
+  const id = crypto.randomUUID();
+  const now = nowIso();
+  await db.prepare(`
+    INSERT INTO redirects (id, source, destination, type, active, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).bind(id, source, body.destination, body.type ?? 301, body.active === false ? 0 : 1, now, now).run();
+
+  const row = await db.prepare("SELECT * FROM redirects WHERE id = ?").bind(id).first<RedirectRow>();
+  return NextResponse.json(row ? mapRedirect(row) : null, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await connectDB();
-  const { id, ...body } = await req.json();
-  if (body.source && !body.source.startsWith("/")) body.source = `/${body.source}`;
-  const redirect = await Redirect.findByIdAndUpdate(id, body, { new: true });
-  if (!redirect) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(redirect);
+
+  const db = getD1();
+  const { id, ...body } = await req.json() as { id?: string; source?: string; destination?: string; type?: 301 | 302; active?: boolean };
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const existing = await db.prepare("SELECT * FROM redirects WHERE id = ?").bind(id).first<RedirectRow>();
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await db.prepare(`
+    UPDATE redirects
+    SET source = ?, destination = ?, type = ?, active = ?, updated_at = ?
+    WHERE id = ?
+  `).bind(
+    body.source ? normalizeSource(body.source) : existing.source,
+    body.destination ?? existing.destination,
+    body.type ?? existing.type,
+    body.active === undefined ? existing.active : body.active ? 1 : 0,
+    nowIso(),
+    id
+  ).run();
+
+  const row = await db.prepare("SELECT * FROM redirects WHERE id = ?").bind(id).first<RedirectRow>();
+  return NextResponse.json(row ? mapRedirect(row) : null);
 }
 
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await connectDB();
-  const { id } = await req.json();
-  await Redirect.findByIdAndDelete(id);
+
+  const db = getD1();
+  const { id } = await req.json() as { id?: string };
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  await db.prepare("DELETE FROM redirects WHERE id = ?").bind(id).run();
   return NextResponse.json({ success: true });
 }

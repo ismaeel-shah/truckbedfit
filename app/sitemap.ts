@@ -1,6 +1,9 @@
 import { MetadataRoute } from "next";
+import { listCategories, listPosts } from "@/lib/db/content";
 
 const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://worknest.example.com";
+
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
@@ -11,13 +14,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const [postsRes, catsRes] = await Promise.all([
-      fetch(`${base}/api/posts?limit=1000&status=published`, { cache: "no-store" }),
-      fetch(`${base}/api/categories`, { cache: "no-store" }),
+    const [{ posts }, categories] = await Promise.all([
+      listPosts({ limit: 1000, status: "published" }),
+      listCategories(),
     ]);
-
-    const { posts } = await postsRes.json();
-    const categories = await catsRes.json();
 
     const postUrls: MetadataRoute.Sitemap = posts.map(
       (post: { slug: string; updatedAt: string; featuredImage?: string; title?: string }) => ({
