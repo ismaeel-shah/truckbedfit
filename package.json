@@ -11,13 +11,11 @@
     "cf:deploy": "npm run cf:build && wrangler deploy",
     "db:migrate:local": "wrangler d1 migrations apply homedeskessentials --local",
     "db:migrate:remote": "wrangler d1 migrations apply homedeskessentials --remote",
-    "migration:export-d1": "ts-node --project tsconfig.scripts.json scripts/export-mongo-to-d1.ts",
     "migration:verify-d1-sql": "ts-node --project tsconfig.scripts.json scripts/verify-d1-sql.ts",
     "migration:import-d1:local": "wrangler d1 execute homedeskessentials --local --file migration-output/mongo-to-d1.sql",
     "migration:import-d1:remote": "wrangler d1 execute homedeskessentials --remote --file migration-output/mongo-to-d1.remote.sql",
     "start": "next start",
-    "lint": "next lint",
-    "seed": "ts-node --project tsconfig.json scripts/seed.ts"
+    "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -40,7 +38,6 @@
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^1.7.0",
-    "mongoose": "^9.4.1",
     "next": "14.2.35",
     "next-auth": "^4.24.13",
     "next-themes": "^0.4.6",

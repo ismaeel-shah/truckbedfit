@@ -12,6 +12,16 @@
   "observability": {
     "enabled": true
   },
+  "routes": [
+    {
+      "pattern": "homedeskessentials.com/*",
+      "zone_name": "homedeskessentials.com"
+    },
+    {
+      "pattern": "www.homedeskessentials.com/*",
+      "zone_name": "homedeskessentials.com"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
