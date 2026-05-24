@@ -4,9 +4,11 @@ import BlogCard from "@/components/public/BlogCard";
 import CategoryFilter from "@/components/public/CategoryFilter";
 import { getPageMeta } from "@/lib/utils/pageSettings";
 import { buildCanonical } from "@/lib/utils/seo";
+import { listCategories, listPosts } from "@/lib/db/content";
 import { Search } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export async function generateMetadata({
@@ -39,25 +41,16 @@ export async function generateMetadata({
 }
 
 async function getData(searchParams: { page?: string; search?: string; category?: string }) {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const page = searchParams.page ?? "1";
+  const page = parseInt(searchParams.page ?? "1");
   const search = searchParams.search ?? "";
   const category = searchParams.category ?? "";
 
-  const [postsRes, catsRes] = await Promise.all([
-    fetch(
-      `${base}/api/posts?page=${page}&limit=9&status=published${search ? `&search=${search}` : ""}${category ? `&category=${category}` : ""}`,
-      { next: { revalidate: 3600 } }
-    ),
-    fetch(`${base}/api/categories`, { next: { revalidate: 3600 } }),
-  ]);
-
   const [{ posts, total, pages }, categories] = await Promise.all([
-    postsRes.json(),
-    catsRes.json(),
+    listPosts({ page, limit: 9, status: "published", search, category }),
+    listCategories(),
   ]);
 
-  return { posts, total, pages: pages ?? 1, categories, page: parseInt(page) };
+  return { posts, total, pages: pages ?? 1, categories, page };
 }
 
 export default async function BlogPage({

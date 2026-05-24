@@ -1,23 +1,21 @@
 import Link from "next/link";
 import PostsTable from "@/components/dashboard/PostsTable";
-import { connectDB } from "@/lib/mongodb";
-import Post from "@/lib/models/Post";
-import "@/lib/models/Category";
-import "@/lib/models/Author";
+import { getD1, mapPost, postJoins, postSelect, PostRow } from "@/lib/db/d1";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Posts" };
 
 async function getPosts() {
   try {
-    await connectDB();
-    const posts = await Post.find()
-      .populate("category", "name slug icon")
-      .populate("author", "name")
-      .sort({ createdAt: -1 })
-      .limit(200)
-      .lean();
-    return posts;
+    const db = getD1();
+    const { results = [] } = await db.prepare(`
+      SELECT ${postSelect}
+      FROM posts p
+      ${postJoins}
+      ORDER BY p.created_at DESC
+      LIMIT 200
+    `).all<PostRow>();
+    return results.map(mapPost);
   } catch {
     return [];
   }
