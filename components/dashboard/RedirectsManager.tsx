@@ -12,9 +12,7 @@ interface Redirect {
   active: boolean;
 }
 
-type RedirectForm = Omit<Redirect, "_id">;
-
-const empty: RedirectForm = { source: "", destination: "", type: 301, active: true };
+const empty = { source: "", destination: "", type: 301 as const, active: true };
 
 export default function RedirectsManager({ initialRedirects }: { initialRedirects: Redirect[] }) {
   const [redirects, setRedirects] = useState<Redirect[]>(initialRedirects);

@@ -1,15 +1,13 @@
-import { getD1, parseJson } from "@/lib/db/d1";
+import { connectDB } from "@/lib/mongodb";
+import SiteSettings from "@/lib/models/SiteSettings";
 
 export async function getPageMeta(
   key: string
 ): Promise<{ metaTitle?: string; metaDescription?: string }> {
   try {
-    const db = getD1();
-    const row = await db
-      .prepare("SELECT value_json FROM site_settings WHERE key = ?")
-      .bind(key)
-      .first<{ value_json: string }>();
-    return parseJson<Record<string, string>>(row?.value_json, {});
+    await connectDB();
+    const row = await SiteSettings.findOne({ key }).lean();
+    return (row?.value as Record<string, string>) ?? {};
   } catch {
     return {};
   }

@@ -8,10 +8,8 @@ import Link from "next/link";
 import { ArrowRight, Flame } from "lucide-react";
 import { getPageMeta } from "@/lib/utils/pageSettings";
 import { buildCanonical } from "@/lib/utils/seo";
-import { listCategories, listPosts } from "@/lib/db/content";
 import { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,16 +29,24 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-async function fetchPosts(params: { category?: string; limit?: number }) {
+const base = () => process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+async function fetchPosts(params: string) {
   try {
-    const { posts } = await listPosts({ ...params, status: "published" });
+    const res = await fetch(`${base()}/api/posts?status=published&${params}`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const { posts } = await res.json();
     return posts ?? [];
   } catch { return []; }
 }
 
 async function fetchCategories() {
   try {
-    return listCategories();
+    const res = await fetch(`${base()}/api/categories`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    return res.json();
   } catch { return []; }
 }
 
@@ -63,12 +69,12 @@ export default async function HomePage() {
     lightingPosts,
   ] = await Promise.all([
     fetchCategories(),
-    fetchPosts({ limit: 8 }),
-    fetchPosts({ category: "ergonomic-chairs", limit: 6 }),
-    fetchPosts({ category: "monitors-displays", limit: 4 }),
-    fetchPosts({ category: "desks-workstations", limit: 4 }),
-    fetchPosts({ category: "keyboards-mice", limit: 6 }),
-    fetchPosts({ category: "lighting-webcams", limit: 4 }),
+    fetchPosts("limit=8"),
+    fetchPosts("category=ergonomic-chairs&limit=6"),
+    fetchPosts("category=monitors-displays&limit=4"),
+    fetchPosts("category=desks-workstations&limit=4"),
+    fetchPosts("category=keyboards-mice&limit=6"),
+    fetchPosts("category=lighting-webcams&limit=4"),
   ]);
 
   const featured   = latestPosts[0] as Post | undefined;

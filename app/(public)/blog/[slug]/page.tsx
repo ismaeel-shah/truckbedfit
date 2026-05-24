@@ -9,18 +9,29 @@ import RelatedPosts from "@/components/public/RelatedPosts";
 import AuthorCard from "@/components/public/AuthorCard";
 import { buildCanonical } from "@/lib/utils/seo";
 import { processContent } from "@/lib/utils/processContent";
-import { getD1 } from "@/lib/db/d1";
-import { getPublishedPostBySlug, listPosts } from "@/lib/db/content";
+import { connectDB } from "@/lib/mongodb";
+import RedirectModel from "@/lib/models/Redirect";
 
-export const dynamic = "force-dynamic";
 export const revalidate = 1800;
 
 async function getPost(slug: string) {
-  return getPublishedPostBySlug(slug);
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const res = await fetch(`${base}/api/posts?slug=${slug}&status=published`, {
+    next: { revalidate: 1800 },
+  });
+  if (!res.ok) return null;
+  const { posts } = await res.json();
+  return posts?.find((p: { slug: string }) => p.slug === slug) ?? null;
 }
 
 async function getRelated(categoryId: string, excludeSlug: string) {
-  const { posts } = await listPosts({ category: categoryId, limit: 4, status: "published" });
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const res = await fetch(
+    `${base}/api/posts?category=${categoryId}&limit=4&status=published`,
+    { next: { revalidate: 1800 } }
+  );
+  if (!res.ok) return [];
+  const { posts } = await res.json();
   return posts.filter((p: { slug: string }) => p.slug !== excludeSlug).slice(0, 3);
 }
 
@@ -60,11 +71,8 @@ export default async function SinglePostPage({
 }) {
   const post = await getPost(params.slug);
   if (!post) {
-    const db = getD1();
-    const doc = await db
-      .prepare("SELECT destination, type FROM redirects WHERE source = ? AND active = 1")
-      .bind(`/blog/${params.slug}`)
-      .first<{ destination: string; type: number }>();
+    await connectDB();
+    const doc = await RedirectModel.findOne({ source: `/blog/${params.slug}`, active: true }).lean() as { destination: string; type: number } | null;
     if (doc) {
       if (doc.type === 301) permanentRedirect(doc.destination);
       else redirect(doc.destination);

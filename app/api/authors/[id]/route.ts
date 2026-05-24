@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { AuthorRow, getD1, mapAuthor, nowIso } from "@/lib/db/d1";
+import { connectDB } from "@/lib/mongodb";
+import Author from "@/lib/models/Author";
 
 export async function PATCH(
   req: NextRequest,
@@ -10,27 +11,18 @@ export async function PATCH(
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const db = getD1();
-  const body = await req.json() as Record<string, string>;
-  const existing = await db.prepare("SELECT * FROM authors WHERE id = ?").bind(params.id).first<AuthorRow>();
-  if (!existing) return NextResponse.json({ error: "Author not found" }, { status: 404 });
+  await connectDB();
+  const { name, bio, photo, twitter, website } = await req.json();
+  const update: Record<string, unknown> = {};
+  if (name !== undefined)    update.name    = name;
+  if (bio !== undefined)     update.bio     = bio;
+  if (photo !== undefined)   update.photo   = photo;
+  if (twitter !== undefined) update.twitter = twitter;
+  if (website !== undefined) update.website = website;
 
-  await db.prepare(`
-    UPDATE authors
-    SET name = ?, bio = ?, photo = ?, twitter = ?, website = ?, updated_at = ?
-    WHERE id = ?
-  `).bind(
-    body.name ?? existing.name,
-    body.bio ?? existing.bio,
-    body.photo ?? existing.photo,
-    body.twitter ?? existing.twitter,
-    body.website ?? existing.website,
-    nowIso(),
-    params.id
-  ).run();
-
-  const row = await db.prepare("SELECT * FROM authors WHERE id = ?").bind(params.id).first<AuthorRow>();
-  return NextResponse.json(row ? mapAuthor(row) : null);
+  const author = await Author.findByIdAndUpdate(params.id, update, { new: true });
+  if (!author) return NextResponse.json({ error: "Author not found" }, { status: 404 });
+  return NextResponse.json(author);
 }
 
 export async function DELETE(
@@ -40,10 +32,8 @@ export async function DELETE(
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const db = getD1();
-  const existing = await db.prepare("SELECT id FROM authors WHERE id = ?").bind(params.id).first();
-  if (!existing) return NextResponse.json({ error: "Author not found" }, { status: 404 });
-
-  await db.prepare("DELETE FROM authors WHERE id = ?").bind(params.id).run();
+  await connectDB();
+  const author = await Author.findByIdAndDelete(params.id);
+  if (!author) return NextResponse.json({ error: "Author not found" }, { status: 404 });
   return NextResponse.json({ success: true });
 }

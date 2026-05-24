@@ -1,7 +1,8 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { getD1, UserRow } from "./db/d1";
+import { connectDB } from "./mongodb";
+import User from "./models/User";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,18 +15,15 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const db = getD1();
-        const user = await db
-          .prepare("SELECT * FROM users WHERE email = ?")
-          .bind(credentials.email.toLowerCase().trim())
-          .first<UserRow>();
+        await connectDB();
+        const user = await User.findOne({ email: credentials.email });
         if (!user) return null;
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
 
         return {
-          id: user.id,
+          id: user._id.toString(),
           email: user.email,
           name: user.name,
           role: user.role,
@@ -35,7 +33,7 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 8 * 60 * 60,
+    maxAge: 8 * 60 * 60, // 8 hours hard expiry
   },
   cookies: {
     sessionToken: {
@@ -47,6 +45,7 @@ export const authOptions: NextAuthOptions = {
         sameSite: "lax" as const,
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        // no maxAge = session cookie, deleted when browser closes
       },
     },
   },

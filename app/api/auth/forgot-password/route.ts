@@ -1,30 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { getD1, nowIso, UserRow } from "@/lib/db/d1";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/lib/models/User";
 import { sendPasswordResetEmail } from "@/lib/utils/email";
 
 export async function POST(req: NextRequest) {
-  const { email } = await req.json() as { email?: string };
+  const { email } = await req.json();
   if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
 
-  const db = getD1();
-  const user = await db
-    .prepare("SELECT * FROM users WHERE email = ?")
-    .bind(email.toLowerCase().trim())
-    .first<UserRow>();
+  await connectDB();
+  const user = await User.findOne({ email: email.toLowerCase().trim() });
 
+  // Always return success to prevent email enumeration
   if (!user) return NextResponse.json({ ok: true });
 
-  const token = crypto.randomBytes(32).toString("hex");
-  const expiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const token   = crypto.randomBytes(32).toString("hex");
+  const expiry  = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-  await db.prepare(`
-    UPDATE users
-    SET reset_token = ?, reset_token_expiry = ?, updated_at = ?
-    WHERE id = ?
-  `).bind(token, expiry, nowIso(), user.id).run();
+  user.resetToken       = token;
+  user.resetTokenExpiry = expiry;
+  await user.save();
 
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const base     = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const resetUrl = `${base}/login/reset-password?token=${token}`;
 
   try {
