@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - codex/cloudflare-migration
   workflow_dispatch:
 
 jobs:
