@@ -29,12 +29,12 @@ A production-grade Amazon affiliate blogging website **exclusively focused on th
 |---|---|
 | Frontend | Next.js 14 (App Router) |
 | Backend | Node.js via Next.js API Routes |
-| Database | MongoDB + Mongoose |
+| Database | Cloudflare D1 (SQLite) |
 | Auth | NextAuth.js (Credentials) |
 | Styling | Tailwind CSS |
 | Rich Text Editor | Tiptap |
-| Image Uploads | Cloudinary |
-| Deployment | Vercel |
+| Image Uploads | Cloudflare R2 |
+| Deployment | Cloudflare Workers |
 
 ---
 
@@ -57,7 +57,7 @@ A production-grade Amazon affiliate blogging website **exclusively focused on th
 - ✅ Real-time SEO checklist
 - 🔗 Auto slug generation from title (manually editable)
 - 📅 Post scheduling (publish later)
-- 🖼️ Drag & drop image uploader via Cloudinary
+- 🖼️ Drag & drop image uploader via Cloudflare R2
 - 🛍️ Amazon affiliate product manager per post
 - 📂 Sub-category management
 
@@ -148,7 +148,6 @@ A production-grade Amazon affiliate blogging website **exclusively focused on th
 ### Prerequisites
 - Node.js 22+
 - Cloudflare account (Workers + D1 + R2)
-- Cloudinary account (free tier works)
 - Amazon Associates account
 
 ### 1. Clone the repository
@@ -176,11 +175,6 @@ Open `.env.local` and fill in all values:
 # NextAuth
 NEXTAUTH_SECRET=your-long-random-secret-key
 NEXTAUTH_URL=http://localhost:3000
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
 
 # Cloudflare R2
 R2_PUBLIC_URL=https://media.yourdomain.com
@@ -239,11 +233,12 @@ CI/CD via GitHub Actions auto-deploys on every push to `master`.
 
 ---
 
-## 🖼️ Cloudinary Setup
+## 🖼️ Cloudflare R2 Setup
 
-1. Sign up at [cloudinary.com](https://cloudinary.com) — free tier gives 25GB storage
-2. Dashboard → copy **Cloud Name**, **API Key**, **API Secret**
-3. Add to `.env.local`
+1. Cloudflare dashboard → R2 → `homedeskessentials-media` bucket
+2. Settings → Enable public access (ya custom domain add karo)
+3. Copy the public URL
+4. Add to Cloudflare Workers env vars: `R2_PUBLIC_URL=https://your-r2-url`
 
 ---
 
@@ -305,7 +300,6 @@ Inside the post editor → **Affiliate Products** panel:
   "@tiptap/extension-image": "^2.x",
   "@tiptap/extension-link": "^2.x",
   "@tiptap/extension-table": "^2.x",
-  "cloudinary": "^2.x",
   "tailwindcss": "^3.x",
   "lucide-react": "latest",
   "react-hook-form": "^7.x",
