@@ -25,7 +25,8 @@ export default function MediaPage() {
         setUploads((prev) => [{ url, name: file.name }, ...prev]);
         toast.success(`${file.name} uploaded`);
       } else {
-        toast.error(`Failed to upload ${file.name}`);
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error ?? `Failed to upload ${file.name}`);
       }
     }
     setUploading(false);
