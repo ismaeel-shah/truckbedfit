@@ -27,8 +27,9 @@ export async function POST(req: NextRequest) {
 
   try {
     const { env } = getCloudflareContext();
-    const bucket = (env as unknown as AppCloudflareEnv).MEDIA_BUCKET;
-    const publicUrl = process.env.R2_PUBLIC_URL;
+    const cfEnv = env as unknown as AppCloudflareEnv;
+    const bucket = cfEnv.MEDIA_BUCKET;
+    const publicUrl = cfEnv.R2_PUBLIC_URL ?? process.env.R2_PUBLIC_URL;
 
     if (!bucket) return NextResponse.json({ error: "R2 bucket not configured" }, { status: 500 });
     if (!publicUrl) return NextResponse.json({ error: "R2_PUBLIC_URL env var not set" }, { status: 500 });

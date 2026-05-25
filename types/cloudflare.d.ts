@@ -8,4 +8,5 @@ interface AppCloudflareEnv {
     ): Promise<unknown>;
   };
   ASSETS: unknown;
+  R2_PUBLIC_URL?: string;
 }
