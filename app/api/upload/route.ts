@@ -4,12 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { v2 as cloudinary } from "cloudinary";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
 function cleanFilename(name: string) {
   return name
     .toLowerCase()
@@ -27,15 +21,42 @@ async function uploadToR2(file: File, buffer: Buffer) {
 
     const key = `uploads/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${cleanFilename(file.name || "upload")}`;
     await bucket.put(key, buffer, {
-      httpMetadata: {
-        contentType: file.type || "application/octet-stream",
-      },
+      httpMetadata: { contentType: file.type || "application/octet-stream" },
     });
 
     return {
       url: `${publicUrl.replace(/\/$/, "")}/${key}`,
       publicId: key,
     };
+  } catch {
+    return null;
+  }
+}
+
+async function uploadToCloudinary(buffer: Buffer) {
+  const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = process.env;
+  if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
+    return null;
+  }
+
+  cloudinary.config({
+    cloud_name: CLOUDINARY_CLOUD_NAME,
+    api_key: CLOUDINARY_API_KEY,
+    api_secret: CLOUDINARY_API_SECRET,
+  });
+
+  try {
+    const result = await new Promise<{ secure_url: string; public_id: string }>(
+      (resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream({ folder: "homedeskessentials" }, (error, result) => {
+            if (error || !result) return reject(error ?? new Error("No result"));
+            resolve(result);
+          })
+          .end(buffer);
+      }
+    );
+    return { url: result.secure_url, publicId: result.public_id };
   } catch {
     return null;
   }
@@ -61,16 +82,11 @@ export async function POST(req: NextRequest) {
   const r2Result = await uploadToR2(file, buffer);
   if (r2Result) return NextResponse.json(r2Result);
 
-  const result = await new Promise<{ secure_url: string; public_id: string }>(
-    (resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream({ folder: "worknest" }, (error, result) => {
-          if (error || !result) return reject(error);
-          resolve(result);
-        })
-        .end(buffer);
-    }
-  );
+  const cloudinaryResult = await uploadToCloudinary(buffer);
+  if (cloudinaryResult) return NextResponse.json(cloudinaryResult);
 
-  return NextResponse.json({ url: result.secure_url, publicId: result.public_id });
+  return NextResponse.json(
+    { error: "No storage configured. Add Cloudinary secrets or R2_PUBLIC_URL in Cloudflare Workers." },
+    { status: 500 }
+  );
 }
