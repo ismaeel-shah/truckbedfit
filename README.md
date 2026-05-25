@@ -128,11 +128,9 @@ A production-grade Amazon affiliate blogging website **exclusively focused on th
 │       ├── StatsCard.tsx
 │       └── PostsTable.tsx
 ├── lib/
-│   ├── mongodb.ts
-│   ├── models/
-│   │   ├── Post.ts
-│   │   ├── Category.ts
-│   │   └── User.ts
+│   ├── db/
+│   │   ├── d1.ts
+│   │   └── content.ts
 │   └── utils/
 │       ├── slugify.ts
 │       ├── seo.ts
@@ -148,8 +146,8 @@ A production-grade Amazon affiliate blogging website **exclusively focused on th
 ## ⚙️ Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- MongoDB Atlas account (free tier works)
+- Node.js 22+
+- Cloudflare account (Workers + D1 + R2)
 - Cloudinary account (free tier works)
 - Amazon Associates account
 
@@ -175,9 +173,6 @@ cp .env.local.example .env.local
 Open `.env.local` and fill in all values:
 
 ```env
-# MongoDB
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/worknest
-
 # NextAuth
 NEXTAUTH_SECRET=your-long-random-secret-key
 NEXTAUTH_URL=http://localhost:3000
@@ -187,12 +182,20 @@ CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 
+# Cloudflare R2
+R2_PUBLIC_URL=https://media.yourdomain.com
+
 # Site
 NEXT_PUBLIC_SITE_URL=https://yourdomain.com
-NEXT_PUBLIC_SITE_NAME=WorkNest
+NEXT_PUBLIC_SITE_NAME=Home Desk Essentials
 
 # Amazon Associates
 AMAZON_ASSOCIATE_TAG=yourtag-20
+
+# Email (Resend)
+RESEND_API_KEY=re_your_api_key
+RESEND_FROM="Home Desk Essentials <noreply@yourdomain.com>"
+CONTACT_EMAIL=you@yourdomain.com
 ```
 
 ### 4. Seed the database
@@ -218,40 +221,21 @@ npm run dev
 
 ---
 
-## 🌐 Deploying to Vercel
+## 🌐 Deploying to Cloudflare
 
 ### Step 1 — Push to GitHub
 ```bash
 git add .
 git commit -m "initial commit"
-git push origin main
+git push origin master
 ```
 
-### Step 2 — Import on Vercel
-1. Go to [vercel.com](https://vercel.com) → New Project
-2. Import your GitHub repository
-3. Framework: **Next.js** (auto-detected)
+### Step 2 — Build & Deploy
+```bash
+npm run cf:deploy
+```
 
-### Step 3 — Add Environment Variables
-In Vercel dashboard → Project Settings → Environment Variables — add all variables from your `.env.local`
-
-### Step 4 — MongoDB Atlas Network Access
-In MongoDB Atlas → Network Access → Add IP Address → `0.0.0.0/0`
-(Required because Vercel uses dynamic IPs)
-
-### Step 5 — Deploy
-Click Deploy. Every future push to `main` auto-deploys.
-
----
-
-## 🗄️ MongoDB Atlas Setup
-
-1. Sign up at [mongodb.com/atlas](https://www.mongodb.com/atlas) — free tier is enough to start
-2. Create a new cluster (M0 Free)
-3. Database Access → Add Database User (username + password)
-4. Network Access → Allow from anywhere (`0.0.0.0/0`)
-5. Connect → Drivers → copy your connection string
-6. Replace `<password>` in the string and add it to `MONGODB_URI`
+CI/CD via GitHub Actions auto-deploys on every push to `master`.
 
 ---
 
@@ -315,7 +299,6 @@ Inside the post editor → **Affiliate Products** panel:
   "next": "14.x",
   "next-auth": "^4.x",
   "next-themes": "^0.x",
-  "mongoose": "^8.x",
   "bcryptjs": "^2.x",
   "@tiptap/react": "^2.x",
   "@tiptap/starter-kit": "^2.x",
