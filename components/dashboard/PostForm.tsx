@@ -46,7 +46,7 @@ interface PostData {
   featuredImage: string;
   featuredImageAlt: string;
   category: string;
-  tags: string | string[];
+  tags: string;
   status: "draft" | "published" | "scheduled";
   scheduledAt: string;
   metaTitle: string;
@@ -132,7 +132,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     const payload = {
       ...form,
       status: status ?? form.status,
-      tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
+      tags: (form.tags as string).split(",").map((t: string) => t.trim()).filter(Boolean),
     };
 
     const url = initial?._id ? `/api/posts/${initial._id}` : "/api/posts";
