@@ -46,7 +46,7 @@ interface PostData {
   featuredImage: string;
   featuredImageAlt: string;
   category: string;
-  tags: string;
+  tags: string | string[];
   status: "draft" | "published" | "scheduled";
   scheduledAt: string;
   metaTitle: string;
