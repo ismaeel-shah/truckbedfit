@@ -1,13 +1,21 @@
 import { notFound } from "next/navigation";
 import PostForm from "@/components/dashboard/PostForm";
+import { getD1, mapPost, postJoins, postSelect, PostRow } from "@/lib/db/d1";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Edit Post" };
 
 async function getPost(id: string) {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const res = await fetch(`${base}/api/posts/${id}`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const db = getD1();
+    const row = await db
+      .prepare(`SELECT ${postSelect} FROM posts p ${postJoins} WHERE p.id = ?`)
+      .bind(id)
+      .first<PostRow>();
+    return row ? mapPost(row) : null;
+  } catch {
+    return null;
+  }
 }
 
 export default async function EditPostPage({ params }: { params: { id: string } }) {
