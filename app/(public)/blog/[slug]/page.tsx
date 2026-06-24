@@ -142,7 +142,7 @@ export default async function SinglePostPage({
 
         <div className="grid lg:grid-cols-[1fr_280px] gap-10">
           {/* Main content */}
-          <article>
+          <article className="min-w-0">
             {/* Header */}
             <header className="mb-8">
               {post.category && (
