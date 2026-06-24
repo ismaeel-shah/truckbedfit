@@ -154,8 +154,8 @@
 
 .prose .table-wrapper table {
   display: table !important;
-  width: 100% !important;
-  min-width: 480px;
+  width: max-content !important;
+  min-width: 100%;
   border-collapse: collapse !important;
   margin: 0 !important;
   font-size: 0.875rem !important;
