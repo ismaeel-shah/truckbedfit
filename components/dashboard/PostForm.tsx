@@ -371,34 +371,42 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                   </button>
                 </div>
 
-                <div className="flex gap-4">
-                  {/* Image preview */}
-                  <div className="shrink-0 w-20 h-20 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
+                {/* Row 1: Name + Amazon Link */}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {[
+                    { field: "name",      label: "Name" },
+                    { field: "amazonUrl", label: "Amazon Link" },
+                  ].map(({ field, label }) => (
+                    <div key={field}>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
+                      <input
+                        type="text"
+                        value={product[field as keyof typeof product] as string}
+                        onChange={(e) => updateProduct(i, field, e.target.value)}
+                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Row 2: Image URL + Preview */}
+                <div className="flex gap-3 items-start">
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Image URL</label>
+                    <input
+                      type="text"
+                      value={product.imageUrl}
+                      onChange={(e) => updateProduct(i, "imageUrl", e.target.value)}
+                      className="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  <div className="shrink-0 mt-5 w-16 h-16 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
                     {product.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={product.imageUrl} alt="preview" className="w-full h-full object-contain" />
                     ) : (
-                      <span className="text-xs text-slate-300 text-center px-1">No image</span>
+                      <span className="text-[10px] text-slate-300 text-center px-1">No image</span>
                     )}
-                  </div>
-
-                  {/* Fields */}
-                  <div className="flex-1 space-y-2">
-                    {[
-                      { field: "name",      label: "Name" },
-                      { field: "amazonUrl", label: "Amazon Link" },
-                      { field: "imageUrl",  label: "Image URL" },
-                    ].map(({ field, label }) => (
-                      <div key={field}>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
-                        <input
-                          type="text"
-                          value={product[field as keyof typeof product] as string}
-                          onChange={(e) => updateProduct(i, field, e.target.value)}
-                          className="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent"
-                        />
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
