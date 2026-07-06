@@ -161,12 +161,17 @@ export default async function SinglePostPage({
                   <Clock size={14} />
                   {post.readingTime} min read
                 </span>
-                {post.publishedAt && (
+                {post.updatedAt && post.updatedAt !== post.publishedAt ? (
+                  <span className="flex items-center gap-1.5" title={`Published ${post.publishedAt ? format(new Date(post.publishedAt), "MMM d, yyyy") : ""}`}>
+                    <Calendar size={14} />
+                    Updated {format(new Date(post.updatedAt), "MMM d, yyyy")}
+                  </span>
+                ) : post.publishedAt ? (
                   <span className="flex items-center gap-1.5">
                     <Calendar size={14} />
                     {format(new Date(post.publishedAt), "MMM d, yyyy")}
                   </span>
-                )}
+                ) : null}
               </div>
             </header>
 
