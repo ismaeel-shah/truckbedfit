@@ -14,6 +14,7 @@ interface Post {
   status: string;
   category?: { name: string; icon: string };
   publishedAt?: string;
+  updatedAt?: string;
   views: number;
   readingTime: number;
 }
@@ -119,7 +120,7 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
             <th className="pb-3 font-medium">Status</th>
             <th className="pb-3 font-medium">Category</th>
             <th className="pb-3 font-medium">Published</th>
-            <th className="pb-3 font-medium">Read</th>
+            <th className="pb-3 font-medium">Updated</th>
             <th className="pb-3 font-medium">Actions</th>
           </tr>
         </thead>
@@ -152,7 +153,7 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
                 {post.publishedAt ? format(new Date(post.publishedAt), "MMM d, yyyy") : "—"}
               </td>
               <td className="py-3 pr-4 text-slate-400 text-xs">
-                {post.readingTime}m
+                {post.updatedAt ? format(new Date(post.updatedAt), "MMM d, yyyy") : "—"}
               </td>
               <td className="py-3">
                 <div className="flex items-center gap-2">
