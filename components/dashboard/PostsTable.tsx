@@ -153,7 +153,9 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
                 {post.publishedAt ? format(new Date(post.publishedAt), "MMM d, yyyy") : "—"}
               </td>
               <td className="py-3 pr-4 text-slate-400 text-xs">
-                {post.updatedAt ? format(new Date(post.updatedAt), "MMM d, yyyy") : "—"}
+                {post.updatedAt && post.publishedAt && new Date(post.updatedAt) > new Date(post.publishedAt)
+                  ? format(new Date(post.updatedAt), "MMM d, yyyy")
+                  : "—"}
               </td>
               <td className="py-3">
                 <div className="flex items-center gap-2">
