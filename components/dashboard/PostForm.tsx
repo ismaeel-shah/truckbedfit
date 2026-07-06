@@ -366,75 +366,40 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                       Product {i + 1}
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeProduct(i)}
-                    className="text-red-400 hover:text-red-500"
-                  >
+                  <button type="button" onClick={() => removeProduct(i)} className="text-red-400 hover:text-red-500">
                     <Trash2 size={15} />
                   </button>
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {["name", "amazonUrl", "imageUrl", "price", "badge"].map((field) => (
-                    <div key={field}>
-                      <label className="block text-xs font-medium text-slate-500 mb-1 capitalize">
-                        {field === "amazonUrl" ? "Amazon URL" : field === "imageUrl" ? "Image URL" : field}
-                      </label>
-                      <input
-                        type="text"
-                        value={product[field as keyof typeof product] as string}
-                        onChange={(e) => updateProduct(i, field, e.target.value)}
-                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent"
-                      />
-                    </div>
-                  ))}
-                </div>
+                <div className="flex gap-4">
+                  {/* Image preview */}
+                  <div className="shrink-0 w-20 h-20 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
+                    {product.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={product.imageUrl} alt="preview" className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-xs text-slate-300 text-center px-1">No image</span>
+                    )}
+                  </div>
 
-                {/* Pros */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Pros</label>
-                  {product.pros.map((pro, vi) => (
-                    <div key={vi} className="flex gap-2 mb-1">
-                      <input
-                        type="text"
-                        value={pro}
-                        onChange={(e) => updateProCon(i, "pros", vi, e.target.value)}
-                        placeholder="Add a pro"
-                        className="flex-1 px-2 py-1 text-sm rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent"
-                      />
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => updateProduct(i, "pros", [...product.pros, ""])}
-                    className="text-xs text-accent hover:underline"
-                  >
-                    + Add pro
-                  </button>
-                </div>
-
-                {/* Cons */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Cons</label>
-                  {product.cons.map((con, vi) => (
-                    <div key={vi} className="flex gap-2 mb-1">
-                      <input
-                        type="text"
-                        value={con}
-                        onChange={(e) => updateProCon(i, "cons", vi, e.target.value)}
-                        placeholder="Add a con"
-                        className="flex-1 px-2 py-1 text-sm rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent"
-                      />
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => updateProduct(i, "cons", [...product.cons, ""])}
-                    className="text-xs text-accent hover:underline"
-                  >
-                    + Add con
-                  </button>
+                  {/* Fields */}
+                  <div className="flex-1 space-y-2">
+                    {[
+                      { field: "name",      label: "Name" },
+                      { field: "amazonUrl", label: "Amazon Link" },
+                      { field: "imageUrl",  label: "Image URL" },
+                    ].map(({ field, label }) => (
+                      <div key={field}>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
+                        <input
+                          type="text"
+                          value={product[field as keyof typeof product] as string}
+                          onChange={(e) => updateProduct(i, field, e.target.value)}
+                          className="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
