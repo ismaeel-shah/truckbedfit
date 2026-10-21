@@ -1,6 +1,7 @@
 "use client";
 
 import { runSEOChecklist } from "@/lib/utils/seo";
+import { SITE_URL } from "@/lib/site";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 interface SEOPanelProps {
@@ -22,7 +23,7 @@ export default function SEOPanel({ data, onChange }: SEOPanelProps) {
   const siteUrl =
     typeof window !== "undefined"
       ? window.location.origin
-      : "https://worknest.example.com";
+      : SITE_URL;
 
   return (
     <div className="space-y-5">
@@ -70,7 +71,7 @@ export default function SEOPanel({ data, onChange }: SEOPanelProps) {
           type="text"
           value={data.focusKeyword}
           onChange={(e) => onChange("focusKeyword", e.target.value)}
-          placeholder="e.g. best ergonomic chair under 300"
+          placeholder="e.g. best tonneau cover for f-150"
           className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>

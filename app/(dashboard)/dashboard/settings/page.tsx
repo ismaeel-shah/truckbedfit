@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { Save, ChevronDown, ChevronUp } from "lucide-react";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 /* ── Pages whose SEO can be managed ── */
 const PAGES = [
@@ -45,6 +46,7 @@ const FIELD_HINTS: Record<string, string> = {
 
 export default function SettingsPage() {
   const { data: session } = useSession();
+  const isAdmin = (session?.user as { role?: string } | undefined)?.role === "admin";
   const [password, setPassword]     = useState({ current: "", next: "", confirm: "" });
   const [saving, setSaving]          = useState(false);
   const [openPage, setOpenPage]      = useState<string | null>(null);
@@ -104,7 +106,8 @@ export default function SettingsPage() {
 
       <div className="max-w-2xl space-y-6">
 
-        {/* ── Pages SEO ─────────────────────────────── */}
+        {/* ── Pages SEO (admins only) ───────────────── */}
+        {isAdmin && (
         <div className="card p-6">
           <h2 className="font-semibold text-primary dark:text-white mb-1">Pages SEO</h2>
           <p className="text-xs text-slate-400 mb-5">
@@ -179,6 +182,7 @@ export default function SettingsPage() {
             })}
           </div>
         </div>
+        )}
 
         {/* ── Account info ──────────────────────────── */}
         <div className="card p-6">
@@ -225,8 +229,8 @@ export default function SettingsPage() {
         <div className="card p-6">
           <h2 className="font-semibold text-primary dark:text-white mb-4">Site Info</h2>
           <div className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
-            <p><span className="font-medium text-primary dark:text-white">Site URL:</span> {process.env.NEXT_PUBLIC_SITE_URL ?? "Not set"}</p>
-            <p><span className="font-medium text-primary dark:text-white">Site Name:</span> {process.env.NEXT_PUBLIC_SITE_NAME ?? "Home Desk Essentials"}</p>
+            <p><span className="font-medium text-primary dark:text-white">Site URL:</span> {SITE_URL}</p>
+            <p><span className="font-medium text-primary dark:text-white">Site Name:</span> {SITE_NAME}</p>
           </div>
         </div>
 

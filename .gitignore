@@ -36,6 +36,12 @@ wrangler-preview*.log
 .open-next/
 .wrangler/
 
+# wrangler local secrets
+.dev.vars*
+
+# leftover data exports from the site this project was cloned from
+/migration-output/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { requireUser } from "@/lib/auth";
+import { getMediaBucket, MEDIA_PREFIX, toMediaItem } from "@/lib/media";
 
 function cleanFilename(name: string) {
   return name
@@ -12,8 +11,8 @@ function cleanFilename(name: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser();
+  if (response) return response;
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
@@ -26,27 +25,19 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { env } = getCloudflareContext();
-    const cfEnv = env as unknown as AppCloudflareEnv;
-    const bucket = cfEnv.MEDIA_BUCKET;
-    const publicUrl = cfEnv.R2_PUBLIC_URL ?? process.env.R2_PUBLIC_URL;
+    const bucket = getMediaBucket();
+    const key = `${MEDIA_PREFIX}${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${cleanFilename(file.name || "upload")}`;
+    const httpMetadata = { contentType: file.type || "application/octet-stream" };
+    const customMetadata = { originalName: (file.name || "upload").slice(0, 200) };
 
-    if (!bucket) return NextResponse.json({ error: "R2 bucket not configured" }, { status: 500 });
-    if (!publicUrl) return NextResponse.json({ error: "R2_PUBLIC_URL env var not set" }, { status: 500 });
+    await bucket.put(key, await file.arrayBuffer(), { httpMetadata, customMetadata });
 
-    const bytes = await file.arrayBuffer();
-    const key = `uploads/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${cleanFilename(file.name || "upload")}`;
-
-    await bucket.put(key, bytes, {
-      httpMetadata: { contentType: file.type || "application/octet-stream" },
-    });
-
-    return NextResponse.json({
-      url: `${publicUrl.replace(/\/$/, "")}/${key}`,
-      publicId: key,
-    });
+    const item = toMediaItem({ key, size: file.size, uploaded: new Date(), httpMetadata, customMetadata });
+    // `publicId` kept for older callers that expect it.
+    return NextResponse.json({ ...item, publicId: key });
   } catch (err) {
     console.error("R2 upload error:", err);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : "Upload failed";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

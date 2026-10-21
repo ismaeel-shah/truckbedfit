@@ -1,98 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionUser, requireUser } from "@/lib/auth";
 import { slugify } from "@/lib/utils/slugify";
 import { calculateReadingTime } from "@/lib/utils/readingTime";
-import { getD1, mapPost, nowIso, postJoins, postSelect, PostRow } from "@/lib/db/d1";
+import { getD1, isPostStatus, mapPost, nowIso, PostPayload, postJoins, postSelect, PostRow, toIsoOrNull } from "@/lib/db/d1";
+import { listPosts, PostStatusFilter } from "@/lib/db/content";
 
 function asInt(value: string | null, fallback: number) {
   const n = Number(value);
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
 }
 
-async function categoryIdForParam(db: ReturnType<typeof getD1>, category: string) {
-  if (/^[0-9a-fA-F-]{24,36}$/.test(category)) return category;
-  const row = await db.prepare("SELECT id FROM categories WHERE slug = ?").bind(category).first<{ id: string }>();
-  return row?.id ?? null;
-}
-
 export async function GET(req: NextRequest) {
-  const db = getD1();
   const { searchParams } = new URL(req.url);
-  const page = asInt(searchParams.get("page"), 1);
-  const limit = Math.min(asInt(searchParams.get("limit"), 10), 1000);
-  const category = searchParams.get("category");
-  const search = searchParams.get("search");
-  const status = searchParams.get("status");
-  const slug = searchParams.get("slug");
+  const requestedStatus = searchParams.get("status");
 
-  const session = await getServerSession(authOptions);
-  const where: string[] = [];
-  const values: unknown[] = [];
-
-  if (status && session && status !== "all") {
-    where.push("p.status = ?");
-    values.push(status);
-  } else if (!session || status !== "all") {
-    where.push("p.status = 'published'");
+  // Only signed-in users may list drafts/scheduled posts; everyone else sees published.
+  let status: PostStatusFilter = "published";
+  if (requestedStatus && (requestedStatus === "all" || isPostStatus(requestedStatus))) {
+    if (await getSessionUser()) status = requestedStatus;
   }
 
-  if (category) {
-    const categoryId = await categoryIdForParam(db, category);
-    where.push("p.category_id = ?");
-    values.push(categoryId ?? "__missing_category__");
-  }
+  const result = await listPosts({
+    page: asInt(searchParams.get("page"), 1),
+    limit: asInt(searchParams.get("limit"), 10),
+    category: searchParams.get("category") ?? undefined,
+    search: searchParams.get("search") ?? undefined,
+    slug: searchParams.get("slug") ?? undefined,
+    status,
+  });
 
-  if (slug) {
-    where.push("p.slug = ?");
-    values.push(slug);
-  }
-
-  if (search) {
-    where.push("(p.title LIKE ? OR p.excerpt LIKE ?)");
-    values.push(`%${search}%`, `%${search}%`);
-  }
-
-  const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
-  const skip = (page - 1) * limit;
-
-  const [postResult, countRow] = await Promise.all([
-    db.prepare(`
-      SELECT ${postSelect}
-      FROM posts p
-      ${postJoins}
-      ${whereSql}
-      ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.created_at DESC
-      LIMIT ? OFFSET ?
-    `).bind(...values, limit, skip).all<PostRow>(),
-    db.prepare(`
-      SELECT COUNT(*) AS total
-      FROM posts p
-      ${whereSql}
-    `).bind(...values).first<{ total: number }>(),
-  ]);
-
-  const total = countRow?.total ?? 0;
-  const posts = (postResult.results ?? []).map(mapPost);
-
-  return NextResponse.json({ posts, total, page, pages: Math.ceil(total / limit) });
+  return NextResponse.json(result);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser();
+  if (response) return response;
 
   const db = getD1();
-  const body = await req.json() as Record<string, any>;
-  const slug = body.slug || slugify(body.title ?? "");
-  const readingTime = calculateReadingTime(body.content ?? "");
+  const body = await req.json() as PostPayload;
+  const title = body.title?.trim();
+  const slug = body.slug ? slugify(body.slug) : slugify(title ?? "");
+  const status = body.status ?? "draft";
+  const scheduledAt = toIsoOrNull(body.scheduledAt);
+
+  if (!title) return NextResponse.json({ error: "Title is required" }, { status: 400 });
+  if (!slug) return NextResponse.json({ error: "Slug is required" }, { status: 400 });
+  if (!body.category) return NextResponse.json({ error: "Category is required" }, { status: 400 });
+  if (!isPostStatus(status)) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  if (status === "scheduled" && !scheduledAt) {
+    return NextResponse.json({ error: "Scheduled posts need a valid schedule date" }, { status: 400 });
+  }
 
   const existing = await db.prepare("SELECT id FROM posts WHERE slug = ?").bind(slug).first();
   if (existing) return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
 
   const now = nowIso();
   const id = crypto.randomUUID();
-  const publishedAt = body.status === "published" ? now : null;
+  const publishedAt = status === "published" ? now : null;
 
   await db.prepare(`
     INSERT INTO posts (
@@ -104,7 +68,7 @@ export async function POST(req: NextRequest) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id,
-    body.title ?? "",
+    title,
     slug,
     body.excerpt ?? "",
     body.content ?? "",
@@ -113,11 +77,11 @@ export async function POST(req: NextRequest) {
     body.category,
     body.author || null,
     JSON.stringify(body.tags ?? []),
-    body.status ?? "draft",
+    status,
     publishedAt,
-    body.scheduledAt || null,
+    status === "scheduled" ? scheduledAt : null,
     0,
-    readingTime,
+    calculateReadingTime(body.content ?? ""),
     body.metaTitle ?? "",
     body.metaDescription ?? "",
     body.focusKeyword ?? "",

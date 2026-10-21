@@ -5,10 +5,10 @@
 @layer base {
   :root {
     --background: #F8FAFC;
-    --foreground: #1B2A3B;
+    --foreground: #1F2328;
   }
   .dark {
-    --background: #0D1520;
+    --background: #111315;
     --foreground: #E2E8F0;
   }
   html { scroll-behavior: smooth; }
@@ -49,7 +49,7 @@
            bg-accent/10 text-accent border border-accent/20;
   }
   .gradient-text {
-    @apply bg-gradient-to-r from-accent to-teal-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-accent to-amber-500 bg-clip-text text-transparent;
   }
 }
 
@@ -84,24 +84,24 @@
 }
 
 .tiptap-editor .ProseMirror img.ProseMirror-selectednode {
-  outline: 3px solid #2DD4BF !important;
+  outline: 3px solid #EA580C !important;
   outline-offset: 3px !important;
 }
 
 /* ── Blog content links ───────────────────────────────────────── */
 .prose a {
-  color: #2DD4BF;
+  color: #EA580C;
   font-weight: 600;
   text-decoration: none;
-  border-bottom: 2px solid rgba(45, 212, 191, 0.35);
+  border-bottom: 2px solid rgba(234, 88, 12, 0.35);
   padding-bottom: 1px;
   transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   border-radius: 2px;
 }
 .prose a:hover {
-  color: #0f9e8e;
-  border-bottom-color: #2DD4BF;
-  background: rgba(45, 212, 191, 0.08);
+  color: #C2410C;
+  border-bottom-color: #EA580C;
+  background: rgba(234, 88, 12, 0.08);
   padding-inline: 3px;
   margin-inline: -3px;
 }
@@ -163,7 +163,7 @@
 
 /* Header row */
 .prose .table-wrapper thead tr {
-  background: #1B2A3B !important;
+  background: #1F2328 !important;
 }
 .prose .table-wrapper th {
   color: #ffffff !important;
@@ -205,13 +205,13 @@
 
 /* Row hover */
 .prose .table-wrapper tbody tr:hover td {
-  background: #f0fdfa !important;
-  color: #0f766e !important;
+  background: #FFF7ED !important;
+  color: #9A3412 !important;
   transition: background 0.15s ease, color 0.15s ease;
 }
 .dark .prose .table-wrapper tbody tr:hover td {
-  background: rgba(45, 212, 191, 0.08) !important;
-  color: #2DD4BF !important;
+  background: rgba(234, 88, 12, 0.08) !important;
+  color: #EA580C !important;
 }
 
 /* ── Frontend blog post images ────────────────────────────────── */
@@ -240,8 +240,8 @@
   50% { transform: translateY(-12px); }
 }
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(45,212,191,0.3); }
-  50% { box-shadow: 0 0 40px rgba(45,212,191,0.6); }
+  0%, 100% { box-shadow: 0 0 20px rgba(234, 88, 12,0.3); }
+  50% { box-shadow: 0 0 40px rgba(234, 88, 12,0.6); }
 }
 @keyframes shimmer {
   0% { background-position: -1000px 0; }
@@ -249,4 +249,19 @@
 }
 .animate-float { animation: float 4s ease-in-out infinite; }
 .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+
+/* ── Rugged "garage" surfaces (homepage) ─────────────────────── */
+/* Faint diagonal tread lines for dark panels */
+.bg-stripes {
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0 2px, transparent 2px 14px);
+}
+/* Orange/charcoal hazard band */
+.hazard-stripe {
+  background-image: repeating-linear-gradient(-45deg, #EA580C 0 14px, #1F2328 14px 28px);
+}
+/* Outlined numerals for ranked lists */
+.text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px #EA580C;
+}
 

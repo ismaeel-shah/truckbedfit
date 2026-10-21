@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Clock, ArrowRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { imgLoadingProps } from "@/lib/utils/imageProps";
 
 interface BlogCardProps {
   post: {
@@ -15,9 +16,11 @@ interface BlogCardProps {
   };
   featured?: boolean;
   variant?: "default" | "horizontal" | "minimal";
+  /** Above-the-fold card: load its image immediately instead of lazily. */
+  priority?: boolean;
 }
 
-export default function BlogCard({ post, featured = false, variant = "default" }: BlogCardProps) {
+export default function BlogCard({ post, featured = false, variant = "default", priority = false }: BlogCardProps) {
   const timeAgo = post.publishedAt
     ? formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true })
     : "Draft";
@@ -33,6 +36,7 @@ export default function BlogCard({ post, featured = false, variant = "default" }
               src={post.featuredImage}
               alt={post.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              {...imgLoadingProps(priority)}
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent/30 flex items-center justify-center">
@@ -70,7 +74,7 @@ export default function BlogCard({ post, featured = false, variant = "default" }
             href={`/blog/${post.slug}`}
             className="mt-auto inline-flex items-center gap-2 text-accent font-semibold text-sm hover:gap-3 transition-all duration-200"
           >
-            Read Guide <ArrowRight size={15} />
+            Read Guide<span className="sr-only">: {post.title}</span> <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </div>
       </article>
@@ -87,6 +91,7 @@ export default function BlogCard({ post, featured = false, variant = "default" }
             src={post.featuredImage}
             alt={post.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            {...imgLoadingProps(priority)}
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-accent/20 flex items-center justify-center">
@@ -120,7 +125,7 @@ export default function BlogCard({ post, featured = false, variant = "default" }
           href={`/blog/${post.slug}`}
           className="inline-flex items-center gap-1.5 text-accent text-sm font-semibold hover:gap-2.5 transition-all duration-200"
         >
-          Read more <ArrowRight size={14} />
+          Read more<span className="sr-only">: {post.title}</span> <ArrowRight size={14} aria-hidden="true" />
         </Link>
       </div>
     </article>

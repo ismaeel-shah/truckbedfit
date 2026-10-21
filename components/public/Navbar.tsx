@@ -1,24 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, X, Home, BookOpen, Tag, Info } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Menu, X, Home, BookOpen, Info, LayoutGrid, ChevronDown, ArrowRight } from "lucide-react";
+import { useState, useEffect, useRef, useId } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
+import Logo from "@/components/Logo";
 
-const NAV_LINKS = [
-  { label: "Home",     href: "/",       icon: Home },
-  { label: "Blog",     href: "/blog",   icon: BookOpen },
-  { label: "Chairs",   href: "/category/ergonomic-chairs",    icon: Tag },
-  { label: "Desks",    href: "/category/desks-workstations",  icon: Tag },
-  { label: "Monitors", href: "/category/monitors-displays",   icon: Tag },
-  { label: "About",    href: "/about",  icon: Info },
+export interface NavCategory {
+  name: string;
+  slug: string;
+  icon: string;
+  postCount: number;
+}
+
+const LINKS_BEFORE = [
+  { label: "Home", href: "/",     icon: Home },
+  { label: "Blog", href: "/blog", icon: BookOpen },
+];
+const LINKS_AFTER = [
+  { label: "About", href: "/about", icon: Info },
 ];
 
-export default function Navbar() {
-  const [open, setOpen]         = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+const HOVER_CLOSE_DELAY_MS = 150;
+
+function isActive(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
+function guideCount(n: number) {
+  return `${n} ${n === 1 ? "guide" : "guides"}`;
+}
+
+const desktopLinkClass = (active: boolean) =>
+  clsx(
+    "inline-flex items-center gap-1 px-3 py-2 rounded-md font-heading text-[15px] font-semibold uppercase tracking-wide transition-colors duration-150",
+    active ? "bg-accent/10 text-accent" : "text-slate-700 hover:bg-slate-100 hover:text-primary"
+  );
+
+const mobileLinkClass = (active: boolean) =>
+  clsx(
+    "flex w-full items-center gap-3 px-3 py-2.5 rounded-md font-heading text-base font-semibold uppercase tracking-wide transition-colors",
+    active ? "bg-accent/10 text-accent" : "text-slate-700 hover:bg-slate-50"
+  );
+
+export default function Navbar({ categories = [] }: { categories?: NavCategory[] }) {
+  const [open, setOpen]                     = useState(false);
+  const [mobileCatsOpen, setMobileCatsOpen] = useState(false);
+  const [scrolled, setScrolled]             = useState(false);
   const pathname = usePathname();
+  const mobileCatsId = useId();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -26,77 +57,86 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Close the mobile menu after navigating.
+  useEffect(() => {
+    setOpen(false);
+    setMobileCatsOpen(false);
+  }, [pathname]);
+
+  // While the mobile menu is open: freeze page scroll (overflow on <html> keeps the
+  // scroll position and the sticky header intact), close on Escape, and close if the
+  // viewport grows to the desktop layout where the menu is hidden.
+  useEffect(() => {
+    if (!open) return;
+    const html = document.documentElement;
+    const previousOverflow = html.style.overflow;
+    html.style.overflow = "hidden";
+
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const onViewportChange = (e: MediaQueryListEvent) => { if (e.matches) setOpen(false); };
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    desktop.addEventListener("change", onViewportChange);
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      html.style.overflow = previousOverflow;
+      desktop.removeEventListener("change", onViewportChange);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const categoriesActive = pathname.startsWith("/category");
+
   return (
+    <>
+    {/* Backdrop behind the mobile menu. Rendered outside <header> because the header's
+        backdrop-blur would otherwise trap this fixed element inside it. */}
+    {open && (
+      <div
+        className="fixed inset-x-0 bottom-0 top-[68px] z-40 touch-none bg-black/40 md:hidden"
+        onClick={() => setOpen(false)}
+        aria-hidden="true"
+      />
+    )}
     <header
       className={clsx(
         "sticky top-0 z-50 transition-all duration-300 border-b",
         scrolled
-          ? "bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-sm border-slate-200 dark:border-slate-800"
-          : "bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm border-slate-100 dark:border-slate-800/60"
+          ? "bg-white/95 backdrop-blur-md shadow-sm border-slate-200"
+          : "bg-white/90 backdrop-blur-sm border-slate-100"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[68px]">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="38" height="38" rx="10" fill="url(#navGrad)"/>
-              {/* Monitor */}
-              <rect x="9" y="8" width="15" height="11" rx="2.5" fill="white" opacity="0.95"/>
-              <rect x="10.5" y="9.5" width="12" height="8" rx="1.5" fill="#0D1520" opacity="0.3"/>
-              {/* Monitor stand */}
-              <rect x="15" y="19" width="3" height="2.5" rx="1" fill="white" opacity="0.85"/>
-              {/* Desk surface */}
-              <rect x="4" y="21.5" width="30" height="3" rx="1.5" fill="white"/>
-              {/* Coffee mug */}
-              <rect x="25" y="16" width="5" height="5.5" rx="2.5" fill="white" opacity="0.8"/>
-              <rect x="30" y="17.5" width="2" height="2.5" rx="1" fill="white" opacity="0.6"/>
-              {/* Desk legs */}
-              <rect x="7" y="24.5" width="2.5" height="5" rx="1.25" fill="white" opacity="0.65"/>
-              <rect x="28.5" y="24.5" width="2.5" height="5" rx="1.25" fill="white" opacity="0.65"/>
-              <defs>
-                <linearGradient id="navGrad" x1="0" y1="0" x2="38" y2="38" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#1B2A3B"/>
-                  <stop offset="100%" stopColor="#2DD4BF"/>
-                </linearGradient>
-              </defs>
-            </svg>
-            <div className="flex flex-col leading-none">
-              <span className="font-heading font-bold text-[18px] text-primary tracking-tight">
-                Home<span className="text-accent">Desk</span>
-              </span>
-              <span className="text-[9px] font-semibold text-slate-400 tracking-[0.2em] uppercase">
-                Essentials
-              </span>
-            </div>
+          <Link href="/">
+            <Logo id="nav" />
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map((l) => {
-              const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
-              return (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={clsx(
-                    "px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150",
-                    active
-                      ? "bg-accent/10 text-accent"
-                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary dark:hover:text-white"
-                  )}
-                >
-                  {l.label}
-                </Link>
-              );
-            })}
+          <nav className="hidden md:flex items-center gap-1" aria-label="Main">
+            {LINKS_BEFORE.map((l) => (
+              <Link key={l.href} href={l.href} className={desktopLinkClass(isActive(pathname, l.href))}>
+                {l.label}
+              </Link>
+            ))}
+            {categories.length > 0 && (
+              <CategoriesDropdown categories={categories} active={categoriesActive} />
+            )}
+            {LINKS_AFTER.map((l) => (
+              <Link key={l.href} href={l.href} className={desktopLinkClass(isActive(pathname, l.href))}>
+                {l.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Mobile menu button */}
           <button
             onClick={() => setOpen(!open)}
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-700 transition-colors"
           >
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -104,31 +144,193 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {open && (
-          <div className="md:hidden py-4 border-t border-slate-100 dark:border-slate-800">
-            <nav className="flex flex-col gap-1">
-              {NAV_LINKS.map((l) => {
-                const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
-                return (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    onClick={() => setOpen(false)}
-                    className={clsx(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                      active
-                        ? "bg-accent/10 text-accent"
-                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                    )}
+          <div className="md:hidden max-h-[calc(100dvh-68px)] overflow-y-auto overscroll-contain py-4 border-t border-slate-100">
+            <nav className="flex flex-col gap-1" aria-label="Main">
+              {LINKS_BEFORE.map((l) => (
+                <Link key={l.href} href={l.href} className={mobileLinkClass(isActive(pathname, l.href))}>
+                  <l.icon size={16} />
+                  {l.label}
+                </Link>
+              ))}
+
+              {categories.length > 0 && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setMobileCatsOpen((v) => !v)}
+                    aria-expanded={mobileCatsOpen}
+                    aria-controls={mobileCatsId}
+                    className={mobileLinkClass(categoriesActive)}
                   >
-                    <l.icon size={16} />
-                    {l.label}
-                  </Link>
-                );
-              })}
+                    <LayoutGrid size={16} />
+                    Categories
+                    <ChevronDown
+                      size={16}
+                      className={clsx("ml-auto transition-transform duration-200", mobileCatsOpen && "rotate-180")}
+                    />
+                  </button>
+                  {mobileCatsOpen && (
+                    <ul id={mobileCatsId} className="mt-1 ml-5 border-l-2 border-accent/40 pl-3 space-y-0.5">
+                      {categories.map((c) => (
+                        <li key={c.slug}>
+                          <Link
+                            href={`/category/${c.slug}`}
+                            className={clsx(
+                              "flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors",
+                              pathname === `/category/${c.slug}` ? "bg-accent/10 text-accent" : "text-slate-700 hover:bg-slate-50"
+                            )}
+                          >
+                            <span className="text-lg" aria-hidden="true">{c.icon || "🛻"}</span>
+                            <span className="flex-1 font-medium">{c.name}</span>
+                            <span className="text-xs text-slate-400">{guideCount(c.postCount)}</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {LINKS_AFTER.map((l) => (
+                <Link key={l.href} href={l.href} className={mobileLinkClass(isActive(pathname, l.href))}>
+                  <l.icon size={16} />
+                  {l.label}
+                </Link>
+              ))}
             </nav>
           </div>
         )}
       </div>
     </header>
+    </>
+  );
+}
+
+/** Desktop "Categories" disclosure: opens on mouse hover or click, closes on outside click, Escape, focus loss or navigation. */
+function CategoriesDropdown({ categories, active }: { categories: NavCategory[]; active: boolean }) {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const panelId = useId();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>();
+  const openedByHover = useRef(false);
+
+  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const handlePointerEnter = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    clearTimeout(closeTimer.current);
+    if (!open) {
+      openedByHover.current = true;
+      setOpen(true);
+    }
+  };
+
+  const handlePointerLeave = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    closeTimer.current = setTimeout(() => setOpen(false), HOVER_CLOSE_DELAY_MS);
+  };
+
+  const handleClick = () => {
+    // A click right after hover opened the panel shouldn't immediately close it.
+    if (open && openedByHover.current) {
+      openedByHover.current = false;
+      return;
+    }
+    openedByHover.current = false;
+    setOpen((v) => !v);
+  };
+
+  return (
+    <div
+      ref={wrapperRef}
+      className="relative"
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onBlur={(e) => {
+        if (!wrapperRef.current?.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={handleClick}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className={desktopLinkClass(active || open)}
+      >
+        Categories
+        <ChevronDown size={15} className={clsx("transition-transform duration-200", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        // pt-3 bridges the gap so the panel doesn't close while the mouse moves onto it
+        <div id={panelId} className="absolute right-0 top-full w-[min(36rem,calc(100vw-2rem))] pt-3">
+          <div className="overflow-hidden rounded-md border-2 border-primary bg-white shadow-2xl">
+            <div className="h-1.5 hazard-stripe" aria-hidden="true" />
+            <div className="flex items-baseline justify-between px-5 pb-2 pt-4">
+              <p className="font-heading text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Gear categories</p>
+              <span className="text-xs text-slate-400">{categories.length} total</span>
+            </div>
+            <ul className="grid max-h-[60vh] gap-1 overflow-y-auto px-3 pb-3 sm:grid-cols-2">
+              {categories.map((c) => {
+                const current = pathname === `/category/${c.slug}`;
+                return (
+                  <li key={c.slug}>
+                    <Link
+                      href={`/category/${c.slug}`}
+                      onClick={() => setOpen(false)}
+                      aria-current={current ? "page" : undefined}
+                      className={clsx(
+                        "group flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-background",
+                        current && "bg-accent/10"
+                      )}
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center bg-background text-xl transition-colors group-hover:bg-accent/15" aria-hidden="true">
+                        {c.icon || "🛻"}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate font-heading text-lg font-bold uppercase leading-tight text-primary transition-colors group-hover:text-accent">
+                          {c.name}
+                        </span>
+                        <span className="text-xs text-slate-500">{guideCount(c.postCount)}</span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <Link
+              href="/blog"
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-between bg-primary px-5 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white transition-colors hover:text-accent"
+            >
+              All guides <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -114,6 +114,41 @@ export function nowIso() {
   return new Date().toISOString();
 }
 
+/** JSON body accepted by POST /api/posts and PATCH /api/posts/[id]. */
+export interface PostPayload {
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  content?: string;
+  featuredImage?: string;
+  featuredImageAlt?: string;
+  category?: string;
+  author?: string | null;
+  tags?: string[];
+  status?: string;
+  scheduledAt?: string | null;
+  publishedAt?: string | null;
+  metaTitle?: string;
+  metaDescription?: string;
+  focusKeyword?: string;
+  ogImage?: string;
+  affiliateProducts?: unknown[];
+  faqs?: unknown[];
+}
+
+export const POST_STATUSES = ["draft", "published", "scheduled"] as const;
+
+export function isPostStatus(value: unknown): value is PostRow["status"] {
+  return typeof value === "string" && (POST_STATUSES as readonly string[]).includes(value);
+}
+
+/** Normalises any parseable date to a UTC ISO string so it compares correctly in SQL. */
+export function toIsoOrNull(value: unknown): string | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 export function parseJson<T>(value: string | null | undefined, fallback: T): T {
   if (!value) return fallback;
   try {

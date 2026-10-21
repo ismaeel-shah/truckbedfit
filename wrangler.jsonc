@@ -1,10 +1,13 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "homedeskessentials",
+  "name": "truckbedfit",
   "main": ".open-next/worker.js",
   "workers_dev": true,
   "compatibility_date": "2026-05-24",
   "compatibility_flags": ["nodejs_compat"],
+  // Without this, esbuild's keepNames wraps functions in __name(), which breaks
+  // inline scripts (next-themes) in the browser: "ReferenceError: __name is not defined".
+  "keep_names": false,
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -12,30 +15,36 @@
   "observability": {
     "enabled": true
   },
+  // Non-secret runtime config. Secrets (NEXTAUTH_SECRET, RESEND_API_KEY, CONTACT_EMAIL)
+  // are set with `npx wrangler secret put <NAME>` — see README.
+  //
+  // TEMPORARY (until truckbedfit.com is bought and added to Cloudflare): the site runs on
+  // https://truckbedfit.ismaeilkhan90.workers.dev and images on the bucket's r2.dev URL.
+  // When the domain is connected:
+  //   R2_PUBLIC_URL → "https://media.truckbedfit.com"
+  //   NEXTAUTH_URL  → "https://www.truckbedfit.com"
+  //   and restore the routes:
+  //   "routes": [
+  //     { "pattern": "truckbedfit.com/*", "zone_name": "truckbedfit.com" },
+  //     { "pattern": "www.truckbedfit.com/*", "zone_name": "truckbedfit.com" }
+  //   ],
   "vars": {
-    "R2_PUBLIC_URL": "https://media.homedeskessentials.com"
+    "R2_PUBLIC_URL": "https://pub-fb4362b058f04a188d1f820b24b771e5.r2.dev",
+    "NEXTAUTH_URL": "https://truckbedfit.ismaeilkhan90.workers.dev",
+    "RESEND_FROM": "TruckBedFit <noreply@truckbedfit.com>"
   },
-  "routes": [
-    {
-      "pattern": "homedeskessentials.com/*",
-      "zone_name": "homedeskessentials.com"
-    },
-    {
-      "pattern": "www.homedeskessentials.com/*",
-      "zone_name": "homedeskessentials.com"
-    }
-  ],
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "homedeskessentials",
-      "database_id": "bb472943-03f8-4efb-9736-1517bde30374"
+      "database_name": "truckbedfit",
+      "database_id": "61a057b7-d049-41c8-905e-e46a28097e53",
+      "migrations_dir": "migrations"
     }
   ],
   "r2_buckets": [
     {
       "binding": "MEDIA_BUCKET",
-      "bucket_name": "homedeskessentials-media"
+      "bucket_name": "truckbedfit-uploads"
     }
   ]
 }

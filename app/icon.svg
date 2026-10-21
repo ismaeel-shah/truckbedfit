@@ -1,21 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 38" width="48" height="48">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#1B2A3B"/>
-      <stop offset="100%" stop-color="#2DD4BF"/>
+    <linearGradient id="g" x1="0" y1="0" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1F2328"/>
+      <stop offset="100%" stop-color="#EA580C"/>
     </linearGradient>
   </defs>
   <!-- Background -->
-  <rect width="48" height="48" rx="11" fill="url(#g)"/>
-  <!-- Monitor body -->
-  <rect x="11" y="10" width="26" height="17" rx="3" fill="white" opacity="0.95"/>
-  <!-- Monitor screen -->
-  <rect x="13" y="12" width="22" height="13" rx="2" fill="#1B2A3B" opacity="0.35"/>
-  <!-- Monitor stand -->
-  <rect x="21" y="27" width="6" height="4" rx="1.5" fill="white" opacity="0.85"/>
-  <!-- Desk surface -->
-  <rect x="6" y="31" width="36" height="4" rx="2" fill="white"/>
-  <!-- Desk legs -->
-  <rect x="10" y="35" width="3" height="6" rx="1.5" fill="white" opacity="0.65"/>
-  <rect x="35" y="35" width="3" height="6" rx="1.5" fill="white" opacity="0.65"/>
+  <rect width="38" height="38" rx="10" fill="url(#g)"/>
+  <!-- Bed -->
+  <rect x="4" y="15.5" width="14" height="7" rx="1.2" fill="white" opacity="0.9"/>
+  <!-- Cab + hood -->
+  <path d="M18.5 22.5V12.5a2 2 0 0 1 2-2h5.2l3.6 5H32a2 2 0 0 1 2 2v5z" fill="white"/>
+  <!-- Window -->
+  <path d="M21 12.8h4l2.3 3.2H21z" fill="#1F2328" opacity="0.35"/>
+  <!-- Chassis -->
+  <rect x="3.5" y="21.5" width="31" height="3" rx="1.5" fill="white"/>
+  <!-- Wheels -->
+  <circle cx="10.5" cy="26" r="3.6" fill="#1F2328" stroke="white" stroke-width="1.8"/>
+  <circle cx="10.5" cy="26" r="1.1" fill="white"/>
+  <circle cx="27.5" cy="26" r="3.6" fill="#1F2328" stroke="white" stroke-width="1.8"/>
+  <circle cx="27.5" cy="26" r="1.1" fill="white"/>
 </svg>

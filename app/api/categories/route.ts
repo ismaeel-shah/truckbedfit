@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { slugify } from "@/lib/utils/slugify";
 import { CategoryRow, getD1, mapCategory, nowIso } from "@/lib/db/d1";
 
@@ -20,8 +19,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser();
+  if (response) return response;
 
   const db = getD1();
   const body = await req.json() as Record<string, string>;
@@ -54,8 +53,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser();
+  if (response) return response;
 
   const db = getD1();
   const { id, ...body } = await req.json() as Record<string, string>;
@@ -86,8 +85,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser();
+  if (response) return response;
 
   const db = getD1();
   const { id } = await req.json() as { id?: string };

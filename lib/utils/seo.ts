@@ -1,11 +1,64 @@
+import type { Metadata } from "next";
+import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from "@/lib/site";
+
 export function truncate(str: string, max: number): string {
   return str.length <= max ? str : str.slice(0, max - 3) + "...";
 }
 
 export function buildCanonical(path: string): string {
-  const base =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://homedeskessentials.com";
-  return `${base}${path}`;
+  return `${SITE_URL}${path}`;
+}
+
+/** `?page=` value → positive integer, defaulting to 1 for missing/invalid input. */
+export function parsePageParam(value: string | undefined): number {
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 1 ? n : 1;
+}
+
+/** Paginated listings: page 1 is the bare path, later pages keep their own self-referencing URL. */
+export function paginatedPath(path: string, page: number): string {
+  return page > 1 ? `${path}?page=${page}` : path;
+}
+
+/** "Blog" → "Blog – Page 2" so paginated pages don't share one title. */
+export function paginatedTitle(title: string, page: number): string {
+  return page > 1 ? `${title} – Page ${page}` : title;
+}
+
+type OpenGraph = NonNullable<Metadata["openGraph"]>;
+type Twitter = NonNullable<Metadata["twitter"]>;
+
+// Next.js replaces (does not merge) a parent's openGraph/twitter when a page sets
+// its own, so every page builds them from these defaults to keep the site name,
+// locale and a share image.
+export function buildOpenGraph(og: OpenGraph = {}): OpenGraph {
+  return {
+    siteName: SITE_NAME,
+    locale: "en_US",
+    type: "website",
+    images: [DEFAULT_OG_IMAGE],
+    ...og,
+  } as OpenGraph;
+}
+
+/** Metadata for simple static pages (legal pages etc.): title, description, canonical, share tags. */
+export function staticPageMetadata(title: string, description: string, path: string): Metadata {
+  const url = buildCanonical(path);
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: buildOpenGraph({ title: `${title} | ${SITE_NAME}`, description, url }),
+    twitter: buildTwitter({ title: `${title} | ${SITE_NAME}`, description }),
+  };
+}
+
+export function buildTwitter(twitter: Twitter = {}): Twitter {
+  return {
+    card: "summary_large_image",
+    images: [DEFAULT_OG_IMAGE.url],
+    ...twitter,
+  } as Twitter;
 }
 
 export interface SEOCheckResult {

@@ -148,7 +148,7 @@ export default function CategoriesPage() {
                 required
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
-                placeholder="e.g. Ergonomic Chairs"
+                placeholder="e.g. Tonneau Covers"
                 className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>

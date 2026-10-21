@@ -1,7 +1,41 @@
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getD1, UserRow } from "./db/d1";
+
+export type SessionUser = Pick<UserRow, "id" | "name" | "email" | "role">;
+
+/**
+ * Returns the signed-in user, re-read from D1 so role changes and deleted
+ * accounts take effect immediately instead of when the JWT expires.
+ */
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const session = await getServerSession(authOptions);
+  const id = (session?.user as { id?: string } | undefined)?.id;
+  if (!id) return null;
+
+  return getD1()
+    .prepare("SELECT id, name, email, role FROM users WHERE id = ?")
+    .bind(id)
+    .first<SessionUser>();
+}
+
+type AuthResult =
+  | { user: SessionUser; response: null }
+  | { user: null; response: NextResponse };
+
+/** Guard for API routes: `const { user, response } = await requireUser(); if (response) return response;` */
+export async function requireUser(role?: "admin"): Promise<AuthResult> {
+  const user = await getSessionUser();
+  if (!user) {
+    return { user: null, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  }
+  if (role === "admin" && user.role !== "admin") {
+    return { user: null, response: NextResponse.json({ error: "Admins only" }, { status: 403 }) };
+  }
+  return { user, response: null };
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [

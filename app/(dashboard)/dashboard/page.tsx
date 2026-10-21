@@ -2,28 +2,27 @@ import { FileText, CalendarClock, BookOpen, Clock, Pencil, Eye } from "lucide-re
 import StatsCard from "@/components/dashboard/StatsCard";
 import Link from "next/link";
 import { getD1, mapPost, postJoins, postSelect, PostRow } from "@/lib/db/d1";
+import { publishDueScheduledPosts } from "@/lib/db/content";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard" };
 
 async function getStats() {
   try {
-    const db = getD1();
-    const rows = await Promise.all([
-      db.prepare("SELECT COUNT(*) AS count FROM posts").first<{ count: number }>(),
-      db.prepare("SELECT COUNT(*) AS count FROM posts WHERE status = 'published'").first<{ count: number }>(),
-      db.prepare("SELECT COUNT(*) AS count FROM posts WHERE status = 'draft'").first<{ count: number }>(),
-      db.prepare("SELECT COUNT(*) AS count FROM posts WHERE status = 'scheduled'").first<{ count: number }>(),
-    ]);
+    await publishDueScheduledPosts();
+    const row = await getD1().prepare(`
+      SELECT
+        COUNT(*) AS total,
+        COALESCE(SUM(status = 'published'), 0) AS published,
+        COALESCE(SUM(status = 'draft'), 0) AS drafts,
+        COALESCE(SUM(status = 'scheduled'), 0) AS scheduled,
+        COALESCE(SUM(views), 0) AS views
+      FROM posts
+    `).first<{ total: number; published: number; drafts: number; scheduled: number; views: number }>();
 
-    return {
-      total: rows[0]?.count ?? 0,
-      published: rows[1]?.count ?? 0,
-      drafts: rows[2]?.count ?? 0,
-      scheduled: rows[3]?.count ?? 0,
-    };
+    return row ?? { total: 0, published: 0, drafts: 0, scheduled: 0, views: 0 };
   } catch {
-    return { total: 0, published: 0, drafts: 0, scheduled: 0 };
+    return { total: 0, published: 0, drafts: 0, scheduled: 0, views: 0 };
   }
 }
 
@@ -57,11 +56,12 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
         <StatsCard label="Total Posts" value={stats.total} icon={FileText} />
         <StatsCard label="Published" value={stats.published} icon={BookOpen} color="text-green-500" />
         <StatsCard label="Drafts" value={stats.drafts} icon={Clock} color="text-yellow-500" />
         <StatsCard label="Scheduled" value={stats.scheduled} icon={CalendarClock} color="text-blue-500" />
+        <StatsCard label="Total Views" value={stats.views} icon={Eye} color="text-orange-500" />
       </div>
 
       <div>

@@ -69,6 +69,20 @@ const emptyProduct = (): AffiliateProduct => ({
   order: 0,
 });
 
+/** UTC ISO string -> "YYYY-MM-DDTHH:mm" in the browser's timezone */
+function isoToLocalInput(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
+/** datetime-local value (browser time) -> UTC ISO string, or "" */
+function localInputToIso(value: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+}
+
 export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -112,6 +126,14 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     fetch("/api/authors").then((r) => r.json()).then(setAuthors);
   }, []);
 
+  // scheduledAt is stored as UTC ISO; the datetime-local input needs browser-local time.
+  // Converted after mount so server and client render the same markup.
+  useEffect(() => {
+    const iso = initial?.scheduledAt;
+    if (iso) setForm((prev) => ({ ...prev, scheduledAt: isoToLocalInput(iso) }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const set = (field: string, value: unknown) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -128,10 +150,18 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     if (!form.title) { toast.error("Title is required"); return; }
     if (!form.category) { toast.error("Category is required"); return; }
 
+    const nextStatus = status ?? form.status;
+    const scheduledAt = localInputToIso(form.scheduledAt);
+    if (nextStatus === "scheduled" && !scheduledAt) {
+      toast.error("Pick a schedule date");
+      return;
+    }
+
     setSaving(true);
     const payload = {
       ...form,
-      status: status ?? form.status,
+      status: nextStatus,
+      scheduledAt,
       tags: (form.tags as string).split(",").map((t: string) => t.trim()).filter(Boolean),
     };
 
@@ -204,19 +234,6 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
 
   const removeFaq = (i: number) =>
     set("faqs", form.faqs.filter((_, idx) => idx !== i));
-
-  const updateProCon = (
-    pi: number,
-    type: "pros" | "cons",
-    vi: number,
-    value: string
-  ) => {
-    const updated = [...form.affiliateProducts];
-    const arr = [...updated[pi][type]];
-    arr[vi] = value;
-    updated[pi] = { ...updated[pi], [type]: arr };
-    set("affiliateProducts", updated);
-  };
 
   return (
     <div className="grid lg:grid-cols-[1fr_320px] gap-6">
@@ -325,7 +342,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                     type="text"
                     value={faq.question}
                     onChange={(e) => updateFaq(i, "question", e.target.value)}
-                    placeholder="e.g. What is the best ergonomic chair?"
+                    placeholder="e.g. Will this tonneau cover fit a 5.5 ft bed?"
                     className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
@@ -501,7 +518,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
               type="text"
               value={form.tags}
               onChange={(e) => set("tags", e.target.value)}
-              placeholder="ergonomic, chair, review"
+              placeholder="tonneau cover, f-150, review"
               className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>

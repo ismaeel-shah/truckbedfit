@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getD1, nowIso, parseJson } from "@/lib/db/d1";
 
 type SettingRow = {
@@ -21,8 +20,8 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser("admin");
+  if (response) return response;
 
   const db = getD1();
   const { key, value } = await req.json() as { key?: string; value?: Record<string, string> };

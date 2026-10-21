@@ -7,16 +7,33 @@ import ReadingProgress from "@/components/public/ReadingProgress";
 import AmazonProductBox from "@/components/public/AmazonProductBox";
 import RelatedPosts from "@/components/public/RelatedPosts";
 import AuthorCard from "@/components/public/AuthorCard";
-import { buildCanonical } from "@/lib/utils/seo";
+import { buildCanonical, buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
 import { processContent } from "@/lib/utils/processContent";
 import { getD1 } from "@/lib/db/d1";
-import { getPublishedPostBySlug, listPosts } from "@/lib/db/content";
+import { getPublishedPostBySlug, incrementPostViews, listPosts } from "@/lib/db/content";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { headers } from "next/headers";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 1800;
+
+const BOT_UA = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|lighthouse|headless/i;
 
 async function getPost(slug: string) {
   return getPublishedPostBySlug(slug);
+}
+
+/** Counts a human page view without delaying the response. */
+function countView(postId: string) {
+  const userAgent = headers().get("user-agent") ?? "";
+  if (!userAgent || BOT_UA.test(userAgent)) return;
+
+  const update = incrementPostViews(postId).catch((err) => console.error("view count failed:", err));
+  try {
+    getCloudflareContext().ctx.waitUntil(update);
+  } catch {
+    // Outside the Workers runtime the promise simply runs on its own.
+  }
 }
 
 async function getRelated(categoryId: string, excludeSlug: string) {
@@ -32,24 +49,33 @@ export async function generateMetadata({
   const post = await getPost(params.slug);
   if (!post) return { title: "Post not found" };
 
+  const title = post.metaTitle || post.title;
+  const description = post.metaDescription || post.excerpt;
+  const canonical = buildCanonical(`/blog/${params.slug}`);
+  // OG image → featured image → site default (from buildOpenGraph). Dimensions are
+  // omitted for post images because we don't know their real size.
+  const shareImage = post.ogImage || post.featuredImage;
+
   return {
-    title: post.metaTitle || post.title,
-    description: post.metaDescription || post.excerpt,
-    openGraph: {
-      title: post.metaTitle || post.title,
-      description: post.metaDescription || post.excerpt,
-      images: post.ogImage || post.featuredImage
-        ? [{ url: post.ogImage || post.featuredImage, width: 1200, height: 630, alt: post.title }]
-        : [],
+    // A custom meta title is used exactly as written (the SEO panel limits it to 60
+    // characters); otherwise the post title gets the " | TruckBedFit" suffix.
+    title: post.metaTitle ? { absolute: post.metaTitle } : post.title,
+    description,
+    openGraph: buildOpenGraph({
+      title,
+      description,
+      url: canonical,
       type: "article",
       publishedTime: post.publishedAt,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: post.metaTitle || post.title,
-      description: post.metaDescription || post.excerpt,
-    },
-    alternates: { canonical: buildCanonical(`/blog/${params.slug}`) },
+      modifiedTime: post.updatedAt,
+      ...(shareImage && { images: [{ url: shareImage, alt: post.title }] }),
+    }),
+    twitter: buildTwitter({
+      title,
+      description,
+      ...(shareImage && { images: [shareImage] }),
+    }),
+    alternates: { canonical },
   };
 }
 
@@ -72,9 +98,11 @@ export default async function SinglePostPage({
     notFound();
   }
 
+  countView(post._id);
+
   const related = await getRelated(post.category?._id, params.slug);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://homedeskessentials.com";
+  const siteUrl = SITE_URL;
   const postUrl = `${siteUrl}/blog/${params.slug}`;
 
   const blogPostingSchema = {
@@ -86,8 +114,10 @@ export default async function SinglePostPage({
     image:        post.featuredImage,
     datePublished: post.publishedAt,
     dateModified:  post.updatedAt,
-    author:    { "@type": "Person", name: post.author?.name ?? "Home Desk Essentials" },
-    publisher: { "@type": "Organization", name: "Home Desk Essentials", url: siteUrl },
+    author: post.author?.name
+      ? { "@type": "Person", name: post.author.name }
+      : { "@type": "Organization", name: SITE_NAME, url: siteUrl },
+    publisher: { "@type": "Organization", name: SITE_NAME, url: siteUrl },
   };
 
   const breadcrumbSchema = {
@@ -175,6 +205,13 @@ export default async function SinglePostPage({
               </div>
             </header>
 
+            {/* FTC: disclose affiliate links before readers reach them */}
+            <p className="mb-8 border-l-2 border-accent bg-white px-4 py-3 text-xs leading-relaxed text-slate-500">
+              {SITE_NAME} is reader-supported. When you buy through links on our site, we may earn an affiliate
+              commission at no extra cost to you.{" "}
+              <a href="/affiliate-disclosure" className="font-semibold text-accent hover:underline">Read our affiliate disclosure</a>
+            </p>
+
             {/* Featured image */}
             {post.featuredImage && (
               <div className="w-full rounded-2xl overflow-hidden mb-10 bg-white">
@@ -183,6 +220,11 @@ export default async function SinglePostPage({
                   src={post.featuredImage}
                   alt={post.featuredImageAlt || post.title}
                   className="w-full h-auto block"
+                  // The featured image is usually the LCP element: fetch it first.
+                  // (lowercase attribute — React 18 doesn't know fetchPriority yet)
+                  {...{ fetchpriority: "high" }}
+                  loading="eager"
+                  decoding="async"
                 />
               </div>
             )}

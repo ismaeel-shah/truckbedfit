@@ -11,6 +11,8 @@ interface MediaUploaderProps {
 }
 
 function isValidUrl(url: string) {
+  // Site-relative paths (e.g. /api/media/file/... in local dev) are fine too.
+  if (url.startsWith("/") && !url.startsWith("//")) return true;
   try {
     const u = new URL(url);
     return u.protocol === "http:" || u.protocol === "https:";

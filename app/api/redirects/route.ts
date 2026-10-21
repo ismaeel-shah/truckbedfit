@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getD1, mapRedirect, nowIso, RedirectRow } from "@/lib/db/d1";
 
 function normalizeSource(source: string) {
@@ -8,8 +7,8 @@ function normalizeSource(source: string) {
 }
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser("admin");
+  if (response) return response;
 
   const db = getD1();
   const { results = [] } = await db
@@ -19,8 +18,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser("admin");
+  if (response) return response;
 
   const db = getD1();
   const body = await req.json() as { source?: string; destination?: string; type?: 301 | 302; active?: boolean };
@@ -42,8 +41,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser("admin");
+  if (response) return response;
 
   const db = getD1();
   const { id, ...body } = await req.json() as { id?: string; source?: string; destination?: string; type?: 301 | 302; active?: boolean };
@@ -70,8 +69,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser("admin");
+  if (response) return response;
 
   const db = getD1();
   const { id } = await req.json() as { id?: string };

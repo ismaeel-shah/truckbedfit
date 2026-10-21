@@ -18,9 +18,9 @@ export default function AmazonProductBox({ products }: { products: Product[] }) 
     <div className="my-10 not-prose">
       <div className="flex items-center gap-3 mb-5">
         <Star size={18} className="text-amazon fill-amazon" />
-        <h3 className="font-heading text-xl font-bold text-primary dark:text-white">
+        <h2 className="font-heading text-xl font-bold text-primary dark:text-white">
           Our Top Picks
-        </h3>
+        </h2>
         <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800" />
       </div>
 
@@ -46,9 +46,9 @@ export default function AmazonProductBox({ products }: { products: Product[] }) 
               </div>
             )}
 
-            <h4 className="font-semibold text-sm text-primary dark:text-white mb-1 leading-snug">
+            <h3 className="font-semibold text-sm text-primary dark:text-white mb-1 leading-snug">
               {product.name}
-            </h4>
+            </h3>
 
             {product.price && (
               <p className="text-amazon font-black text-2xl mb-3">{product.price}</p>
@@ -81,7 +81,8 @@ export default function AmazonProductBox({ products }: { products: Product[] }) 
             <a
               href={product.amazonUrl}
               target="_blank"
-              rel="noopener noreferrer nofollow"
+              // Affiliate link: Google asks for rel="sponsored" on paid links.
+              rel="sponsored nofollow noopener noreferrer"
               className="amazon-btn mt-auto text-sm"
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white" xmlns="http://www.w3.org/2000/svg">

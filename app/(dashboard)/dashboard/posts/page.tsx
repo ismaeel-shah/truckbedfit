@@ -1,12 +1,14 @@
 import Link from "next/link";
 import PostsTable from "@/components/dashboard/PostsTable";
 import { getD1, mapPost, postJoins, postSelect, PostRow } from "@/lib/db/d1";
+import { publishDueScheduledPosts } from "@/lib/db/content";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Posts" };
 
 async function getPosts() {
   try {
+    await publishDueScheduledPosts();
     const db = getD1();
     const { results = [] } = await db.prepare(`
       SELECT ${postSelect}

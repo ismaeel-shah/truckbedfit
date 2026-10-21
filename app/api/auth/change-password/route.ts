@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getD1, nowIso, UserRow } from "@/lib/db/d1";
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { user: sessionUser, response } = await requireUser();
+  if (response) return response;
 
   const { currentPassword, newPassword } = await req.json() as {
     currentPassword?: string;
@@ -16,8 +15,7 @@ export async function POST(req: NextRequest) {
   if (newPassword.length < 6) return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
 
   const db = getD1();
-  const userId = (session.user as { id?: string }).id;
-  const user = await db.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first<UserRow>();
+  const user = await db.prepare("SELECT * FROM users WHERE id = ?").bind(sessionUser.id).first<UserRow>();
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const isValid = await bcrypt.compare(currentPassword, user.password);

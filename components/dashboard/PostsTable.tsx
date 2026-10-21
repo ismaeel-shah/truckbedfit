@@ -14,6 +14,7 @@ interface Post {
   status: string;
   category?: { name: string; icon: string };
   publishedAt?: string;
+  scheduledAt?: string;
   updatedAt?: string;
   views: number;
   readingTime: number;
@@ -121,6 +122,7 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
             <th className="pb-3 font-medium">Category</th>
             <th className="pb-3 font-medium">Published</th>
             <th className="pb-3 font-medium">Updated</th>
+            <th className="pb-3 font-medium">Views</th>
             <th className="pb-3 font-medium">Actions</th>
           </tr>
         </thead>
@@ -150,12 +152,19 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
                 {post.category ? `${post.category.icon} ${post.category.name}` : "—"}
               </td>
               <td className="py-3 pr-4 text-slate-400 text-xs">
-                {post.publishedAt ? format(new Date(post.publishedAt), "MMM d, yyyy") : "—"}
+                {post.status === "scheduled" && post.scheduledAt
+                  ? `Scheduled ${format(new Date(post.scheduledAt), "MMM d, yyyy h:mm a")}`
+                  : post.status === "published" && post.publishedAt
+                  ? format(new Date(post.publishedAt), "MMM d, yyyy")
+                  : "—"}
               </td>
               <td className="py-3 pr-4 text-slate-400 text-xs">
                 {post.updatedAt && post.publishedAt && new Date(post.updatedAt) > new Date(post.publishedAt)
                   ? format(new Date(post.updatedAt), "MMM d, yyyy")
                   : "—"}
+              </td>
+              <td className="py-3 pr-4 text-slate-500 dark:text-slate-400 text-xs tabular-nums">
+                {(post.views ?? 0).toLocaleString()}
               </td>
               <td className="py-3">
                 <div className="flex items-center gap-2">

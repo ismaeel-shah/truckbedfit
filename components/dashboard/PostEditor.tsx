@@ -71,7 +71,6 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
         setImgSelected(false);
       }
     },
-    editorProps: { attributes: { class: "tiptap-editor" } },
   });
 
   if (!editor) return null;
@@ -212,8 +211,8 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
 
   /* ── Color palette ─────────────────────────────────── */
   const colors = [
-    "#1B2A3B", "#ef4444", "#f97316", "#eab308",
-    "#22c55e", "#2DD4BF", "#3b82f6", "#8b5cf6",
+    "#1F2328", "#ef4444", "#f97316", "#eab308",
+    "#22c55e", "#14b8a6", "#3b82f6", "#8b5cf6",
     "#ec4899", "#6b7280", "#000000", "#ffffff",
   ];
 
@@ -484,10 +483,11 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
           )}
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-b-xl">
+        <div className="bg-white dark:bg-slate-900 rounded-b-xl transition-shadow focus-within:ring-2 focus-within:ring-inset focus-within:ring-accent/40">
+          {/* .tiptap-editor must wrap .ProseMirror — globals.css gives the editable area its height, padding and no outline */}
           <EditorContent
             editor={editor}
-            className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-heading p-4 min-h-[400px] focus:outline-none"
+            className="tiptap-editor prose prose-slate dark:prose-invert max-w-none prose-headings:font-heading"
           />
         </div>
       )}

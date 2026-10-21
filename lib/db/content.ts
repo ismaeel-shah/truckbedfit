@@ -1,19 +1,50 @@
 import { CategoryRow, getD1, mapCategory, mapPost, postJoins, postSelect, PostRow } from "./d1";
 
+export type PostStatusFilter = "published" | "draft" | "scheduled" | "all";
+
 type ListPostsOptions = {
   page?: number;
   limit?: number;
   category?: string;
   search?: string;
   slug?: string;
-  status?: "published" | "draft" | "scheduled" | "all";
+  status?: PostStatusFilter;
+  orderBy?: "latest" | "views";
 };
 
+/** Accepts either a category id or slug. */
 async function categoryIdForParam(category: string) {
-  const db = getD1();
-  if (/^[0-9a-fA-F-]{24,36}$/.test(category)) return category;
-  const row = await db.prepare("SELECT id FROM categories WHERE slug = ?").bind(category).first<{ id: string }>();
+  const row = await getD1()
+    .prepare("SELECT id FROM categories WHERE id = ? OR slug = ? LIMIT 1")
+    .bind(category, category)
+    .first<{ id: string }>();
   return row?.id ?? null;
+}
+
+// Scheduled posts are promoted lazily on read instead of via a cron job.
+// Throttled per Worker isolate so busy pages don't issue an UPDATE on every request.
+const SCHEDULE_CHECK_INTERVAL_MS = 60_000;
+let lastScheduleCheck = 0;
+
+export async function publishDueScheduledPosts() {
+  const nowMs = Date.now();
+  if (nowMs - lastScheduleCheck < SCHEDULE_CHECK_INTERVAL_MS) return;
+  lastScheduleCheck = nowMs;
+
+  try {
+    await getD1().prepare(`
+      UPDATE posts
+      SET status = 'published', published_at = scheduled_at, updated_at = scheduled_at
+      WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= ?
+    `).bind(new Date(nowMs).toISOString()).run();
+  } catch (err) {
+    lastScheduleCheck = 0;
+    console.error("publishDueScheduledPosts failed:", err);
+  }
+}
+
+export async function incrementPostViews(id: string) {
+  await getD1().prepare("UPDATE posts SET views = views + 1 WHERE id = ?").bind(id).run();
 }
 
 export async function listCategories() {
@@ -29,6 +60,8 @@ export async function listCategories() {
 }
 
 export async function listPosts(options: ListPostsOptions = {}) {
+  await publishDueScheduledPosts();
+
   const db = getD1();
   const page = Math.max(1, options.page ?? 1);
   const limit = Math.min(Math.max(1, options.limit ?? 10), 1000);
@@ -59,6 +92,9 @@ export async function listPosts(options: ListPostsOptions = {}) {
   }
 
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  const orderSql = options.orderBy === "views"
+    ? "p.views DESC, COALESCE(p.published_at, p.created_at) DESC"
+    : "COALESCE(p.published_at, p.created_at) DESC, p.created_at DESC";
   const skip = (page - 1) * limit;
   const [postResult, countRow] = await Promise.all([
     db.prepare(`
@@ -66,7 +102,7 @@ export async function listPosts(options: ListPostsOptions = {}) {
       FROM posts p
       ${postJoins}
       ${whereSql}
-      ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.created_at DESC
+      ORDER BY ${orderSql}
       LIMIT ? OFFSET ?
     `).bind(...values, limit, skip).all<PostRow>(),
     db.prepare(`SELECT COUNT(*) AS total FROM posts p ${whereSql}`).bind(...values).first<{ total: number }>(),

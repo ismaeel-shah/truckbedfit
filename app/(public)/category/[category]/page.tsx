@@ -1,12 +1,14 @@
 import { notFound, redirect, permanentRedirect } from "next/navigation";
 import { Metadata } from "next";
 import BlogCard from "@/components/public/BlogCard";
-import { buildCanonical } from "@/lib/utils/seo";
+import {
+  buildCanonical, buildOpenGraph, buildTwitter, paginatedPath, paginatedTitle, parsePageParam,
+} from "@/lib/utils/seo";
+import { SITE_NAME } from "@/lib/site";
 import { getD1 } from "@/lib/db/d1";
 import { getCategoryBySlug, listPosts } from "@/lib/db/content";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 3600;
 
 async function getCategory(slug: string) {
   return getCategoryBySlug(slug);
@@ -26,25 +28,19 @@ export async function generateMetadata({
   const cat = await getCategory(params.category);
   if (!cat) return { title: "Category not found" };
 
-  const title = cat.metaTitle || `${cat.name} — Home Office Guides`;
-  const desc  = cat.metaDescription || cat.description
-    || `Best ${cat.name.toLowerCase()} reviews and buying guides for your home office.`;
-  const page  = parseInt(searchParams.page ?? "1");
-  const canonical = buildCanonical(`/category/${params.category}`);
+  const page  = parsePageParam(searchParams.page);
+  const title = paginatedTitle(cat.metaTitle || `${cat.name} — Truck Bed Guides`, page);
+  const baseDesc = cat.metaDescription || cat.description
+    || `The best ${cat.name.toLowerCase()} for your pickup: fitment-first reviews, buying guides and honest pros and cons from ${SITE_NAME}.`;
+  const desc  = page > 1 ? `${baseDesc} Page ${page}.` : baseDesc;
+  const canonical = buildCanonical(paginatedPath(`/category/${params.category}`, page));
 
   return {
     title:       cat.metaTitle ? { absolute: title } : title,
     description: desc,
-    alternates: {
-      canonical,
-      ...(page > 1 && { prev: buildCanonical(page === 2 ? `/category/${params.category}` : `/category/${params.category}?page=${page - 1}`) }),
-    },
-    openGraph: {
-      title, description: desc,
-      url:  canonical,
-      type: "website",
-    },
-    twitter: { card: "summary_large_image", title, description: desc },
+    alternates: { canonical },
+    openGraph: buildOpenGraph({ title, description: desc, url: canonical }),
+    twitter: buildTwitter({ title, description: desc }),
   };
 }
 
@@ -69,8 +65,10 @@ export default async function CategoryPage({
     notFound();
   }
 
-  const page = parseInt(searchParams.page ?? "1");
+  const page = parsePageParam(searchParams.page);
   const { posts, pages } = await getPosts(cat._id, page);
+  // A page past the end would be an empty "soft 404" — return a real 404 instead.
+  if (page > 1 && page > pages) notFound();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -99,8 +97,8 @@ export default async function CategoryPage({
 
       {posts.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post: Parameters<typeof BlogCard>[0]["post"]) => (
-            <BlogCard key={post._id} post={post} />
+          {posts.map((post: Parameters<typeof BlogCard>[0]["post"], i: number) => (
+            <BlogCard key={post._id} post={post} priority={i === 0} />
           ))}
         </div>
       ) : (
@@ -114,7 +112,7 @@ export default async function CategoryPage({
           {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
             <a
               key={p}
-              href={`/category/${params.category}?page=${p}`}
+              href={paginatedPath(`/category/${params.category}`, p)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 p === page
                   ? "bg-accent text-primary"

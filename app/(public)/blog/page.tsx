@@ -3,13 +3,16 @@ import { Metadata } from "next";
 import BlogCard from "@/components/public/BlogCard";
 import CategoryFilter from "@/components/public/CategoryFilter";
 import { getPageMeta } from "@/lib/utils/pageSettings";
-import { buildCanonical } from "@/lib/utils/seo";
+import { notFound } from "next/navigation";
+import {
+  buildCanonical, buildOpenGraph, buildTwitter, paginatedPath, paginatedTitle, parsePageParam,
+} from "@/lib/utils/seo";
+import { SITE_NAME } from "@/lib/site";
 import { listCategories, listPosts } from "@/lib/db/content";
 import { Search } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 3600;
 
 export async function generateMetadata({
   searchParams,
@@ -17,31 +20,36 @@ export async function generateMetadata({
   searchParams: { page?: string; search?: string; category?: string };
 }): Promise<Metadata> {
   const meta  = await getPageMeta("page_blog");
-  const title = meta.metaTitle || "Blog";
-  const desc  = meta.metaDescription || "All home office buying guides, reviews, and tips from Home Desk Essentials.";
-  const page  = parseInt(searchParams.page ?? "1");
-  const isSearch = !!searchParams.search;
+  const page  = parsePageParam(searchParams.page);
+  const title = paginatedTitle(meta.metaTitle || "Truck Bed Guides & Reviews", page);
+  const baseDesc = meta.metaDescription || `All truck bed accessory buying guides, reviews, and fitment tips from ${SITE_NAME}.`;
+  const desc  = page > 1 ? `${baseDesc} Page ${page}.` : baseDesc;
+  const canonical = buildCanonical(paginatedPath("/blog", page));
+  // Search results and ?category= filters duplicate other pages: keep them out of the
+  // index but let crawlers follow their links.
+  const isFilteredView = Boolean(searchParams.search || searchParams.category);
 
   return {
     title:       meta.metaTitle ? { absolute: title } : title,
     description: desc,
-    // Noindex search result pages to prevent duplicate content
-    robots: isSearch ? { index: false, follow: false } : { index: true, follow: true },
-    alternates: {
-      canonical: buildCanonical("/blog"),
-      ...(page > 1 && { prev: buildCanonical(page === 2 ? "/blog" : `/blog?page=${page - 1}`) }),
-    },
-    openGraph: {
-      title, description: desc,
-      url:  buildCanonical("/blog"),
-      type: "website",
-    },
-    twitter: { card: "summary_large_image", title, description: desc },
+    robots: isFilteredView ? { index: false, follow: true } : { index: true, follow: true },
+    alternates: { canonical },
+    openGraph: buildOpenGraph({ title, description: desc, url: canonical }),
+    twitter: buildTwitter({ title, description: desc }),
   };
 }
 
+/** Page 1 links to the bare /blog URL so pagination never creates a ?page=1 duplicate. */
+function blogPageHref(page: number, search?: string) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (search) params.set("search", search);
+  const query = params.toString();
+  return query ? `/blog?${query}` : "/blog";
+}
+
 async function getData(searchParams: { page?: string; search?: string; category?: string }) {
-  const page = parseInt(searchParams.page ?? "1");
+  const page = parsePageParam(searchParams.page);
   const search = searchParams.search ?? "";
   const category = searchParams.category ?? "";
 
@@ -59,15 +67,17 @@ export default async function BlogPage({
   searchParams: { page?: string; search?: string; category?: string };
 }) {
   const { posts, pages, categories, page } = await getData(searchParams);
+  // A page past the end would be an empty "soft 404" — return a real 404 instead.
+  if (page > 1 && page > pages) notFound();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center mb-8">
         <h1 className="font-heading text-4xl font-bold text-primary dark:text-white mb-2">
-          Home Office Blog
+          Truck Bed Guides &amp; Reviews
         </h1>
         <p className="text-slate-500 dark:text-slate-400">
-          Expert guides, reviews, and tips for remote workers
+          Buying guides, reviews, and fitment tips for pickup owners
         </p>
       </div>
 
@@ -89,8 +99,8 @@ export default async function BlogPage({
       {posts.length > 0 ? (
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-            {posts.map((post: Parameters<typeof BlogCard>[0]["post"]) => (
-              <BlogCard key={post._id} post={post} />
+            {posts.map((post: Parameters<typeof BlogCard>[0]["post"], i: number) => (
+              <BlogCard key={post._id} post={post} priority={i === 0} />
             ))}
           </div>
 
@@ -100,7 +110,7 @@ export default async function BlogPage({
               {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
                 <Link
                   key={p}
-                  href={`/blog?page=${p}${searchParams.search ? `&search=${searchParams.search}` : ""}`}
+                  href={blogPageHref(p, searchParams.search)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     p === page
                       ? "bg-accent text-primary"

@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@worknest.com"
+                      placeholder="admin@truckbedfit.com"
                       className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-accent text-sm"
                     />
                   </div>

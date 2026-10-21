@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { AuthorRow, getD1, mapAuthor, nowIso } from "@/lib/db/d1";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser();
+  if (response) return response;
 
   const db = getD1();
   const body = await req.json() as Record<string, string>;
@@ -37,8 +36,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser();
+  if (response) return response;
 
   const db = getD1();
   const existing = await db.prepare("SELECT id FROM authors WHERE id = ?").bind(params.id).first();

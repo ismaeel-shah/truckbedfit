@@ -26,7 +26,7 @@ export default function AuthorCard({ author }: { author: Author }) {
         <div className="flex flex-col items-center gap-3 pt-6 pb-4 px-5 bg-slate-50 dark:bg-slate-800/50">
           <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700 flex-shrink-0 ring-2 ring-accent/20">
             {author.photo ? (
-              <img src={author.photo} alt={author.name} className="w-full h-full object-cover" />
+              <img src={author.photo} alt={author.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-accent/20">
                 <User size={32} className="text-accent" />
@@ -89,7 +89,7 @@ export default function AuthorCard({ author }: { author: Author }) {
       <div className="hidden md:flex gap-5 items-start p-6">
         <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700 flex-shrink-0">
           {author.photo ? (
-            <img src={author.photo} alt={author.name} className="w-full h-full object-cover" />
+            <img src={author.photo} alt={author.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-accent/20">
               <User size={28} className="text-accent" />

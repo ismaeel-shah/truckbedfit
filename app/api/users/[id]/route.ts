@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getD1, mapUser, nowIso, UserRow } from "@/lib/db/d1";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser("admin");
+  if (response) return response;
 
   const db = getD1();
   const user = await db.prepare("SELECT * FROM users WHERE id = ?").bind(params.id).first<UserRow>();
@@ -21,11 +20,10 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { user: currentUser, response } = await requireUser("admin");
+  if (response) return response;
 
-  const currentUserId = (session.user as { id?: string }).id;
-  if (currentUserId === params.id) {
+  if (currentUser.id === params.id) {
     return NextResponse.json({ error: "You cannot delete your own account" }, { status: 400 });
   }
 
@@ -41,13 +39,20 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { user: currentUser, response } = await requireUser("admin");
+  if (response) return response;
 
   const db = getD1();
   const body = await req.json() as Record<string, string>;
   const existing = await db.prepare("SELECT * FROM users WHERE id = ?").bind(params.id).first<UserRow>();
   if (!existing) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  if (body.role !== undefined && body.role !== "admin" && body.role !== "editor") {
+    return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+  }
+  if (body.role && body.role !== existing.role && currentUser.id === params.id) {
+    return NextResponse.json({ error: "You cannot change your own role" }, { status: 400 });
+  }
 
   await db.prepare(`
     UPDATE users

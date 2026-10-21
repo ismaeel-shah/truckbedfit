@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionUser, requireUser } from "@/lib/auth";
 import { calculateReadingTime } from "@/lib/utils/readingTime";
-import { getD1, mapPost, nowIso, postJoins, postSelect, PostRow } from "@/lib/db/d1";
+import { slugify } from "@/lib/utils/slugify";
+import { getD1, isPostStatus, mapPost, nowIso, PostPayload, postJoins, postSelect, PostRow, toIsoOrNull } from "@/lib/db/d1";
 
 async function getPostById(id: string) {
   const db = getD1();
@@ -20,7 +20,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const post = await getPostById(params.id);
-  if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // Unpublished posts are only visible to signed-in users.
+  if (!post || (post.status !== "published" && !(await getSessionUser()))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   return NextResponse.json(post);
 }
 
@@ -28,16 +31,34 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser();
+  if (response) return response;
 
   const db = getD1();
-  const body = await req.json() as Record<string, any>;
+  const body = await req.json() as PostPayload;
   const existing = await db.prepare("SELECT * FROM posts WHERE id = ?").bind(params.id).first<PostRow>();
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const publishedAt = body.status === "published" && !existing.published_at
-    ? nowIso()
+  const status = body.status ?? existing.status;
+  if (!isPostStatus(status)) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+
+  const scheduledAt = body.scheduledAt !== undefined
+    ? toIsoOrNull(body.scheduledAt)
+    : existing.scheduled_at;
+  if (status === "scheduled" && !scheduledAt) {
+    return NextResponse.json({ error: "Scheduled posts need a valid schedule date" }, { status: 400 });
+  }
+
+  const slug = body.slug ? slugify(body.slug) : existing.slug;
+  if (slug !== existing.slug) {
+    const clash = await db.prepare("SELECT id FROM posts WHERE slug = ? AND id != ?").bind(slug, params.id).first();
+    if (clash) return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+  }
+
+  // One timestamp for both columns so a fresh publish isn't shown as "Updated".
+  const now = nowIso();
+  const publishedAt = status === "published" && !existing.published_at
+    ? now
     : body.publishedAt ?? existing.published_at;
 
   try {
@@ -67,25 +88,25 @@ export async function PATCH(
       WHERE id = ?
     `).bind(
       body.title ?? existing.title,
-      body.slug ?? existing.slug,
+      slug,
       body.excerpt ?? existing.excerpt,
       body.content ?? existing.content,
       body.featuredImage ?? existing.featured_image,
       body.featuredImageAlt ?? existing.featured_image_alt,
       body.category ?? existing.category_id,
-      body.author || null,
+      body.author === undefined ? existing.author_id : body.author || null,
       JSON.stringify(body.tags ?? JSON.parse(existing.tags_json || "[]")),
-      body.status ?? existing.status,
+      status,
       publishedAt,
-      body.scheduledAt || existing.scheduled_at,
-      body.content ? calculateReadingTime(body.content) : existing.reading_time,
+      scheduledAt,
+      body.content !== undefined ? calculateReadingTime(body.content) : existing.reading_time,
       body.metaTitle ?? existing.meta_title,
       body.metaDescription ?? existing.meta_description,
       body.focusKeyword ?? existing.focus_keyword,
       body.ogImage ?? existing.og_image,
       JSON.stringify(body.affiliateProducts ?? JSON.parse(existing.affiliate_products_json || "[]")),
       JSON.stringify(body.faqs ?? JSON.parse(existing.faqs_json || "[]")),
-      nowIso(),
+      now,
       params.id
     ).run();
 
@@ -102,8 +123,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireUser();
+  if (response) return response;
 
   const db = getD1();
   const existing = await db.prepare("SELECT id FROM posts WHERE id = ?").bind(params.id).first();

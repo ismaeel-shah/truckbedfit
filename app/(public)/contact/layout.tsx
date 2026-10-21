@@ -1,14 +1,16 @@
 import { Metadata } from "next";
 import { getPageMeta } from "@/lib/utils/pageSettings";
+import { staticPageMetadata } from "@/lib/utils/seo";
+import { SITE_NAME } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
   const meta = await getPageMeta("page_contact");
-  return {
-    title: meta.metaTitle
-      ? { absolute: meta.metaTitle }
-      : "Contact",
-    description: meta.metaDescription || "Get in touch with the Home Desk Essentials team.",
-  };
+  const base = staticPageMetadata(
+    meta.metaTitle || "Contact",
+    meta.metaDescription || `Questions about a guide, a fitment problem or a product we should review? Get in touch with the ${SITE_NAME} team.`,
+    "/contact"
+  );
+  return meta.metaTitle ? { ...base, title: { absolute: meta.metaTitle } } : base;
 }
 
 export default function ContactLayout({ children }: { children: React.ReactNode }) {

@@ -1,352 +1,105 @@
-# 🏠 WorkNest — Home Office Amazon Affiliate Blog
+# TruckBedFit
 
-A production-grade Amazon affiliate blogging website **exclusively focused on the Home Office niche** — covering desks, ergonomic chairs, monitors, lighting, keyboards, and everything remote workers need. Built with **Next.js 14**, **Node.js**, **MongoDB**, and deployed on **Vercel**.
+Amazon affiliate blog for truck bed accessories — tonneau covers, liners, toolboxes, racks, and more — with a built-in admin CMS. Live at **https://www.truckbedfit.com**.
 
-> **Niche Strategy:** Single-niche focus for maximum topical authority and faster Google rankings.
-
----
-
-## 🎯 Niche Focus — Home Office
-
-### Sub-categories covered:
-
-| Sub-Category | Example Topics |
-|---|---|
-| 🪑 Ergonomic Chairs | Best chairs under $300, lumbar support reviews |
-| 🖥️ Monitors & Displays | Ultrawide monitors, 4K for home office |
-| 🗂️ Desks & Workstations | Standing desks, L-shaped desks, small space desks |
-| ⌨️ Keyboards & Mice | Mechanical keyboards, wireless mice, ergonomic combos |
-| 💡 Lighting & Webcams | Ring lights, key lights, best webcams for meetings |
-| 🔌 Cables & Accessories | Desk organizers, cable management, monitor arms |
-| 🎧 Headphones & Audio | Noise-cancelling headphones, desk speakers |
-| 🌐 Networking | Wi-Fi routers, mesh networks for home office |
-
----
-
-## 🚀 Tech Stack
+## Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 14 (App Router) |
-| Backend | Node.js via Next.js API Routes |
-| Database | Cloudflare D1 (SQLite) |
-| Auth | NextAuth.js (Credentials) |
-| Styling | Tailwind CSS |
-| Rich Text Editor | Tiptap |
-| Image Uploads | Cloudflare R2 |
-| Deployment | Cloudflare Workers |
+| Framework | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS |
+| Hosting | Cloudflare Workers via `@opennextjs/cloudflare` |
+| Database | Cloudflare D1 (`truckbedfit`), raw SQL — see `migrations/` |
+| Media | Cloudflare R2 (`truckbedfit-uploads`), served from `media.truckbedfit.com` |
+| Auth | NextAuth credentials (bcrypt, 8h JWT sessions) |
+| Editor | Tiptap rich text + raw HTML mode |
+| Email | Resend (contact form, password reset) |
 
----
+## How it works
 
-## ✨ Features
+- **Branding** lives in `lib/site.ts` (`SITE_NAME`, `SITE_URL`, tagline, description). Change it there, not in components.
+- **Categories** are created in the dashboard. The homepage renders one section per category that has published posts (oldest category first, layouts rotate slider → grid → magazine → magazine flipped). The navbar shows the 3 categories with the most posts; the footer lists all of them.
+- **Scheduled posts** are published automatically: the first request after a post's schedule time promotes it (checked at most once a minute per Worker). Schedule times are stored in UTC.
+- **Views** are counted on each post page view (bots excluded) and drive the homepage "Trending" section and the dashboard stats.
+- **Redirects** are managed in the dashboard and resolved for any unknown URL.
 
-### Public Website
-- 🏠 Homepage with hero, featured posts grid, sub-category filter
-- 📝 Blog listing with search and pagination
-- 📖 Single post page — sticky Table of Contents, reading progress bar, breadcrumbs
-- 🏷️ Sub-category pages (Chairs, Desks, Monitors, etc.)
-- 🛒 Amazon affiliate product comparison boxes inside posts
-- 🌙 Full dark mode support
-- 📱 Fully responsive — mobile, tablet, desktop
+### Roles
 
-### Dashboard (Admin)
-- 📊 Stats — Total Posts, Published, Drafts, Total Views
-- ✍️ Rich text post editor (Tiptap) with full toolbar
-- 🔍 Complete SEO panel — meta title, description, OG tags, Twitter cards, JSON-LD
-- 👁️ Live Google SERP preview inside the editor
-- ✅ Real-time SEO checklist
-- 🔗 Auto slug generation from title (manually editable)
-- 📅 Post scheduling (publish later)
-- 🖼️ Drag & drop image uploader via Cloudflare R2
-- 🛍️ Amazon affiliate product manager per post
-- 📂 Sub-category management
+| Role | Can do |
+|---|---|
+| `admin` | Everything, including Users, Redirects, and page SEO settings |
+| `editor` | Posts, categories, authors, media, own password |
 
-### SEO (Built-in)
-- `generateMetadata` on every page (Next.js 14 Metadata API)
-- Dynamic `sitemap.xml` — auto-updates on new posts
-- `robots.txt`
-- JSON-LD structured data — BlogPosting, BreadcrumbList, Product
-- Canonical URLs
-- Open Graph + Twitter Card tags
-- ISR — Incremental Static Regeneration (revalidate every hour)
-- Optimized images via `next/image`
-- Zero layout shift fonts via `next/font`
+Roles are re-read from the database on every API request, so demoting or deleting a user takes effect immediately. Admins cannot change their own role.
 
----
+## Local development
 
-## 📁 Project Structure
-
-```
-/
-├── app/
-│   ├── (public)/
-│   │   ├── page.tsx                        # Homepage
-│   │   ├── blog/
-│   │   │   ├── page.tsx                    # All posts listing
-│   │   │   └── [slug]/page.tsx             # Single blog post
-│   │   ├── category/
-│   │   │   └── [category]/page.tsx         # Sub-category page
-│   │   ├── about/page.tsx
-│   │   └── contact/page.tsx
-│   ├── (dashboard)/
-│   │   └── dashboard/
-│   │       ├── page.tsx                    # Dashboard home
-│   │       ├── posts/
-│   │       │   ├── page.tsx                # All posts table
-│   │       │   ├── new/page.tsx            # Create new post
-│   │       │   └── edit/[id]/page.tsx      # Edit post
-│   │       ├── categories/page.tsx
-│   │       ├── media/page.tsx
-│   │       └── settings/page.tsx
-│   ├── api/
-│   │   ├── auth/[...nextauth]/route.ts
-│   │   ├── posts/route.ts
-│   │   ├── posts/[id]/route.ts
-│   │   ├── categories/route.ts
-│   │   └── upload/route.ts
-│   ├── sitemap.ts
-│   ├── robots.ts
-│   └── layout.tsx
-├── components/
-│   ├── public/
-│   │   ├── Navbar.tsx
-│   │   ├── Footer.tsx
-│   │   ├── BlogCard.tsx
-│   │   ├── BlogGrid.tsx
-│   │   ├── HeroSection.tsx
-│   │   ├── CategoryFilter.tsx
-│   │   ├── AmazonProductBox.tsx
-│   │   ├── TableOfContents.tsx
-│   │   ├── RelatedPosts.tsx
-│   │   └── NewsletterSignup.tsx
-│   └── dashboard/
-│       ├── DashboardLayout.tsx
-│       ├── Sidebar.tsx
-│       ├── PostEditor.tsx
-│       ├── SEOPanel.tsx
-│       ├── MediaUploader.tsx
-│       ├── StatsCard.tsx
-│       └── PostsTable.tsx
-├── lib/
-│   ├── db/
-│   │   ├── d1.ts
-│   │   └── content.ts
-│   └── utils/
-│       ├── slugify.ts
-│       ├── seo.ts
-│       └── readingTime.ts
-├── middleware.ts                            # Protects /dashboard routes
-├── .env.local.example
-├── next.config.js
-└── tailwind.config.js
-```
-
----
-
-## ⚙️ Getting Started
-
-### Prerequisites
-- Node.js 22+
-- Cloudflare account (Workers + D1 + R2)
-- Amazon Associates account
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/yourusername/worknest.git
-cd worknest
-```
-
-### 2. Install dependencies
+Requires Node.js 22+.
 
 ```bash
 npm install
+cp .env.local.example .env.local      # then fill in values (generate a NEW NEXTAUTH_SECRET)
+npm run db:migrate:local              # create tables in the local D1 (.wrangler/state)
+npm run admin:create -- --email you@truckbedfit.com --name "Your Name"   # prompts for password
+npm run dev                           # http://localhost:3000, dashboard at /dashboard
 ```
 
-### 3. Configure environment variables
+`next dev` gets the D1/R2 bindings from `wrangler.jsonc` (local simulation) via `initOpenNextCloudflareForDev()` in `next.config.mjs`.
 
-```bash
-cp .env.local.example .env.local
+Useful checks: `npm run typecheck`, `npm run lint`. Builds fail on type or lint errors.
+
+## First deploy (one-time Cloudflare setup)
+
+1. **Create the database and bucket**
+   ```bash
+   npx wrangler login
+   npx wrangler d1 create truckbedfit --location enam
+   npx wrangler r2 bucket create truckbedfit-uploads --location enam
+   ```
+   Paste the `database_id` printed by `d1 create` into `wrangler.jsonc` (replacing the all-zero placeholder).
+
+2. **R2 public access** — Cloudflare dashboard → R2 → `truckbedfit-uploads` → Settings → connect custom domain `media.truckbedfit.com`. If you use a different URL, update `R2_PUBLIC_URL` in `wrangler.jsonc`.
+
+3. **Create tables and the first admin in production**
+   ```bash
+   npm run db:migrate:remote
+   npm run admin:create -- --email you@truckbedfit.com --name "Your Name" --remote
+   ```
+
+4. **Secrets** (never commit these)
+   ```bash
+   npx wrangler secret put NEXTAUTH_SECRET    # new random value, not the one from any other site
+   npx wrangler secret put RESEND_API_KEY
+   npx wrangler secret put CONTACT_EMAIL      # where contact-form messages go
+   ```
+   Non-secret values (`R2_PUBLIC_URL`, `NEXTAUTH_URL`, `RESEND_FROM`) are in `wrangler.jsonc` → `vars`. In Resend, verify the `truckbedfit.com` domain so `noreply@truckbedfit.com` can send.
+
+5. **Domain** — add `truckbedfit.com` to the same Cloudflare account. The routes in `wrangler.jsonc` bind both `truckbedfit.com` and `www.truckbedfit.com`; the middleware 301-redirects the bare domain to `www`.
+
+6. **Deploy**
+   ```bash
+   npm run cf:deploy
+   ```
+   Or push to `master`: `.github/workflows/deploy-cloudflare.yml` type-checks, builds, and deploys. It needs repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+
+> OpenNext warns that Windows builds are not fully supported. If `npm run cf:build` misbehaves locally, build in WSL or let CI (Linux) do it.
+
+## Writing posts
+
+- Fill in the SEO tab (focus keyword, meta title ≤ 60 chars, meta description 50–160 chars); the checklist shows what's missing.
+- Affiliate products render as "Our Top Picks" cards above the post body. **Put your Associates tag in every Amazon URL** (`?tag=yourtag-20`) — the site does not add it automatically.
+- FAQs render at the end of the post and as FAQPage structured data.
+
+## Project layout
+
 ```
-
-Open `.env.local` and fill in all values:
-
-```env
-# NextAuth
-NEXTAUTH_SECRET=your-long-random-secret-key
-NEXTAUTH_URL=http://localhost:3000
-
-# Cloudflare R2
-R2_PUBLIC_URL=https://media.yourdomain.com
-
-# Site
-NEXT_PUBLIC_SITE_URL=https://yourdomain.com
-NEXT_PUBLIC_SITE_NAME=Home Desk Essentials
-
-# Amazon Associates
-AMAZON_ASSOCIATE_TAG=yourtag-20
-
-# Email (Resend)
-RESEND_API_KEY=re_your_api_key
-RESEND_FROM="Home Desk Essentials <noreply@yourdomain.com>"
-CONTACT_EMAIL=you@yourdomain.com
+app/(public)/        public site: home, blog, post, category, about, contact
+app/(dashboard)/     admin dashboard
+app/api/             API routes (posts, categories, authors, users, redirects, settings, upload, auth)
+components/          public/, dashboard/, Logo.tsx
+lib/site.ts          branding constants
+lib/auth.ts          NextAuth config + requireUser() guard for API routes
+lib/db/              D1 access (d1.ts mappers/types, content.ts shared queries)
+migrations/          D1 schema
+scripts/             create-admin, OpenNext asset sync
+middleware.ts        www redirect + dashboard auth
 ```
-
-### 4. Seed the database
-
-```bash
-npm run seed
-```
-
-This creates:
-- Default admin user
-- 8 Home Office sub-categories (Chairs, Desks, Monitors, Keyboards, Lighting, Audio, Networking, Accessories)
-
-### 5. Start development server
-
-```bash
-npm run dev
-```
-
-| URL | Description |
-|---|---|
-| `http://localhost:3000` | Public website |
-| `http://localhost:3000/dashboard` | Admin dashboard |
-
----
-
-## 🌐 Deploying to Cloudflare
-
-### Step 1 — Push to GitHub
-```bash
-git add .
-git commit -m "initial commit"
-git push origin master
-```
-
-### Step 2 — Build & Deploy
-```bash
-npm run cf:deploy
-```
-
-CI/CD via GitHub Actions auto-deploys on every push to `master`.
-
----
-
-## 🖼️ Cloudflare R2 Setup
-
-1. Cloudflare dashboard → R2 → `homedeskessentials-media` bucket
-2. Settings → Enable public access (ya custom domain add karo)
-3. Copy the public URL
-4. Add to Cloudflare Workers env vars: `R2_PUBLIC_URL=https://your-r2-url`
-
----
-
-## 🔐 Admin Dashboard Access
-
-The entire `/dashboard` is protected via `middleware.ts` using NextAuth.
-
-**Default credentials after seeding:**
-```
-URL:      http://localhost:3000/dashboard
-Email:    admin@worknest.com
-Password: admin123
-```
-
-> ⚠️ Change the password immediately after first login via the Settings page.
-
----
-
-## ✍️ Writing SEO-Optimized Posts
-
-When creating a post in the dashboard, fill in the SEO Panel on the right:
-
-| Field | Tip |
-|---|---|
-| **Focus Keyword** | e.g. `best ergonomic chair under 300` |
-| **Meta Title** | Include keyword, keep under 60 chars |
-| **Meta Description** | Summarize post, include keyword, under 160 chars |
-| **Slug** | Auto-generated, keep it short and keyword-rich |
-| **OG Image** | Use featured image (1200x630px recommended) |
-
-The live **SEO Checklist** in the editor tells you exactly what to fix before publishing.
-
----
-
-## 🛒 Adding Amazon Affiliate Products
-
-Inside the post editor → **Affiliate Products** panel:
-
-1. Click **Add Product**
-2. Fill in: Product Name, Amazon URL, Image URL, Price, Badge (e.g. "Best Overall")
-3. Add Pros and Cons
-4. Drag to reorder
-5. Products render as styled comparison cards inside the post automatically
-
-> Always append your Associate Tag to every Amazon link: `?tag=yourtag-20`
-
----
-
-## 📦 Key Dependencies
-
-```json
-{
-  "next": "14.x",
-  "next-auth": "^4.x",
-  "next-themes": "^0.x",
-  "bcryptjs": "^2.x",
-  "@tiptap/react": "^2.x",
-  "@tiptap/starter-kit": "^2.x",
-  "@tiptap/extension-image": "^2.x",
-  "@tiptap/extension-link": "^2.x",
-  "@tiptap/extension-table": "^2.x",
-  "tailwindcss": "^3.x",
-  "lucide-react": "latest",
-  "react-hook-form": "^7.x",
-  "zod": "^3.x",
-  "date-fns": "^3.x",
-  "react-hot-toast": "^2.x",
-  "clsx": "^2.x",
-  "tailwind-merge": "^2.x"
-}
-```
-
----
-
-## 🎨 Design System
-
-| Token | Value |
-|---|---|
-| Primary | `#1B2A3B` (deep slate) |
-| Accent | `#2DD4BF` (teal) |
-| Background | `#F9FAFB` |
-| Surface | `#FFFFFF` |
-| Amazon CTA | `#FF9900` |
-| Heading Font | Playfair Display |
-| Body Font | DM Sans |
-
----
-
-## 📈 Content Strategy Tips
-
-- **Target buyer-intent keywords** — "best", "review", "vs", "under $X", "for home office"
-- **Minimum post length** — 1500 words for listicles, 2000+ for in-depth reviews
-- **Internal linking** — connect related sub-categories: chairs → desks → monitors
-- **Publishing frequency** — 2 to 3 posts per week consistently for the first 6 months
-- **Start with long-tail** — rank for "best monitor arm for standing desk" before targeting "best monitor"
-
----
-
-## 📄 License
-
-MIT License. See [LICENSE](LICENSE) for details.
-
----
-
-## 🙋 Support
-
-Open a GitHub Issue for bugs or questions.
-
----
-
-*Built for the Home Office niche — one niche, full authority.*
