@@ -1,6 +1,6 @@
 # TruckBedFit
 
-Amazon affiliate blog for truck bed accessories — tonneau covers, liners, toolboxes, racks, and more — with a built-in admin CMS. Live at **https://www.truckbedfit.com**.
+Amazon affiliate blog for truck bed accessories — tonneau covers, liners, toolboxes, racks, and more — with a built-in admin CMS. Live at **https://truckbedfit.com**.
 
 ## Stack
 
@@ -73,7 +73,7 @@ Useful checks: `npm run typecheck`, `npm run lint`. Builds fail on type or lint 
    ```
    Non-secret values (`R2_PUBLIC_URL`, `NEXTAUTH_URL`, `RESEND_FROM`) are in `wrangler.jsonc` → `vars`. In Resend, verify the `truckbedfit.com` domain so `noreply@truckbedfit.com` can send.
 
-5. **Domain** — add `truckbedfit.com` to the same Cloudflare account. The routes in `wrangler.jsonc` bind both `truckbedfit.com` and `www.truckbedfit.com`; the middleware 301-redirects the bare domain to `www`.
+5. **Domain** — add `truckbedfit.com` to the same Cloudflare account. The routes in `wrangler.jsonc` bind both `truckbedfit.com` and `www.truckbedfit.com`; the middleware 301-redirects `www` to the bare domain (canonical).
 
 6. **Deploy**
    ```bash

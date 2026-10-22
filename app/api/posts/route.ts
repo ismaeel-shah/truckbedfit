@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser, requireUser } from "@/lib/auth";
-import { slugify } from "@/lib/utils/slugify";
 import { calculateReadingTime } from "@/lib/utils/readingTime";
 import { getD1, isPostStatus, mapPost, nowIso, PostPayload, postJoins, postSelect, PostRow, toIsoOrNull } from "@/lib/db/d1";
 import { listPosts, PostStatusFilter } from "@/lib/db/content";
+import { preparePostWrite } from "@/lib/db/postWrite";
 
 function asInt(value: string | null, fallback: number) {
   const n = Number(value);
@@ -38,21 +38,30 @@ export async function POST(req: NextRequest) {
 
   const db = getD1();
   const body = await req.json() as PostPayload;
-  const title = body.title?.trim();
-  const slug = body.slug ? slugify(body.slug) : slugify(title ?? "");
   const status = body.status ?? "draft";
   const scheduledAt = toIsoOrNull(body.scheduledAt);
 
-  if (!title) return NextResponse.json({ error: "Title is required" }, { status: 400 });
-  if (!slug) return NextResponse.json({ error: "Slug is required" }, { status: 400 });
-  if (!body.category) return NextResponse.json({ error: "Category is required" }, { status: 400 });
   if (!isPostStatus(status)) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   if (status === "scheduled" && !scheduledAt) {
     return NextResponse.json({ error: "Scheduled posts need a valid schedule date" }, { status: 400 });
   }
 
-  const existing = await db.prepare("SELECT id FROM posts WHERE slug = ?").bind(slug).first();
-  if (existing) return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+  const prepared = await preparePostWrite({
+    title: body.title ?? "",
+    slug: body.slug ?? "",
+    categoryId: body.category ?? "",
+    type: body.type ?? "guide",
+    trucks: body.trucks ?? [],
+    articleId: body.articleId ?? "",
+    status,
+    metaTitle: body.metaTitle ?? "",
+    metaDescription: body.metaDescription ?? "",
+    focusKeyword: body.focusKeyword ?? "",
+    updatedOn: body.updatedOn ?? null,
+    faqs: body.faqs ?? [],
+  });
+  if (!prepared.ok) return NextResponse.json({ error: prepared.error }, { status: prepared.status });
+  const post = prepared.record;
 
   const now = nowIso();
   const id = crypto.randomUUID();
@@ -63,13 +72,14 @@ export async function POST(req: NextRequest) {
       id, title, slug, excerpt, content, featured_image, featured_image_alt,
       category_id, author_id, tags_json, status, published_at, scheduled_at,
       views, reading_time, meta_title, meta_description, focus_keyword, og_image,
-      affiliate_products_json, faqs_json, created_at, updated_at
+      affiliate_products_json, faqs_json, article_id, type, trucks_json, updated_on,
+      created_at, updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id,
-    title,
-    slug,
+    post.title,
+    post.slug,
     body.excerpt ?? "",
     body.content ?? "",
     body.featuredImage ?? "",
@@ -82,12 +92,16 @@ export async function POST(req: NextRequest) {
     status === "scheduled" ? scheduledAt : null,
     0,
     calculateReadingTime(body.content ?? ""),
-    body.metaTitle ?? "",
-    body.metaDescription ?? "",
-    body.focusKeyword ?? "",
+    post.metaTitle,
+    post.metaDescription,
+    post.focusKeyword,
     body.ogImage ?? "",
-    JSON.stringify(body.affiliateProducts ?? []),
-    JSON.stringify(body.faqs ?? []),
+    "[]",
+    JSON.stringify(post.faqs),
+    post.articleId,
+    post.type,
+    JSON.stringify(post.trucks),
+    post.updatedOn,
     now,
     now
   ).run();

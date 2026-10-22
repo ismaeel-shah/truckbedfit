@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser, requireUser } from "@/lib/auth";
 import { calculateReadingTime } from "@/lib/utils/readingTime";
-import { slugify } from "@/lib/utils/slugify";
-import { getD1, isPostStatus, mapPost, nowIso, PostPayload, postJoins, postSelect, PostRow, toIsoOrNull } from "@/lib/db/d1";
+import { getD1, isPostStatus, mapPost, nowIso, parseJson, PostPayload, postJoins, postSelect, PostRow, toIsoOrNull } from "@/lib/db/d1";
+import { preparePostWrite } from "@/lib/db/postWrite";
 
 async function getPostById(id: string) {
   const db = getD1();
@@ -49,11 +49,25 @@ export async function PATCH(
     return NextResponse.json({ error: "Scheduled posts need a valid schedule date" }, { status: 400 });
   }
 
-  const slug = body.slug ? slugify(body.slug) : existing.slug;
-  if (slug !== existing.slug) {
-    const clash = await db.prepare("SELECT id FROM posts WHERE slug = ? AND id != ?").bind(slug, params.id).first();
-    if (clash) return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
-  }
+  // Partial updates (e.g. the alt-text autosave) send one field, so validate the
+  // stored post merged with whatever changed.
+  const prepared = await preparePostWrite({
+    id: params.id,
+    title: body.title ?? existing.title,
+    slug: body.slug ?? existing.slug,
+    categoryId: body.category ?? existing.category_id,
+    type: body.type ?? existing.type,
+    trucks: body.trucks ?? parseJson<string[]>(existing.trucks_json, []),
+    articleId: body.articleId ?? existing.article_id,
+    status,
+    metaTitle: body.metaTitle ?? existing.meta_title,
+    metaDescription: body.metaDescription ?? existing.meta_description,
+    focusKeyword: body.focusKeyword ?? existing.focus_keyword,
+    updatedOn: body.updatedOn !== undefined ? body.updatedOn : existing.updated_on,
+    faqs: body.faqs ?? parseJson(existing.faqs_json, []),
+  });
+  if (!prepared.ok) return NextResponse.json({ error: prepared.error }, { status: prepared.status });
+  const post = prepared.record;
 
   // One timestamp for both columns so a fresh publish isn't shown as "Updated".
   const now = nowIso();
@@ -84,11 +98,15 @@ export async function PATCH(
         og_image = ?,
         affiliate_products_json = ?,
         faqs_json = ?,
+        article_id = ?,
+        type = ?,
+        trucks_json = ?,
+        updated_on = ?,
         updated_at = ?
       WHERE id = ?
     `).bind(
-      body.title ?? existing.title,
-      slug,
+      post.title,
+      post.slug,
       body.excerpt ?? existing.excerpt,
       body.content ?? existing.content,
       body.featuredImage ?? existing.featured_image,
@@ -100,18 +118,22 @@ export async function PATCH(
       publishedAt,
       scheduledAt,
       body.content !== undefined ? calculateReadingTime(body.content) : existing.reading_time,
-      body.metaTitle ?? existing.meta_title,
-      body.metaDescription ?? existing.meta_description,
-      body.focusKeyword ?? existing.focus_keyword,
+      post.metaTitle,
+      post.metaDescription,
+      post.focusKeyword,
       body.ogImage ?? existing.og_image,
-      JSON.stringify(body.affiliateProducts ?? JSON.parse(existing.affiliate_products_json || "[]")),
-      JSON.stringify(body.faqs ?? JSON.parse(existing.faqs_json || "[]")),
+      // Manual product boxes with prices were removed (Amazon policy); clear any old data.
+      "[]",
+      JSON.stringify(post.faqs),
+      post.articleId,
+      post.type,
+      JSON.stringify(post.trucks),
+      post.updatedOn,
       now,
       params.id
     ).run();
 
-    const post = await getPostById(params.id);
-    return NextResponse.json(post);
+    return NextResponse.json(await getPostById(params.id));
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     console.error("PATCH /api/posts/[id] error:", msg);

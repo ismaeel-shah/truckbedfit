@@ -7,11 +7,15 @@ import PostEditor from "./PostEditor";
 import SEOPanel from "./SEOPanel";
 import MediaUploader from "./MediaUploader";
 import { slugify } from "@/lib/utils/slugify";
-import { Plus, Trash2, GripVertical, Check, Loader2 } from "lucide-react";
+import { ARTICLE_TYPES, ARTICLE_TYPE_LABELS, ArticleType, isPillarType, PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
+import { articlePath } from "@/lib/urls";
+import { TRUCKS } from "@/data/trucks";
+import { Plus, Trash2, Check, Loader2 } from "lucide-react";
 
 interface Category {
   _id: string;
   name: string;
+  slug: string;
   icon: string;
 }
 
@@ -19,17 +23,6 @@ interface Author {
   _id: string;
   name: string;
   photo?: string;
-}
-
-interface AffiliateProduct {
-  name: string;
-  amazonUrl: string;
-  imageUrl: string;
-  price: string;
-  badge: string;
-  pros: string[];
-  cons: string[];
-  order: number;
 }
 
 interface FAQ {
@@ -53,21 +46,13 @@ interface PostData {
   metaDescription: string;
   focusKeyword: string;
   ogImage: string;
-  affiliateProducts: AffiliateProduct[];
   faqs: FAQ[];
   author: string;
+  articleId: string;
+  type: ArticleType;
+  trucks: string[];
+  updatedOn: string;
 }
-
-const emptyProduct = (): AffiliateProduct => ({
-  name: "",
-  amazonUrl: "",
-  imageUrl: "",
-  price: "",
-  badge: "",
-  pros: [""],
-  cons: [""],
-  order: 0,
-});
 
 /** UTC ISO string -> "YYYY-MM-DDTHH:mm" in the browser's timezone */
 function isoToLocalInput(iso: string) {
@@ -83,13 +68,22 @@ function localInputToIso(value: string) {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 }
 
+/** Today in the browser's timezone, as YYYY-MM-DD */
+function todayLocal() {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+}
+
+const fieldClass =
+  "w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent";
+
 export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [authors, setAuthors]       = useState<Author[]>([]);
   const [saving, setSaving] = useState(false);
   const [altStatus, setAltStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [activeTab, setActiveTab] = useState<"write" | "seo" | "products" | "faqs">("write");
+  const [activeTab, setActiveTab] = useState<"write" | "seo" | "faqs">("write");
 
   const normaliseInitial = (init?: Partial<PostData>) => {
     if (!init) return {};
@@ -115,9 +109,12 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     metaDescription: "",
     focusKeyword: "",
     ogImage: "",
-    affiliateProducts: [],
     faqs: [],
     author: "",
+    articleId: "",
+    type: "guide",
+    trucks: [],
+    updatedOn: "",
     ...normaliseInitial(initial),
   });
 
@@ -126,16 +123,49 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     fetch("/api/authors").then((r) => r.json()).then(setAuthors);
   }, []);
 
-  // scheduledAt is stored as UTC ISO; the datetime-local input needs browser-local time.
-  // Converted after mount so server and client render the same markup.
+  // Browser-dependent defaults are applied after mount so server and client render the same markup:
+  // scheduledAt is stored as UTC ISO (datetime-local needs browser time) and new posts default
+  // their "last updated" date to today.
   useEffect(() => {
     const iso = initial?.scheduledAt;
-    if (iso) setForm((prev) => ({ ...prev, scheduledAt: isoToLocalInput(iso) }));
+    setForm((prev) => ({
+      ...prev,
+      ...(iso && { scheduledAt: isoToLocalInput(iso) }),
+      ...(!prev.updatedOn && !initial?._id && { updatedOn: todayLocal() }),
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const set = (field: string, value: unknown) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const category = categories.find((c) => c._id === form.category);
+  const pillar = isPillarType(form.type);
+  const urlPath = category
+    ? articlePath({ slug: form.slug || "your-slug", type: form.type, category })
+    : null;
+
+  // The main-article type depends on the category: "pillar" for Tonneau Covers, "category-hub" elsewhere.
+  const setCategory = (id: string) => {
+    const next = categories.find((c) => c._id === id);
+    setForm((prev) => {
+      let type = prev.type;
+      if (isPillarType(type) && next) type = next.slug === PILLAR_CATEGORY_SLUG ? "pillar" : "category-hub";
+      return { ...prev, category: id, type };
+    });
+  };
+
+  const setType = (value: string) => {
+    let type = value as ArticleType;
+    if (isPillarType(type) && category) type = category.slug === PILLAR_CATEGORY_SLUG ? "pillar" : "category-hub";
+    set("type", type);
+  };
+
+  const toggleTruck = (slug: string) =>
+    setForm((prev) => ({
+      ...prev,
+      trucks: prev.trucks.includes(slug) ? prev.trucks.filter((t) => t !== slug) : [...prev.trucks, slug],
+    }));
 
   const handleTitleChange = (title: string) => {
     setForm((prev) => ({
@@ -162,6 +192,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
       ...form,
       status: nextStatus,
       scheduledAt,
+      updatedOn: form.updatedOn || null,
       tags: (form.tags as string).split(",").map((t: string) => t.trim()).filter(Boolean),
     };
 
@@ -176,11 +207,11 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
 
     setSaving(false);
     if (res.ok) {
-      toast.success(status === "published" ? "Post published!" : "Post saved");
+      toast.success(nextStatus === "published" ? "Post published!" : "Post saved");
       router.push("/dashboard/posts");
       router.refresh();
     } else {
-      const err = await res.json();
+      const err = await res.json().catch(() => ({}));
       toast.error(err.error ?? "Save failed");
     }
   };
@@ -201,26 +232,14 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
         setTimeout(() => setAltStatus("idle"), 2500);
       } else {
         setAltStatus("idle");
-        toast.error("Alt text save failed");
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error ?? "Alt text save failed");
       }
     } catch {
       setAltStatus("idle");
       toast.error("Alt text save failed");
     }
   };
-
-  /* Affiliate products helpers */
-  const addProduct = () =>
-    set("affiliateProducts", [...form.affiliateProducts, emptyProduct()]);
-
-  const updateProduct = (i: number, field: string, value: unknown) => {
-    const updated = [...form.affiliateProducts];
-    updated[i] = { ...updated[i], [field]: value };
-    set("affiliateProducts", updated);
-  };
-
-  const removeProduct = (i: number) =>
-    set("affiliateProducts", form.affiliateProducts.filter((_, idx) => idx !== i));
 
   /* FAQ helpers */
   const addFaq = () =>
@@ -243,41 +262,48 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
         <div>
           <input
             type="text"
-            placeholder="Post title"
+            placeholder="Post title (H1)"
             value={form.title}
             onChange={(e) => handleTitleChange(e.target.value)}
             className="w-full text-2xl font-heading font-bold px-0 py-2 bg-transparent border-b border-slate-200 dark:border-slate-700 focus:outline-none focus:border-accent text-primary dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600"
           />
         </div>
 
-        {/* Slug */}
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-slate-400">/blog/</span>
-          <input
-            type="text"
-            value={form.slug}
-            onChange={(e) => set("slug", slugify(e.target.value))}
-            className="flex-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent text-slate-600 dark:text-slate-300"
-          />
-        </div>
+        {/* URL */}
+        {pillar ? (
+          <p className="text-sm text-slate-500">
+            Main article of its category — it appears at{" "}
+            <span className="font-mono text-slate-700 dark:text-slate-200">{urlPath ?? "/[category]"}</span>, above the category&apos;s posts.
+          </p>
+        ) : (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-400 whitespace-nowrap">/{category?.slug ?? "category"}/</span>
+            <input
+              type="text"
+              value={form.slug}
+              onChange={(e) => set("slug", slugify(e.target.value))}
+              className="flex-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent text-slate-600 dark:text-slate-300"
+            />
+          </div>
+        )}
 
         {/* Excerpt */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Excerpt
+            Excerpt <span className="font-normal text-slate-400">(summary shown on cards)</span>
           </label>
           <textarea
             rows={2}
             value={form.excerpt}
             onChange={(e) => set("excerpt", e.target.value)}
-            placeholder="Short summary shown in blog cards…"
-            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+            placeholder="One or two sentences shown in article cards…"
+            className={`${fieldClass} resize-none`}
           />
         </div>
 
         {/* Tabs */}
         <div className="flex border-b border-slate-200 dark:border-slate-700">
-          {(["write", "seo", "products", "faqs"] as const).map((tab) => (
+          {(["write", "seo", "faqs"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
@@ -288,7 +314,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                   : "text-slate-500 hover:text-primary dark:hover:text-white"
               }`}
             >
-              {tab === "products" ? "Affiliate Products" : tab === "faqs" ? `FAQs${form.faqs.length ? ` (${form.faqs.length})` : ""}` : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === "faqs" ? `FAQs${form.faqs.length ? ` (${form.faqs.length})` : ""}` : tab === "seo" ? "SEO" : "Write"}
             </button>
           ))}
         </div>
@@ -307,12 +333,16 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
               slug: form.slug,
               content: form.content,
             }}
+            urlPath={urlPath}
             onChange={(field, value) => set(field, value)}
           />
         )}
 
         {activeTab === "faqs" && (
           <div className="space-y-4">
+            <p className="text-xs text-slate-500">
+              FAQs appear at the end of the article and as FAQ rich results in Google.
+            </p>
             {form.faqs.length === 0 && (
               <div className="text-center py-10 text-slate-400 text-sm">
                 No FAQs yet. Click &quot;Add FAQ&quot; to add your first question.
@@ -328,6 +358,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                   <button
                     type="button"
                     onClick={() => removeFaq(i)}
+                    aria-label={`Remove FAQ ${i + 1}`}
                     className="text-red-400 hover:text-red-500 transition-colors"
                   >
                     <Trash2 size={15} />
@@ -335,105 +366,31 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">
-                    Question
-                  </label>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Question</label>
                   <input
                     type="text"
                     value={faq.question}
                     onChange={(e) => updateFaq(i, "question", e.target.value)}
                     placeholder="e.g. Will this tonneau cover fit a 5.5 ft bed?"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
+                    className={fieldClass}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">
-                    Answer
-                  </label>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Answer</label>
                   <textarea
                     rows={3}
                     value={faq.answer}
                     onChange={(e) => updateFaq(i, "answer", e.target.value)}
                     placeholder="Write a detailed answer…"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                    className={`${fieldClass} resize-none`}
                   />
                 </div>
               </div>
             ))}
 
-            <button
-              type="button"
-              onClick={addFaq}
-              className="btn-secondary flex items-center gap-2 text-sm"
-            >
+            <button type="button" onClick={addFaq} className="btn-secondary flex items-center gap-2 text-sm">
               <Plus size={16} /> Add FAQ
-            </button>
-          </div>
-        )}
-
-        {activeTab === "products" && (
-          <div className="space-y-4">
-            {form.affiliateProducts.map((product, i) => (
-              <div key={i} className="card p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <GripVertical size={16} className="text-slate-300 cursor-grab" />
-                    <span className="text-sm font-semibold text-primary dark:text-white">
-                      Product {i + 1}
-                    </span>
-                  </div>
-                  <button type="button" onClick={() => removeProduct(i)} className="text-red-400 hover:text-red-500">
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-
-                {/* Row 1: Name + Amazon Link */}
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {[
-                    { field: "name",      label: "Name" },
-                    { field: "amazonUrl", label: "Amazon Link" },
-                  ].map(({ field, label }) => (
-                    <div key={field}>
-                      <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
-                      <input
-                        type="text"
-                        value={product[field as keyof typeof product] as string}
-                        onChange={(e) => updateProduct(i, field, e.target.value)}
-                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent"
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Row 2: Image URL + Preview */}
-                <div className="flex gap-3 items-start">
-                  <div className="flex-1">
-                    <label className="block text-xs font-medium text-slate-500 mb-1">Image URL</label>
-                    <input
-                      type="text"
-                      value={product.imageUrl}
-                      onChange={(e) => updateProduct(i, "imageUrl", e.target.value)}
-                      className="w-full px-2 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                  <div className="shrink-0 mt-5 w-16 h-16 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
-                    {product.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={product.imageUrl} alt="preview" className="w-full h-full object-contain" />
-                    ) : (
-                      <span className="text-[10px] text-slate-300 text-center px-1">No image</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addProduct}
-              className="btn-secondary flex items-center gap-2 text-sm"
-            >
-              <Plus size={16} /> Add Product
             </button>
           </div>
         )}
@@ -446,14 +403,8 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
           <h3 className="font-semibold text-primary dark:text-white">Publish</h3>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Status
-            </label>
-            <select
-              value={form.status}
-              onChange={(e) => set("status", e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
-            >
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
+            <select value={form.status} onChange={(e) => set("status", e.target.value)} className={fieldClass}>
               <option value="draft">Draft</option>
               <option value="published">Published</option>
               <option value="scheduled">Scheduled</option>
@@ -462,76 +413,116 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
 
           {form.status === "scheduled" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Schedule Date
-              </label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Schedule Date</label>
               <input
                 type="datetime-local"
                 value={form.scheduledAt}
                 onChange={(e) => set("scheduledAt", e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
+                className={fieldClass}
               />
             </div>
           )}
 
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Last updated</label>
+            <input
+              type="date"
+              value={form.updatedOn}
+              onChange={(e) => set("updatedOn", e.target.value)}
+              className={fieldClass}
+            />
+            <p className="text-xs text-slate-400 mt-1">
+              Shown on the article. Change it only for real content updates, not typo fixes.
+            </p>
+          </div>
+
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => handleSave()}
-              disabled={saving}
-              className="btn-secondary flex-1 text-sm"
-            >
-              Save Draft
+            <button type="button" onClick={() => handleSave()} disabled={saving} className="btn-secondary flex-1 text-sm">
+              Save
             </button>
-            <button
-              type="button"
-              onClick={() => handleSave("published")}
-              disabled={saving}
-              className="btn-primary flex-1 text-sm"
-            >
+            <button type="button" onClick={() => handleSave("published")} disabled={saving} className="btn-primary flex-1 text-sm">
               {saving ? "Saving…" : "Publish"}
             </button>
           </div>
         </div>
 
-        {/* Category */}
+        {/* Category + type */}
         <div className="card p-5 space-y-3">
-          <h3 className="font-semibold text-primary dark:text-white">Category</h3>
-          <select
-            value={form.category}
-            onChange={(e) => set("category", e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
-          >
-            <option value="">Select category…</option>
-            {categories.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.icon} {c.name}
-              </option>
-            ))}
-          </select>
+          <h3 className="font-semibold text-primary dark:text-white">Article</h3>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
+            <select value={form.category} onChange={(e) => setCategory(e.target.value)} className={fieldClass}>
+              <option value="">Select category…</option>
+              {categories.map((c) => (
+                <option key={c._id} value={c._id}>{c.icon} {c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Type</label>
+            <select value={form.type} onChange={(e) => setType(e.target.value)} className={fieldClass}>
+              {ARTICLE_TYPES.map((t) => (
+                <option key={t} value={t}>{ARTICLE_TYPE_LABELS[t]}</option>
+              ))}
+            </select>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Tags (comma-separated)
+              Article ID <span className="font-normal text-slate-400">(planning sheet, optional)</span>
             </label>
+            <input
+              type="text"
+              value={form.articleId}
+              onChange={(e) => set("articleId", e.target.value)}
+              placeholder="e.g. A03"
+              className={fieldClass}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tags (comma-separated)</label>
             <input
               type="text"
               value={form.tags}
               onChange={(e) => set("tags", e.target.value)}
-              placeholder="tonneau cover, f-150, review"
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
+              placeholder="hard folding, budget"
+              className={fieldClass}
             />
+          </div>
+        </div>
+
+        {/* Trucks */}
+        <div className="card p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-primary dark:text-white">Fits these trucks</h3>
+            {form.trucks.length > 0 && (
+              <button type="button" onClick={() => set("trucks", [])} className="text-xs text-slate-400 hover:text-accent">
+                Clear ({form.trucks.length})
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-slate-400">The article is listed on each ticked truck&apos;s page.</p>
+          <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+            {TRUCKS.map((truck) => (
+              <label key={truck.slug} className="flex items-center gap-2 rounded px-1 py-1 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.trucks.includes(truck.slug)}
+                  onChange={() => toggleTruck(truck.slug)}
+                  className="accent-[#EA580C]"
+                />
+                {truck.name}
+              </label>
+            ))}
           </div>
         </div>
 
         {/* Author */}
         <div className="card p-5 space-y-3">
           <h3 className="font-semibold text-primary dark:text-white">Author</h3>
-          <select
-            value={form.author}
-            onChange={(e) => set("author", e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
-          >
+          <select value={form.author} onChange={(e) => set("author", e.target.value)} className={fieldClass}>
             <option value="">Select author…</option>
             {authors.map((a) => (
               <option key={a._id} value={a._id}>{a.name}</option>
@@ -542,11 +533,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
         {/* Featured image */}
         <div className="card p-5 space-y-3">
           <h3 className="font-semibold text-primary dark:text-white">Featured Image</h3>
-          <MediaUploader
-            value={form.featuredImage}
-            onChange={(url) => set("featuredImage", url)}
-            label=""
-          />
+          <MediaUploader value={form.featuredImage} onChange={(url) => set("featuredImage", url)} label="" />
           {form.featuredImage && (
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -569,7 +556,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                   onChange={(e) => { set("featuredImageAlt", e.target.value); setAltStatus("idle"); }}
                   onBlur={handleAltSave}
                   placeholder="Describe the image for accessibility…"
-                  className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
+                  className={`flex-1 ${fieldClass}`}
                 />
                 {initial?._id && (
                   <button
@@ -584,7 +571,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                 )}
               </div>
               {!initial?._id && (
-                <p className="text-xs text-slate-400 mt-1">Alt text will save when you publish or save draft.</p>
+                <p className="text-xs text-slate-400 mt-1">Alt text will save when you publish or save.</p>
               )}
             </div>
           )}
@@ -594,11 +581,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
         <div className="card p-5">
           <h3 className="font-semibold text-primary dark:text-white mb-3">OG Image</h3>
           <p className="text-xs text-slate-400 mb-3">Used for social sharing (1200×630px)</p>
-          <MediaUploader
-            value={form.ogImage}
-            onChange={(url) => set("ogImage", url)}
-            label=""
-          />
+          <MediaUploader value={form.ogImage} onChange={(url) => set("ogImage", url)} label="" />
         </div>
       </div>
     </div>

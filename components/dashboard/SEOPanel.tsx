@@ -13,17 +13,20 @@ interface SEOPanelProps {
     slug: string;
     content: string;
   };
+  /** Public path of the article, e.g. /tonneau-covers/best-for-f-150 (null until a category is picked) */
+  urlPath: string | null;
   onChange: (field: string, value: string) => void;
 }
 
-export default function SEOPanel({ data, onChange }: SEOPanelProps) {
-  const checks = runSEOChecklist(data);
-  const score = checks.filter((c) => c.pass).length;
+/** What Google will show: {year} is replaced with the current year at render time. */
+function withYear(title: string) {
+  return title.replace(/\{year\}/g, String(new Date().getFullYear()));
+}
 
-  const siteUrl =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : SITE_URL;
+export default function SEOPanel({ data, urlPath, onChange }: SEOPanelProps) {
+  const shownTitle = withYear(data.metaTitle);
+  const checks = runSEOChecklist({ ...data, metaTitle: shownTitle });
+  const score = checks.filter((c) => c.pass).length;
 
   return (
     <div className="space-y-5">
@@ -62,10 +65,10 @@ export default function SEOPanel({ data, onChange }: SEOPanelProps) {
 
       <hr className="border-slate-200 dark:border-slate-700" />
 
-      {/* Focus Keyword */}
+      {/* Primary keyword */}
       <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-          Focus Keyword
+          Primary keyword <span className="font-normal text-slate-400">(required to publish)</span>
         </label>
         <input
           type="text"
@@ -76,27 +79,30 @@ export default function SEOPanel({ data, onChange }: SEOPanelProps) {
         />
       </div>
 
-      {/* Meta Title */}
+      {/* SEO title */}
       <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-          Meta Title{" "}
-          <span className={`text-xs ${data.metaTitle.length > 60 ? "text-red-500" : "text-slate-400"}`}>
-            ({data.metaTitle.length}/60)
+          SEO title{" "}
+          <span className={`text-xs ${shownTitle.length > 60 ? "text-red-500" : "text-slate-400"}`}>
+            ({shownTitle.length}/60)
           </span>
         </label>
         <input
           type="text"
           value={data.metaTitle}
           onChange={(e) => onChange("metaTitle", e.target.value)}
-          placeholder="SEO title (max 60 chars)"
+          placeholder="e.g. Best Tonneau Covers for F-150 ({year})"
           className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
         />
+        <p className="text-xs text-slate-400 mt-1">
+          Write <code>{"{year}"}</code> to always show the current year. Leave empty to use the post title.
+        </p>
       </div>
 
-      {/* Meta Description */}
+      {/* Description */}
       <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-          Meta Description{" "}
+          Description <span className="font-normal text-slate-400">(required to publish)</span>{" "}
           <span className={`text-xs ${data.metaDescription.length > 160 ? "text-red-500" : "text-slate-400"}`}>
             ({data.metaDescription.length}/160)
           </span>
@@ -117,10 +123,10 @@ export default function SEOPanel({ data, onChange }: SEOPanelProps) {
         </p>
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
           <p className="text-xs text-slate-400 truncate">
-            {siteUrl}/blog/{data.slug}
+            {SITE_URL.replace(/^https?:\/\//, "")}{urlPath ?? "/[category]/…"}
           </p>
           <p className="text-sm font-medium text-blue-600 dark:text-blue-400 leading-snug line-clamp-1 mt-0.5">
-            {data.metaTitle || data.title || "Post title"}
+            {shownTitle || data.title || "Post title"}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
             {data.metaDescription || "Post description will appear here..."}

@@ -1,4 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { ArticleType } from "@/lib/articleTypes";
+import { articlePath } from "@/lib/urls";
 
 export interface D1Result<T = Record<string, unknown>> {
   results?: T[];
@@ -79,6 +81,10 @@ export type PostRow = {
   og_image: string;
   affiliate_products_json: string;
   faqs_json: string;
+  article_id: string;
+  type: ArticleType;
+  trucks_json: string;
+  updated_on: string | null;
   created_at: string;
   updated_at: string;
   category_name?: string;
@@ -128,12 +134,22 @@ export interface PostPayload {
   status?: string;
   scheduledAt?: string | null;
   publishedAt?: string | null;
+  /** SEO title; may contain {year} */
   metaTitle?: string;
+  /** Meta description */
   metaDescription?: string;
+  /** Primary keyword */
   focusKeyword?: string;
   ogImage?: string;
   affiliateProducts?: unknown[];
   faqs?: unknown[];
+  /** Planning-sheet ID, e.g. "A03" */
+  articleId?: string;
+  type?: string;
+  /** Truck slugs from data/trucks.ts */
+  trucks?: string[];
+  /** Editorial "last updated" date, YYYY-MM-DD */
+  updatedOn?: string | null;
 }
 
 export const POST_STATUSES = ["draft", "published", "scheduled"] as const;
@@ -262,7 +278,13 @@ export function mapPost(row: PostRow) {
     focusKeyword: row.focus_keyword ?? "",
     ogImage: row.og_image ?? "",
     affiliateProducts: parseJson(row.affiliate_products_json, []),
-    faqs: parseJson(row.faqs_json, []),
+    faqs: parseJson<{ question: string; answer: string }[]>(row.faqs_json, []),
+    articleId: row.article_id ?? "",
+    type: row.type ?? "guide",
+    trucks: parseJson<string[]>(row.trucks_json, []),
+    // Editorial date; falls back to the publish date for posts saved before it existed.
+    updatedOn: row.updated_on || (row.published_at ?? row.updated_at).slice(0, 10),
+    url: articlePath({ slug: row.slug, type: row.type, category }),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { slugify } from "@/lib/utils/slugify";
 import { CategoryRow, getD1, mapCategory, nowIso } from "@/lib/db/d1";
+import { isReservedRootSlug } from "@/lib/urls";
+import { PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
+
+/** Category slugs are root URLs (/[category]), so they must not collide with anything. */
+async function checkCategorySlug(db: ReturnType<typeof getD1>, slug: string, excludeId = ""): Promise<string | null> {
+  if (!slug) return "Slug is required";
+  if (isReservedRootSlug(slug)) return `"${slug}" is used by another page on the site — pick a different slug`;
+  const category = await db.prepare("SELECT id FROM categories WHERE slug = ? AND id != ?").bind(slug, excludeId).first();
+  if (category) return "Another category already uses this slug";
+  const article = await db
+    .prepare("SELECT id FROM posts WHERE slug = ? AND type NOT IN ('pillar', 'category-hub')")
+    .bind(slug)
+    .first();
+  if (article) return "An article already uses this slug — pick a different one";
+  return null;
+}
 
 export async function GET() {
   const db = getD1();
@@ -28,8 +44,8 @@ export async function POST(req: NextRequest) {
   if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
 
   const slug = body.slug ? slugify(body.slug) : slugify(name);
-  const existing = await db.prepare("SELECT id FROM categories WHERE slug = ?").bind(slug).first();
-  if (existing) return NextResponse.json({ error: "Category already exists" }, { status: 409 });
+  const slugError = await checkCategorySlug(db, slug);
+  if (slugError) return NextResponse.json({ error: slugError }, { status: 409 });
 
   const now = nowIso();
   const id = crypto.randomUUID();
@@ -65,6 +81,21 @@ export async function PATCH(req: NextRequest) {
 
   const name = body.name?.trim() ?? existing.name;
   const slug = body.slug ? slugify(body.slug) : existing.slug;
+  if (slug !== existing.slug) {
+    if (existing.slug === PILLAR_CATEGORY_SLUG) {
+      return NextResponse.json(
+        { error: `The "${PILLAR_CATEGORY_SLUG}" slug is fixed — the site's pillar article depends on it` },
+        { status: 400 }
+      );
+    }
+    const slugError = await checkCategorySlug(db, slug, id);
+    if (slugError) return NextResponse.json({ error: slugError }, { status: 409 });
+    // The category's pillar/hub article shares the category slug — keep them in step.
+    await db.prepare(`
+      UPDATE posts SET slug = ?, updated_at = ?
+      WHERE category_id = ? AND slug = ? AND type IN ('pillar', 'category-hub')
+    `).bind(slug, nowIso(), id, existing.slug).run();
+  }
   await db.prepare(`
     UPDATE categories
     SET name = ?, slug = ?, description = ?, icon = ?, meta_title = ?, meta_description = ?, updated_at = ?

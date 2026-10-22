@@ -39,8 +39,11 @@ export default async function EditPostPage({ params }: { params: { id: string } 
     metaDescription: post.metaDescription,
     focusKeyword: post.focusKeyword,
     ogImage: post.ogImage,
-    affiliateProducts: post.affiliateProducts,
     faqs: post.faqs,
+    articleId: post.articleId,
+    type: post.type,
+    trucks: post.trucks,
+    updatedOn: post.updatedOn,
   };
 
   return (

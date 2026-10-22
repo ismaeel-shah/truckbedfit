@@ -3,7 +3,8 @@ import { getToken } from "next-auth/jwt";
 import { SITE_URL } from "@/lib/site";
 
 const canonicalHost = new URL(SITE_URL).host;
-const bareHost = canonicalHost.replace(/^www\./, "");
+// The other spelling of the domain (www ↔ bare) is 301-redirected to the canonical host.
+const altHost = canonicalHost.startsWith("www.") ? canonicalHost.slice(4) : `www.${canonicalHost}`;
 
 // Admin-only dashboard pages. The matching APIs enforce this too; this just avoids
 // showing editors pages that would fail to load.
@@ -12,8 +13,8 @@ const ADMIN_PATHS = ["/dashboard/users", "/dashboard/redirects"];
 export async function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
 
-  // Redirect the bare domain to the canonical www host (301 permanent)
-  if (canonicalHost !== bareHost && host === bareHost) {
+  // Redirect the non-canonical spelling (www.truckbedfit.com) to the canonical host (301 permanent)
+  if (host === altHost) {
     const url = req.nextUrl.clone();
     url.host = canonicalHost;
     url.protocol = "https:";

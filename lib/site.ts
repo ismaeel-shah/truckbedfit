@@ -2,7 +2,8 @@
 // build time, so the fallbacks below are what production builds (CI) use.
 export const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || "TruckBedFit";
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.truckbedfit.com").replace(/\/$/, "");
+// Canonical host is the bare domain (no www); middleware 301s www → bare.
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://truckbedfit.com").replace(/\/$/, "");
 
 export const SITE_TAGLINE = "Truck Bed Accessory Reviews & Fitment Guides";
 

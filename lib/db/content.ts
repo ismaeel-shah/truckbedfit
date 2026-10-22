@@ -1,4 +1,5 @@
 import { CategoryRow, getD1, mapCategory, mapPost, postJoins, postSelect, PostRow } from "./d1";
+import type { ArticleType } from "@/lib/articleTypes";
 
 export type PostStatusFilter = "published" | "draft" | "scheduled" | "all";
 
@@ -10,6 +11,14 @@ type ListPostsOptions = {
   slug?: string;
   status?: PostStatusFilter;
   orderBy?: "latest" | "views";
+  /** Only these article types */
+  types?: readonly ArticleType[];
+  /** Leave out these article types (e.g. pillars from post lists) */
+  excludeTypes?: readonly ArticleType[];
+  /** Only posts tagged with this truck slug */
+  truck?: string;
+  /** Leave out one post (e.g. the article being viewed) */
+  excludeId?: string;
 };
 
 /** Accepts either a category id or slug. */
@@ -89,6 +98,27 @@ export async function listPosts(options: ListPostsOptions = {}) {
   if (options.search) {
     where.push("(p.title LIKE ? OR p.excerpt LIKE ?)");
     values.push(`%${options.search}%`, `%${options.search}%`);
+  }
+
+  if (options.types?.length) {
+    where.push(`p.type IN (${options.types.map(() => "?").join(", ")})`);
+    values.push(...options.types);
+  }
+
+  if (options.excludeTypes?.length) {
+    where.push(`p.type NOT IN (${options.excludeTypes.map(() => "?").join(", ")})`);
+    values.push(...options.excludeTypes);
+  }
+
+  if (options.truck) {
+    // trucks_json is a JSON array of slugs; json_each matches whole values, not substrings.
+    where.push("EXISTS (SELECT 1 FROM json_each(p.trucks_json) WHERE json_each.value = ?)");
+    values.push(options.truck);
+  }
+
+  if (options.excludeId) {
+    where.push("p.id != ?");
+    values.push(options.excludeId);
   }
 
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";

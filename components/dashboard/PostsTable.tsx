@@ -6,11 +6,15 @@ import { format } from "date-fns";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
+import { ARTICLE_TYPE_LABELS, ArticleType } from "@/lib/articleTypes";
 
 interface Post {
   _id: string;
   title: string;
   slug: string;
+  url: string;
+  type: string;
+  articleId?: string;
   status: string;
   category?: { name: string; icon: string };
   publishedAt?: string;
@@ -133,7 +137,10 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
                 <p className="font-medium text-primary dark:text-white truncate max-w-xs">
                   {post.title}
                 </p>
-                <p className="text-xs text-slate-400">/blog/{post.slug}</p>
+                <p className="text-xs text-slate-400">
+                  {post.articleId && <span className="mr-1.5 font-semibold text-slate-500">{post.articleId}</span>}
+                  {post.url} · {ARTICLE_TYPE_LABELS[post.type as ArticleType] ?? post.type}
+                </p>
               </td>
               <td className="py-3 pr-4">
                 <span
@@ -168,7 +175,7 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
               </td>
               <td className="py-3">
                 <div className="flex items-center gap-2">
-                  <Link href={`/blog/${post.slug}`} target="_blank" className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-accent">
+                  <Link href={post.url} target="_blank" className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-accent">
                     <Eye size={15} />
                   </Link>
                   <Link href={`/dashboard/posts/edit/${post._id}`} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-accent">

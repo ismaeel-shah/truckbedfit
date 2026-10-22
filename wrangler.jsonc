@@ -22,7 +22,7 @@
   // https://truckbedfit.ismaeilkhan90.workers.dev and images on the bucket's r2.dev URL.
   // When the domain is connected:
   //   R2_PUBLIC_URL → "https://media.truckbedfit.com"
-  //   NEXTAUTH_URL  → "https://www.truckbedfit.com"
+  //   NEXTAUTH_URL  → "https://truckbedfit.com"
   //   and restore the routes:
   //   "routes": [
   //     { "pattern": "truckbedfit.com/*", "zone_name": "truckbedfit.com" },

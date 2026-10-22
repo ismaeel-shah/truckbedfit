@@ -107,7 +107,7 @@ export default async function DashboardPage() {
                   <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700">
                     <span className="text-xs text-slate-400">{post.readingTime ?? 0}m read</span>
                     <div className="flex items-center gap-2">
-                      <Link href={`/blog/${post.slug}`} target="_blank" className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-accent transition-colors">
+                      <Link href={post.url} target="_blank" className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-accent transition-colors">
                         <Eye size={14} />
                       </Link>
                       <Link href={`/dashboard/posts/edit/${post._id}`} className="p-1.5 rounded-lg hover:bg-accent/10 text-slate-400 hover:text-accent transition-colors">
