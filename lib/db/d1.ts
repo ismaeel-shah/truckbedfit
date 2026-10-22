@@ -81,7 +81,6 @@ export type PostRow = {
   og_image: string;
   affiliate_products_json: string;
   faqs_json: string;
-  article_id: string;
   type: ArticleType;
   trucks_json: string;
   updated_on: string | null;
@@ -143,8 +142,6 @@ export interface PostPayload {
   ogImage?: string;
   affiliateProducts?: unknown[];
   faqs?: unknown[];
-  /** Planning-sheet ID, e.g. "A03" */
-  articleId?: string;
   type?: string;
   /** Truck slugs from data/trucks.ts */
   trucks?: string[];
@@ -279,7 +276,6 @@ export function mapPost(row: PostRow) {
     ogImage: row.og_image ?? "",
     affiliateProducts: parseJson(row.affiliate_products_json, []),
     faqs: parseJson<{ question: string; answer: string }[]>(row.faqs_json, []),
-    articleId: row.article_id ?? "",
     type: row.type ?? "guide",
     trucks: parseJson<string[]>(row.trucks_json, []),
     // Editorial date; falls back to the publish date for posts saved before it existed.

@@ -48,7 +48,6 @@ interface PostData {
   ogImage: string;
   faqs: FAQ[];
   author: string;
-  articleId: string;
   type: ArticleType;
   trucks: string[];
   updatedOn: string;
@@ -111,7 +110,6 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     ogImage: "",
     faqs: [],
     author: "",
-    articleId: "",
     type: "guide",
     trucks: [],
     updatedOn: "",
@@ -466,19 +464,6 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                 <option key={t} value={t}>{ARTICLE_TYPE_LABELS[t]}</option>
               ))}
             </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Article ID <span className="font-normal text-slate-400">(planning sheet, optional)</span>
-            </label>
-            <input
-              type="text"
-              value={form.articleId}
-              onChange={(e) => set("articleId", e.target.value)}
-              placeholder="e.g. A03"
-              className={fieldClass}
-            />
           </div>
 
           <div>

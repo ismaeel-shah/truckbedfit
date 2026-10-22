@@ -17,7 +17,6 @@ export const postRecordSchema = z
     trucks: z
       .array(z.string().refine((slug) => TRUCK_SLUGS.includes(slug), { message: "Unknown truck in the truck list" }))
       .max(TRUCK_SLUGS.length),
-    articleId: z.string().trim().max(20, "Article ID is too long (max 20 characters)"),
     status: z.enum(["draft", "published", "scheduled"]),
     metaTitle: z.string().max(120, "SEO title is too long"),
     metaDescription: z.string().max(320, "Description is too long"),

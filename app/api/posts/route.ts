@@ -52,7 +52,6 @@ export async function POST(req: NextRequest) {
     categoryId: body.category ?? "",
     type: body.type ?? "guide",
     trucks: body.trucks ?? [],
-    articleId: body.articleId ?? "",
     status,
     metaTitle: body.metaTitle ?? "",
     metaDescription: body.metaDescription ?? "",
@@ -72,10 +71,10 @@ export async function POST(req: NextRequest) {
       id, title, slug, excerpt, content, featured_image, featured_image_alt,
       category_id, author_id, tags_json, status, published_at, scheduled_at,
       views, reading_time, meta_title, meta_description, focus_keyword, og_image,
-      affiliate_products_json, faqs_json, article_id, type, trucks_json, updated_on,
+      affiliate_products_json, faqs_json, type, trucks_json, updated_on,
       created_at, updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id,
     post.title,
@@ -98,7 +97,6 @@ export async function POST(req: NextRequest) {
     body.ogImage ?? "",
     "[]",
     JSON.stringify(post.faqs),
-    post.articleId,
     post.type,
     JSON.stringify(post.trucks),
     post.updatedOn,

@@ -14,7 +14,6 @@ interface Post {
   slug: string;
   url: string;
   type: string;
-  articleId?: string;
   status: string;
   category?: { name: string; icon: string };
   publishedAt?: string;
@@ -138,7 +137,6 @@ export default function PostsTable({ posts }: { posts: Post[] }) {
                   {post.title}
                 </p>
                 <p className="text-xs text-slate-400">
-                  {post.articleId && <span className="mr-1.5 font-semibold text-slate-500">{post.articleId}</span>}
                   {post.url} · {ARTICLE_TYPE_LABELS[post.type as ArticleType] ?? post.type}
                 </p>
               </td>

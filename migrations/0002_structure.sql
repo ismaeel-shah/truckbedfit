@@ -1,8 +1,5 @@
 -- Affiliate-site structure: typed articles tied to trucks, plus the six fixed categories.
 
--- Planning-sheet ID, e.g. "A03" (internal; never shown on the site)
-ALTER TABLE posts ADD COLUMN article_id TEXT NOT NULL DEFAULT '';
-
 -- Article type drives the category page groups (see lib/articleTypes.ts)
 ALTER TABLE posts ADD COLUMN type TEXT NOT NULL DEFAULT 'guide' CHECK (type IN (
   'pillar', 'category-hub', 'best-list-vehicle', 'best-list-type',

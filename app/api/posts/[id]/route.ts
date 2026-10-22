@@ -58,7 +58,6 @@ export async function PATCH(
     categoryId: body.category ?? existing.category_id,
     type: body.type ?? existing.type,
     trucks: body.trucks ?? parseJson<string[]>(existing.trucks_json, []),
-    articleId: body.articleId ?? existing.article_id,
     status,
     metaTitle: body.metaTitle ?? existing.meta_title,
     metaDescription: body.metaDescription ?? existing.meta_description,
@@ -98,7 +97,6 @@ export async function PATCH(
         og_image = ?,
         affiliate_products_json = ?,
         faqs_json = ?,
-        article_id = ?,
         type = ?,
         trucks_json = ?,
         updated_on = ?,
@@ -125,7 +123,6 @@ export async function PATCH(
       // Manual product boxes with prices were removed (Amazon policy); clear any old data.
       "[]",
       JSON.stringify(post.faqs),
-      post.articleId,
       post.type,
       JSON.stringify(post.trucks),
       post.updatedOn,

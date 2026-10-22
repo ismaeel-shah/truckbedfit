@@ -12,7 +12,6 @@ export interface PostWriteInput {
   categoryId: string;
   type: string;
   trucks: unknown;
-  articleId: string;
   status: string;
   metaTitle: string;
   metaDescription: string;
@@ -51,7 +50,6 @@ export async function preparePostWrite(input: PostWriteInput): Promise<PrepareRe
     categorySlug: category.slug,
     type: input.type,
     trucks: Array.isArray(input.trucks) ? input.trucks : [],
-    articleId: input.articleId ?? "",
     status: input.status,
     metaTitle: input.metaTitle ?? "",
     metaDescription: input.metaDescription ?? "",

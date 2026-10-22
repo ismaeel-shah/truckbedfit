@@ -6,12 +6,12 @@
 -- Never run this against the remote database.
 
 INSERT OR REPLACE INTO posts (
-  id, article_id, title, slug, excerpt, content, category_id, status, published_at,
+  id, title, slug, excerpt, content, category_id, status, published_at,
   reading_time, meta_title, meta_description, focus_keyword, type, trucks_json, updated_on,
   faqs_json, created_at, updated_at
 ) VALUES
 (
-  'placeholder-pillar', 'P00', '[PLACEHOLDER] Tonneau Covers', 'tonneau-covers',
+  'placeholder-pillar', '[PLACEHOLDER] Tonneau Covers', 'tonneau-covers',
   'Placeholder pillar intro. Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
   '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>'
   || '<p>[trustbox]</p>'
@@ -25,7 +25,7 @@ INSERT OR REPLACE INTO posts (
   '2026-10-20T09:00:00.000Z', '2026-10-20T09:00:00.000Z'
 ),
 (
-  'placeholder-f150', 'P01', '[PLACEHOLDER] Best Tonneau Covers for Ford F-150', 'best-tonneau-covers-ford-f-150',
+  'placeholder-f150', '[PLACEHOLDER] Best Tonneau Covers for Ford F-150', 'best-tonneau-covers-ford-f-150',
   'Placeholder best-list for one truck. Lorem ipsum dolor sit amet.',
   '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>'
   || '<p>[trustbox]</p>'
@@ -40,7 +40,7 @@ INSERT OR REPLACE INTO posts (
   '2026-10-19T09:00:00.000Z', '2026-10-19T09:00:00.000Z'
 ),
 (
-  'placeholder-guide', 'P02', '[PLACEHOLDER] How to Measure a Truck Bed', 'how-to-measure-truck-bed-for-tonneau-cover',
+  'placeholder-guide', '[PLACEHOLDER] How to Measure a Truck Bed', 'how-to-measure-truck-bed-for-tonneau-cover',
   'Placeholder guide tagged to several trucks. Lorem ipsum dolor sit amet.',
   '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam id dolor id nibh ultricies vehicula.</p>'
   || '<h2>Placeholder step one</h2><p>Vestibulum id ligula porta felis euismod semper.</p>'
