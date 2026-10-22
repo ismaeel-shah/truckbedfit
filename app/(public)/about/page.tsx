@@ -20,6 +20,7 @@ export default function AboutPage() {
     <div className="bg-background">
       <PageHeader
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "About" }]}
+        path="/about"
         eyebrow="About us"
         title={`About ${SITE_NAME}`}
         lead="An independent guide to outfitting a pickup truck bed — fitment first."

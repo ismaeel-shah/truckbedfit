@@ -6,6 +6,8 @@ import ArticleGrid from "@/components/public/ArticleGrid";
 import BedSizeTable from "@/components/public/trucks/BedSizeTable";
 import { listCategories, listPosts } from "@/lib/db/content";
 import { redirectIfMoved } from "@/lib/db/redirects";
+import JsonLd from "@/components/public/JsonLd";
+import { itemListSchema } from "@/lib/utils/schema";
 import { getTruck, truckYears } from "@/data/trucks";
 import { categoryPath, truckPath } from "@/lib/urls";
 import { buildCanonical, buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
@@ -34,7 +36,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const data = await loadTruckHub(params.truck);
   if (!data) return { title: "Page not found" };
   const { truck } = data;
-  const title = `${truck.name} Bed Accessories & Fitment Guide`;
+  // Keep the full <title> (with " | TruckBedFit", 14 chars) within ~60 characters for long truck names.
+  const long = `${truck.name} Bed Accessories & Fitment`;
+  const title = long.length <= 46 ? long : `${truck.name} Bed Accessories`;
   const description = `Bed sizes, fitment notes and our guides to tonneau covers, liners, toolboxes and racks for the ${truck.name}.`;
   const canonical = buildCanonical(truckPath(truck.slug));
   return {
@@ -57,8 +61,10 @@ export default async function TruckHubPage({ params }: Params) {
 
   return (
     <div className="bg-background">
+      <JsonLd data={itemListSchema(`${truck.name} guides`, groups.flatMap((group) => group.posts))} />
       <PageHeader
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Trucks", href: "/trucks" }, { label: truck.name }]}
+        path={truckPath(truck.slug)}
         eyebrow={years ? `${truck.make} · ${years}` : truck.make}
         title={`${truck.name} bed accessories`}
         lead={`Bed sizes, fitment notes and every guide we've written for the ${truck.name}.`}

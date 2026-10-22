@@ -18,7 +18,7 @@ export default function LegalPage({ title, path, children }: LegalPageProps) {
 
   return (
     <div className="bg-background">
-      <PageHeader title={title} eyebrow="Legal" breadcrumbs={[{ label: "Home", href: "/" }, { label: title }]}>
+      <PageHeader title={title} eyebrow="Legal" path={path} breadcrumbs={[{ label: "Home", href: "/" }, { label: title }]}>
         <p className="mt-4 text-sm text-slate-400">Last updated: {updated}</p>
       </PageHeader>
 

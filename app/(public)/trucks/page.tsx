@@ -22,6 +22,7 @@ export default async function TrucksIndexPage() {
     <div className="bg-background">
       <PageHeader
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Trucks" }]}
+        path="/trucks"
         eyebrow="Shop by truck"
         title="Find gear for your truck"
         lead="Bed sizes, fitment notes and every guide we've written for your pickup."

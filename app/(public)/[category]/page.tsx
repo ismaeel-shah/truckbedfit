@@ -7,7 +7,9 @@ import GearTypeGrid from "@/components/public/home/GearTypeGrid";
 import AffiliateNotice from "@/components/public/article/AffiliateNotice";
 import ArticleBody from "@/components/public/article/ArticleBody";
 import FaqSection from "@/components/public/article/FaqSection";
+import JsonLd from "@/components/public/JsonLd";
 import { getCategoryBySlug, getCategoryPillar, listLiveCategories, listPosts } from "@/lib/db/content";
+import { articleSchema, faqSchema, itemListSchema } from "@/lib/utils/schema";
 import { redirectIfMoved } from "@/lib/db/redirects";
 import { CATEGORY_GROUPS, PILLAR_TYPES, UMBRELLA_CATEGORY_SLUG } from "@/lib/articleTypes";
 import { categoryPath } from "@/lib/urls";
@@ -67,10 +69,24 @@ export default async function CategoryPage({ params }: { params: { category: str
     ? (await listLiveCategories()).filter((c) => c._id !== category._id)
     : [];
 
+  const listed = groups.flatMap((group) => group.posts);
+
   return (
     <div className="bg-background">
+      {listed.length > 0 && <JsonLd data={itemListSchema(`${category.name} guides`, listed)} />}
+      {otherCategories.length > 0 && (
+        <JsonLd
+          data={itemListSchema(
+            "Truck bed accessory categories",
+            otherCategories.map((c) => ({ title: c.name, url: categoryPath(c.slug) }))
+          )}
+        />
+      )}
+      {pillar && <JsonLd data={articleSchema(pillar)} />}
+      {pillar && pillar.faqs.length > 0 && <JsonLd data={faqSchema(pillar.faqs)} />}
       <PageHeader
         breadcrumbs={[{ label: "Home", href: "/" }, { label: category.name }]}
+        path={categoryPath(category.slug)}
         eyebrow={`${category.icon ? `${category.icon} ` : ""}${category.name}`}
         title={pillar?.title ?? category.name}
         lead={category.description}

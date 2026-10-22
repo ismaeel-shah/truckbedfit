@@ -14,6 +14,7 @@ export default function HowWeResearchPage() {
     <div className="bg-background">
       <PageHeader
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "How We Research" }]}
+        path="/how-we-research"
         eyebrow="Our method"
         title="How we research"
         lead="How we pick: specs, fitment guides and owner reports. We don't test products ourselves."
