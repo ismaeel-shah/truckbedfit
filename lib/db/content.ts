@@ -1,5 +1,6 @@
 import { CategoryRow, getD1, mapCategory, mapPost, postJoins, postSelect, PostRow } from "./d1";
-import type { ArticleType } from "@/lib/articleTypes";
+import { ArticleType, PILLAR_TYPES } from "@/lib/articleTypes";
+import { Truck, TRUCKS } from "@/data/trucks";
 
 export type PostStatusFilter = "published" | "draft" | "scheduled" | "all";
 
@@ -63,9 +64,46 @@ export async function listCategories() {
     FROM categories c
     LEFT JOIN posts p ON p.category_id = c.id AND p.status = 'published'
     GROUP BY c.id
-    ORDER BY c.name ASC
+    ORDER BY c.created_at ASC, c.name ASC
   `).all<CategoryRow>();
   return results.map(mapCategory);
+}
+
+/** Categories with at least one published article — the only ones that get a page, menu entry or sitemap URL. */
+export async function listLiveCategories() {
+  await publishDueScheduledPosts();
+  return (await listCategories()).filter((category) => category.postCount > 0);
+}
+
+/** Trucks (in data/trucks.ts order) tagged on at least one published article, with article counts. */
+export async function listLiveTrucks(): Promise<{ truck: Truck; count: number }[]> {
+  await publishDueScheduledPosts();
+  const { results = [] } = await getD1().prepare(`
+    SELECT j.value AS slug, COUNT(*) AS count
+    FROM posts p, json_each(p.trucks_json) j
+    WHERE p.status = 'published'
+    GROUP BY j.value
+  `).all<{ slug: string; count: number }>();
+  const counts = new Map(results.map((row) => [row.slug, row.count]));
+  return TRUCKS.filter((truck) => counts.has(truck.slug)).map((truck) => ({ truck, count: counts.get(truck.slug)! }));
+}
+
+/** A category's published pillar/hub article (renders on /[category]). */
+export async function getCategoryPillar(categoryId: string) {
+  const { posts } = await listPosts({ category: categoryId, types: PILLAR_TYPES, status: "published", limit: 1 });
+  return posts[0] ?? null;
+}
+
+/** The published article at /[category]/[slug] (pillars live on the category page itself). */
+export async function getPublishedArticle(categorySlug: string, slug: string) {
+  const { posts } = await listPosts({
+    category: categorySlug,
+    slug,
+    excludeTypes: PILLAR_TYPES,
+    status: "published",
+    limit: 1,
+  });
+  return posts[0] ?? null;
 }
 
 export async function listPosts(options: ListPostsOptions = {}) {

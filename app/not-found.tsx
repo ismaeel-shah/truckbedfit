@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
 import { listCategories } from "@/lib/db/content";
+import { categoryPath } from "@/lib/urls";
 
 export const metadata = { title: "Page not found" };
 
@@ -35,10 +36,10 @@ export default async function NotFound() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/blog"
+                href="/trucks"
                 className="inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 font-heading text-lg font-bold uppercase tracking-wide text-primary transition-colors hover:bg-orange-500"
               >
-                Browse all guides <ArrowRight size={18} />
+                Find gear for your truck <ArrowRight size={18} aria-hidden="true" />
               </Link>
               <Link
                 href="/"
@@ -58,7 +59,7 @@ export default async function NotFound() {
               {withPosts.slice(0, 8).map((c) => (
                 <li key={c.slug}>
                   <Link
-                    href={`/category/${c.slug}`}
+                    href={categoryPath(c.slug)}
                     className="flex items-center gap-3 rounded-md border-2 border-slate-200 bg-white p-4 font-heading text-lg font-bold uppercase text-primary transition-colors hover:border-accent hover:text-accent"
                   >
                     <span className="text-2xl" aria-hidden="true">{c.icon || "🛻"}</span>
@@ -70,7 +71,7 @@ export default async function NotFound() {
           </section>
         )}
       </main>
-      <Footer categories={categories.map(({ name, slug, icon }) => ({ name, slug, icon }))} />
+      <Footer categories={withPosts.map(({ name, slug, icon }) => ({ name, slug, icon }))} />
     </>
   );
 }

@@ -1,66 +1,64 @@
 import { MetadataRoute } from "next";
 import { listCategories, listPosts } from "@/lib/db/content";
 import { LEGAL_LAST_UPDATED, LEGAL_PAGES, PAGES_LAST_UPDATED, SITE_URL as base } from "@/lib/site";
+import { isPillarType } from "@/lib/articleTypes";
+import { categoryPath, truckPath } from "@/lib/urls";
+import { TRUCKS } from "@/data/trucks";
 
 export const dynamic = "force-dynamic";
 
-/** "2026-10-20T09:00:00.000Z" → "2026-10-20". Next writes strings into <lastmod> as-is. */
-function day(value: string) {
-  return value.slice(0, 10);
+/** Keeps the latest YYYY-MM-DD per key. */
+function bump(map: Map<string, string>, key: string, date: string) {
+  if (date > (map.get(key) ?? "")) map.set(key, date);
 }
 
-// Every URL gets a date-only <lastmod> that reflects a real content change:
-// posts use their own update date, listings use their newest post, and pages
-// whose content lives in code use the dates kept in lib/site.ts.
+// Only published content and live hubs are listed (the visibility rules). Every URL has a
+// date-only <lastmod> from the articles' editorial "last updated" dates — never "now".
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fixedPages: MetadataRoute.Sitemap = [
     { url: `${base}/about`, lastModified: PAGES_LAST_UPDATED },
+    { url: `${base}/how-we-research`, lastModified: PAGES_LAST_UPDATED },
     { url: `${base}/contact`, lastModified: PAGES_LAST_UPDATED },
     ...LEGAL_PAGES.map((page) => ({ url: `${base}${page.href}`, lastModified: LEGAL_LAST_UPDATED })),
   ];
 
   try {
     const [{ posts }, categories] = await Promise.all([
-      listPosts({ limit: 1000, status: "published" }),
+      listPosts({ limit: 5000, status: "published" }),
       listCategories(),
     ]);
 
-    const newestByCategory = new Map<string, string>();
+    const byCategory = new Map<string, string>();
+    const byTruck = new Map<string, string>();
     let newest = "";
     for (const post of posts) {
-      if (post.updatedAt > newest) newest = post.updatedAt;
-      const slug = post.category?.slug;
-      if (slug && post.updatedAt > (newestByCategory.get(slug) ?? "")) {
-        newestByCategory.set(slug, post.updatedAt);
-      }
+      if (post.updatedOn > newest) newest = post.updatedOn;
+      bump(byCategory, post.categoryId, post.updatedOn);
+      for (const truck of post.trucks) bump(byTruck, truck, post.updatedOn);
     }
-    const listingDate = newest ? day(newest) : PAGES_LAST_UPDATED;
+    const siteDate = newest || PAGES_LAST_UPDATED;
 
-    const postUrls: MetadataRoute.Sitemap = posts.map((post) => ({
-      url: `${base}/blog/${post.slug}`,
-      lastModified: day(post.updatedAt),
-    }));
+    const articleUrls = posts
+      .filter((post) => !isPillarType(post.type)) // a pillar *is* its category page
+      .map((post) => ({ url: `${base}${post.url}`, lastModified: post.updatedOn }));
 
-    // Empty categories are thin pages; leave them out until they have posts.
-    const categoryUrls: MetadataRoute.Sitemap = categories
-      .filter((cat) => cat.postCount > 0)
-      .map((cat) => ({
-        url: `${base}/category/${cat.slug}`,
-        lastModified: day(newestByCategory.get(cat.slug) ?? cat.updatedAt),
-      }));
+    const categoryUrls = categories
+      .filter((category) => byCategory.has(category._id))
+      .map((category) => ({ url: `${base}${categoryPath(category.slug)}`, lastModified: byCategory.get(category._id)! }));
+
+    const truckUrls = TRUCKS
+      .filter((truck) => byTruck.has(truck.slug))
+      .map((truck) => ({ url: `${base}${truckPath(truck.slug)}`, lastModified: byTruck.get(truck.slug)! }));
 
     return [
-      { url: base, lastModified: listingDate },
-      { url: `${base}/blog`, lastModified: listingDate },
+      { url: base, lastModified: siteDate },
+      ...(truckUrls.length ? [{ url: `${base}/trucks`, lastModified: siteDate }] : []),
       ...categoryUrls,
-      ...postUrls,
+      ...truckUrls,
+      ...articleUrls,
       ...fixedPages,
     ];
   } catch {
-    return [
-      { url: base, lastModified: PAGES_LAST_UPDATED },
-      { url: `${base}/blog`, lastModified: PAGES_LAST_UPDATED },
-      ...fixedPages,
-    ];
+    return [{ url: base, lastModified: PAGES_LAST_UPDATED }, ...fixedPages];
   }
 }

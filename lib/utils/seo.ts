@@ -9,20 +9,14 @@ export function buildCanonical(path: string): string {
   return `${SITE_URL}${path}`;
 }
 
-/** `?page=` value → positive integer, defaulting to 1 for missing/invalid input. */
-export function parsePageParam(value: string | undefined): number {
-  const n = Number(value);
-  return Number.isInteger(n) && n >= 1 ? n : 1;
+/** Replaces {year} with the current year, so "Best Covers ({year})" never goes stale. */
+export function withYear(text: string): string {
+  return text.replace(/\{year\}/g, String(new Date().getFullYear()));
 }
 
-/** Paginated listings: page 1 is the bare path, later pages keep their own self-referencing URL. */
-export function paginatedPath(path: string, page: number): string {
-  return page > 1 ? `${path}?page=${page}` : path;
-}
-
-/** "Blog" → "Blog – Page 2" so paginated pages don't share one title. */
-export function paginatedTitle(title: string, page: number): string {
-  return page > 1 ? `${title} – Page ${page}` : title;
+/** The <title> for an article: its SEO title (with {year} filled in) or, failing that, its H1. */
+export function articleSeoTitle(post: { title: string; metaTitle: string }): string {
+  return withYear(post.metaTitle.trim()) || post.title;
 }
 
 type OpenGraph = NonNullable<Metadata["openGraph"]>;

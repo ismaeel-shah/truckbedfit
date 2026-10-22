@@ -1,22 +1,18 @@
-import { Fragment } from "react";
 import { Metadata } from "next";
 import GarageHero from "@/components/public/home/GarageHero";
-import SpecBar from "@/components/public/home/SpecBar";
-import LatestList from "@/components/public/home/LatestList";
-import CategoryBlock from "@/components/public/home/CategoryBlock";
-import MostRead from "@/components/public/home/MostRead";
+import TruckPicker from "@/components/public/home/TruckPicker";
 import GearTypeGrid from "@/components/public/home/GearTypeGrid";
+import LatestList from "@/components/public/home/LatestList";
+import TrustStatement from "@/components/public/home/TrustStatement";
 import { getPageMeta } from "@/lib/utils/pageSettings";
 import { buildCanonical, buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
-import { listCategories, listPosts } from "@/lib/db/content";
+import { listLiveCategories, listLiveTrucks, listPosts } from "@/lib/db/content";
+import { PILLAR_TYPES } from "@/lib/articleTypes";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-const SECTION_POST_LIMIT = 6;
-const LATEST_LIST_LIMIT = 6;
-/** "Most Read" band is inserted after this many category sections. */
-const MOST_READ_AFTER_SECTION = 2;
+const LATEST_LIMIT = 6;
 
 export async function generateMetadata(): Promise<Metadata> {
   const meta  = await getPageMeta("page_home");
@@ -31,57 +27,36 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-async function fetchPosts(params: { category?: string; limit?: number; orderBy?: "latest" | "views" }) {
+async function safe<T>(load: () => Promise<T>, fallback: T): Promise<T> {
   try {
-    const { posts } = await listPosts({ ...params, status: "published" });
-    return posts ?? [];
-  } catch { return []; }
-}
-
-async function fetchCategories() {
-  try {
-    return await listCategories();
-  } catch { return []; }
+    return await load();
+  } catch {
+    return fallback;
+  }
 }
 
 export default async function HomePage() {
-  const [categories, latestPosts, popularPosts] = await Promise.all([
-    fetchCategories(),
-    fetchPosts({ limit: LATEST_LIST_LIMIT + 1 }),
-    fetchPosts({ limit: 4, orderBy: "views" }),
+  const [trucks, categories, latest] = await Promise.all([
+    safe(listLiveTrucks, []),
+    safe(listLiveCategories, []),
+    // Pillars/hubs are category pages, not "articles" — keep them out of the latest list.
+    safe(async () => (await listPosts({ status: "published", excludeTypes: PILLAR_TYPES, limit: LATEST_LIMIT + 1 })).posts, []),
   ]);
 
-  // Every category with published posts gets its own section, oldest category first.
-  const sections = await Promise.all(
-    categories
-      .filter((category) => category.postCount > 0)
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-      .map(async (category) => ({
-        category,
-        posts: await fetchPosts({ category: category._id, limit: SECTION_POST_LIMIT }),
-      }))
-  );
-
-  const [featured, ...latest] = latestPosts;
-  const mostRead = popularPosts.some((post) => post.views > 0) ? popularPosts : latestPosts.slice(0, 4);
-  const mostReadBlock = latestPosts.length >= 4 ? <MostRead posts={mostRead} /> : null;
+  const [featured, ...rest] = latest;
+  const cta = trucks.length
+    ? { href: "#truck-picker", label: "Find gear for your truck" }
+    : categories.length
+      ? { href: "#categories", label: "Browse gear by type" }
+      : undefined;
 
   return (
     <div className="bg-background">
-      <GarageHero featured={featured} />
-      <SpecBar />
-
-      <LatestList posts={latest} />
-
-      {sections.map(({ category, posts }, i) => (
-        <Fragment key={category._id}>
-          <CategoryBlock category={category} posts={posts} index={i} />
-          {i === MOST_READ_AFTER_SECTION - 1 && mostReadBlock}
-        </Fragment>
-      ))}
-      {sections.length < MOST_READ_AFTER_SECTION && mostReadBlock}
-
+      <GarageHero featured={featured} cta={cta} />
+      <TruckPicker trucks={trucks} />
       <GearTypeGrid categories={categories} />
+      <LatestList posts={rest} />
+      <TrustStatement />
     </div>
   );
 }

@@ -5,7 +5,13 @@ import { LogoMark } from "@/components/Logo";
 import PostImage from "./PostImage";
 import type { HomePost } from "./types";
 
-export default function GarageHero({ featured }: { featured?: HomePost }) {
+interface GarageHeroProps {
+  featured?: HomePost;
+  /** Main call to action, usually an anchor to the truck picker. Hidden when not given. */
+  cta?: { href: string; label: string };
+}
+
+export default function GarageHero({ featured, cta }: GarageHeroProps) {
   return (
     <section className="relative overflow-hidden bg-primary text-white">
       <div className="absolute inset-0 bg-stripes" aria-hidden="true" />
@@ -27,24 +33,26 @@ export default function GarageHero({ featured }: { featured?: HomePost }) {
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-300">
-            Fitment-first reviews of tonneau covers, liners, toolboxes, racks and
+            Fitment-first buying guides for tonneau covers, liners, toolboxes, racks and
             more — so you buy the right part for your bed length, cab and model year.
           </p>
 
-          <Link
-            href="/blog"
-            className="group mt-8 inline-flex items-center gap-3 rounded-md bg-accent px-7 py-4 font-heading text-xl font-bold uppercase tracking-wide text-primary shadow-lg shadow-accent/20 transition-colors hover:bg-orange-500"
-          >
-            View all guides
-            <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
-          </Link>
+          {cta && (
+            <a
+              href={cta.href}
+              className="group mt-8 inline-flex items-center gap-3 rounded-md bg-accent px-7 py-4 font-heading text-xl font-bold uppercase tracking-wide text-primary shadow-lg shadow-accent/20 transition-colors hover:bg-orange-500"
+            >
+              {cta.label}
+              <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
+            </a>
+          )}
         </div>
 
         {/* Featured post */}
         <div className="lg:col-span-6">
           {featured ? (
             <Link
-              href={`/blog/${featured.slug}`}
+              href={featured.url}
               className="group relative block aspect-[4/3] overflow-hidden rounded-md border-2 border-white/10 shadow-2xl transition-colors hover:border-accent"
             >
               <PostImage post={featured} className="absolute inset-0" priority />
@@ -75,7 +83,7 @@ export default function GarageHero({ featured }: { featured?: HomePost }) {
               <LogoMark id="hero-empty" size={72} />
               <p className="font-heading text-3xl font-bold uppercase">First guides rolling in soon</p>
               <p className="max-w-sm text-sm text-slate-400">
-                We&apos;re testing gear right now. Check back shortly for in-depth truck bed reviews.
+                We&apos;re researching gear right now. Check back shortly for in-depth truck bed buying guides.
               </p>
             </div>
           )}

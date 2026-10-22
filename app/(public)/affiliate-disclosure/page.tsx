@@ -30,7 +30,7 @@ export default function AffiliateDisclosurePage() {
 
       <h2>What this means for you</h2>
       <ul>
-        <li>Many product links on our site — including &quot;View on Amazon&quot; buttons — are affiliate links.</li>
+        <li>Many product links on our site — including &quot;Check price on Amazon&quot; buttons — are affiliate links.</li>
         <li>If you click one and make a qualifying purchase, the retailer pays us a small commission.</li>
         <li>You pay exactly the same price whether or not you use our link.</li>
         <li>We may also join other affiliate programs in the future; this page will be updated if we do.</li>
@@ -38,7 +38,7 @@ export default function AffiliateDisclosurePage() {
 
       <h2>Our editorial independence</h2>
       <p>
-        Commissions help us cover the cost of research, testing and running the site, and keep our guides free to read.
+        Commissions help us cover the cost of research and running the site, and keep our guides free to read.
         They do not decide what we recommend. We choose products based on fitment, build quality, features, value and
         real-world feedback, and we point out downsides as well as strengths. Brands cannot pay for a placement or a
         positive review.

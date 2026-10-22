@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import Logo from "@/components/Logo";
+import { categoryPath } from "@/lib/urls";
 import { CONTACT_EMAIL, LEGAL_PAGES, SITE_NAME } from "@/lib/site";
 
 export interface FooterCategory {
@@ -12,7 +13,8 @@ export interface FooterCategory {
 const QUICK_LINKS = [
   { label: "About Us",  href: "/about"   },
   { label: "Contact",   href: "/contact" },
-  { label: "Blog",      href: "/blog"    },
+  { label: "How We Research", href: "/how-we-research" },
+  { label: "Trucks",    href: "/trucks"  },
 ];
 
 export default function Footer({ categories = [] }: { categories?: FooterCategory[] }) {
@@ -52,7 +54,7 @@ export default function Footer({ categories = [] }: { categories?: FooterCategor
                   {categories.map((c) => (
                     <Link
                       key={c.slug}
-                      href={`/category/${c.slug}`}
+                      href={categoryPath(c.slug)}
                       className="flex items-center gap-2 text-sm text-slate-300 hover:text-accent transition-colors group"
                     >
                       {c.icon && <span className="text-base">{c.icon}</span>}

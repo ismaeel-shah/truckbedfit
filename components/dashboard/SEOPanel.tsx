@@ -1,6 +1,6 @@
 "use client";
 
-import { runSEOChecklist } from "@/lib/utils/seo";
+import { runSEOChecklist, withYear } from "@/lib/utils/seo";
 import { SITE_URL } from "@/lib/site";
 import { CheckCircle2, XCircle } from "lucide-react";
 
@@ -16,11 +16,6 @@ interface SEOPanelProps {
   /** Public path of the article, e.g. /tonneau-covers/best-for-f-150 (null until a category is picked) */
   urlPath: string | null;
   onChange: (field: string, value: string) => void;
-}
-
-/** What Google will show: {year} is replaced with the current year at render time. */
-function withYear(title: string) {
-  return title.replace(/\{year\}/g, String(new Date().getFullYear()));
 }
 
 export default function SEOPanel({ data, urlPath, onChange }: SEOPanelProps) {

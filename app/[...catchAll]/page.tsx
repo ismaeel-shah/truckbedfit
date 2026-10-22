@@ -1,24 +1,15 @@
-import { notFound, redirect, permanentRedirect } from "next/navigation";
-import { getD1 } from "@/lib/db/d1";
+import { notFound } from "next/navigation";
+import { redirectIfMoved } from "@/lib/db/redirects";
 
 export const dynamic = "force-dynamic";
 
+// Unknown URLs with 3+ segments land here (1–2 segments hit /[category] and
+// /[category]/[slug]); all of them check the redirects table before 404ing.
 export default async function CatchAllPage({
   params,
 }: {
   params: { catchAll: string[] };
 }) {
-  const pathname = `/${params.catchAll.join("/")}`;
-  const db = getD1();
-  const doc = await db
-    .prepare("SELECT destination, type FROM redirects WHERE source = ? AND active = 1")
-    .bind(pathname)
-    .first<{ destination: string; type: number }>();
-
-  if (doc) {
-    if (doc.type === 301) permanentRedirect(doc.destination);
-    else redirect(doc.destination);
-  }
-
+  await redirectIfMoved(`/${params.catchAll.join("/")}`);
   notFound();
 }

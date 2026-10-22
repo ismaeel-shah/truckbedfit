@@ -10,11 +10,11 @@ export default function LatestList({ posts }: { posts: HomePost[] }) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <SectionHeading title="Latest Guides" eyebrow="Fresh off the bench" href="/blog" />
+      <SectionHeading title="Latest Guides" eyebrow="Fresh off the bench" />
       <ol className="mt-2 grid gap-x-12 md:grid-cols-2">
         {posts.map((post, i) => (
           <li key={post._id} className="border-b border-slate-200">
-            <Link href={`/blog/${post.slug}`} className="group flex items-center gap-5 py-5">
+            <Link href={post.url} className="group flex items-center gap-5 py-5">
               <span className="w-14 shrink-0 font-heading text-5xl font-extrabold leading-none text-outline" aria-hidden="true">
                 {String(i + 1).padStart(2, "0")}
               </span>

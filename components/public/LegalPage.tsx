@@ -2,6 +2,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import clsx from "clsx";
 import { CONTACT_EMAIL, LEGAL_LAST_UPDATED, LEGAL_PAGES } from "@/lib/site";
+import PageHeader from "./PageHeader";
 
 interface LegalPageProps {
   title: string;
@@ -17,18 +18,9 @@ export default function LegalPage({ title, path, children }: LegalPageProps) {
 
   return (
     <div className="bg-background">
-      <section className="relative overflow-hidden bg-primary text-white">
-        <div className="absolute inset-0 bg-stripes" aria-hidden="true" />
-        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
-          <p className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.25em] text-accent">
-            <span className="h-0.5 w-8 bg-accent" aria-hidden="true" />
-            Legal
-          </p>
-          <h1 className="mt-4 font-heading text-5xl font-extrabold uppercase leading-none md:text-6xl">{title}</h1>
-          <p className="mt-4 text-sm text-slate-400">Last updated: {updated}</p>
-        </div>
-        <div className="relative h-2 hazard-stripe" aria-hidden="true" />
-      </section>
+      <PageHeader title={title} eyebrow="Legal" breadcrumbs={[{ label: "Home", href: "/" }, { label: title }]}>
+        <p className="mt-4 text-sm text-slate-400">Last updated: {updated}</p>
+      </PageHeader>
 
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:px-8">
         <article className="prose prose-slate max-w-3xl prose-headings:font-heading prose-headings:uppercase prose-h2:mt-10 prose-h2:text-2xl prose-h3:text-lg prose-li:my-1">

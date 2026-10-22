@@ -19,8 +19,8 @@ export default function DisclaimerPage() {
 
       <h2>General information only</h2>
       <p>
-        The content on {BUSINESS_NAME} is based on our research, product specifications, manufacturer information and
-        experience. It is not professional automotive, mechanical, engineering, legal or safety advice, and it does not
+        The content on {BUSINESS_NAME} is based on our research: product specifications, manufacturer fitment information and
+        owner reports. We don&apos;t test products ourselves. It is not professional automotive, mechanical, engineering, legal or safety advice, and it does not
         replace the guidance of the manufacturer or a qualified installer.
       </p>
 

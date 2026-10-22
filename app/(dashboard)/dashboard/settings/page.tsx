@@ -15,12 +15,6 @@ const PAGES = [
     fields: ["metaTitle", "metaDescription"],
   },
   {
-    key: "page_blog",
-    label: "Blog Listing Page",
-    path: "/blog",
-    fields: ["metaTitle", "metaDescription"],
-  },
-  {
     key: "page_about",
     label: "About Page",
     path: "/about",

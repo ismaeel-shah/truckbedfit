@@ -8,6 +8,7 @@ interface BlogCardProps {
     _id: string;
     title: string;
     slug: string;
+    url: string;
     excerpt: string;
     featuredImage: string;
     readingTime: number;
@@ -60,7 +61,7 @@ export default function BlogCard({ post, featured = false, variant = "default", 
             <span>{timeAgo}</span>
           </div>
 
-          <Link href={`/blog/${post.slug}`}>
+          <Link href={post.url}>
             <h2 className="font-heading text-2xl md:text-3xl font-bold text-primary dark:text-white leading-snug mb-3 group-hover:text-accent transition-colors">
               {post.title}
             </h2>
@@ -71,7 +72,7 @@ export default function BlogCard({ post, featured = false, variant = "default", 
           </p>
 
           <Link
-            href={`/blog/${post.slug}`}
+            href={post.url}
             className="mt-auto inline-flex items-center gap-2 text-accent font-semibold text-sm hover:gap-3 transition-all duration-200"
           >
             Read Guide<span className="sr-only">: {post.title}</span> <ArrowRight size={15} aria-hidden="true" />
@@ -113,7 +114,7 @@ export default function BlogCard({ post, featured = false, variant = "default", 
       {/* Content */}
       <div className="p-5">
         <p className="text-xs text-slate-400 mb-2">{timeAgo}</p>
-        <Link href={`/blog/${post.slug}`}>
+        <Link href={post.url}>
           <h2 className="font-heading text-lg font-bold text-primary dark:text-white leading-snug mb-2.5 group-hover:text-accent transition-colors line-clamp-2">
             {post.title}
           </h2>
@@ -122,7 +123,7 @@ export default function BlogCard({ post, featured = false, variant = "default", 
           {post.excerpt}
         </p>
         <Link
-          href={`/blog/${post.slug}`}
+          href={post.url}
           className="inline-flex items-center gap-1.5 text-accent text-sm font-semibold hover:gap-2.5 transition-all duration-200"
         >
           Read more<span className="sr-only">: {post.title}</span> <ArrowRight size={14} aria-hidden="true" />

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, X, Home, BookOpen, Info, LayoutGrid, ChevronDown, ArrowRight } from "lucide-react";
+import { Menu, X, Home, Truck, Info, LayoutGrid, ChevronDown, ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef, useId } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import Logo from "@/components/Logo";
+import { categoryPath } from "@/lib/urls";
 
 export interface NavCategory {
   name: string;
@@ -16,7 +17,7 @@ export interface NavCategory {
 
 const LINKS_BEFORE = [
   { label: "Home", href: "/",     icon: Home },
-  { label: "Blog", href: "/blog", icon: BookOpen },
+  { label: "Trucks", href: "/trucks", icon: Truck },
 ];
 const LINKS_AFTER = [
   { label: "About", href: "/about", icon: Info },
@@ -174,10 +175,10 @@ export default function Navbar({ categories = [] }: { categories?: NavCategory[]
                       {categories.map((c) => (
                         <li key={c.slug}>
                           <Link
-                            href={`/category/${c.slug}`}
+                            href={categoryPath(c.slug)}
                             className={clsx(
                               "flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors",
-                              pathname === `/category/${c.slug}` ? "bg-accent/10 text-accent" : "text-slate-700 hover:bg-slate-50"
+                              pathname === categoryPath(c.slug) ? "bg-accent/10 text-accent" : "text-slate-700 hover:bg-slate-50"
                             )}
                           >
                             <span className="text-lg" aria-hidden="true">{c.icon || "🛻"}</span>
@@ -295,11 +296,11 @@ function CategoriesDropdown({ categories, active }: { categories: NavCategory[];
             </div>
             <ul className="grid max-h-[60vh] gap-1 overflow-y-auto px-3 pb-3 sm:grid-cols-2">
               {categories.map((c) => {
-                const current = pathname === `/category/${c.slug}`;
+                const current = pathname === categoryPath(c.slug);
                 return (
                   <li key={c.slug}>
                     <Link
-                      href={`/category/${c.slug}`}
+                      href={categoryPath(c.slug)}
                       onClick={() => setOpen(false)}
                       aria-current={current ? "page" : undefined}
                       className={clsx(
@@ -322,11 +323,11 @@ function CategoriesDropdown({ categories, active }: { categories: NavCategory[];
               })}
             </ul>
             <Link
-              href="/blog"
+              href="/trucks"
               onClick={() => setOpen(false)}
               className="flex items-center justify-between bg-primary px-5 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white transition-colors hover:text-accent"
             >
-              All guides <ArrowRight size={16} />
+              Shop by truck <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
         </div>
