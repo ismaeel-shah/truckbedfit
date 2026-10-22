@@ -11,6 +11,8 @@
     "cf:deploy": "npm run cf:build && wrangler deploy",
     "db:migrate:local": "wrangler d1 migrations apply truckbedfit --local",
     "db:migrate:remote": "wrangler d1 migrations apply truckbedfit --remote",
+    "db:seed-placeholders:local": "wrangler d1 execute truckbedfit --local --file=scripts/seed-placeholders.sql",
+    "db:remove-placeholders:local": "wrangler d1 execute truckbedfit --local --file=scripts/remove-placeholders.sql",
     "admin:create": "ts-node --project tsconfig.scripts.json scripts/create-admin.ts",
     "typecheck": "tsc --noEmit",
     "start": "next start",

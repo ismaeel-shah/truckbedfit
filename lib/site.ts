@@ -12,6 +12,12 @@ export const SITE_DESCRIPTION =
 
 export const DEFAULT_EMAIL_FROM = `${SITE_NAME} <noreply@truckbedfit.com>`;
 
+/**
+ * Amazon Associates tracking ID (e.g. "truckbedfit-20"), added to every ProductBox link.
+ * Build-time value: set NEXT_PUBLIC_AMAZON_TAG in .env.local and as a GitHub repository variable.
+ */
+export const AMAZON_TAG = process.env.NEXT_PUBLIC_AMAZON_TAG ?? "";
+
 // ── Legal ────────────────────────────────────────────────────────
 export const BUSINESS_NAME = "TruckBedFit";
 export const SITE_DOMAIN = "truckbedfit.com";

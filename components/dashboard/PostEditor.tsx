@@ -19,7 +19,9 @@ import {
   Link as LinkIcon, Image as ImageIcon, X, Check,
   UnderlineIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Highlighter, Palette, Table as TableIcon, Eye, FileCode, MonitorPlay,
+  ShoppingCart, ClipboardCheck, Ruler,
 } from "lucide-react";
+import { SHORTCODE_TEMPLATES } from "@/lib/utils/shortcodes";
 
 interface PostEditorProps {
   content: string;
@@ -150,6 +152,10 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
   /* ── Table insert ──────────────────────────────────── */
   const insertTable = () =>
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+
+  /* ── Shortcode insert (rendered as components on the site) ── */
+  const insertShortcode = (code: string) =>
+    editor.chain().focus().insertContent(`<p>${code}</p>`).run();
 
   /* ── Toolbar button ────────────────────────────────── */
   const ToolbarBtn = ({
@@ -347,6 +353,19 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
               </ToolbarBtn>
               <ToolbarBtn onClick={openImgPopover} title="Insert image">
                 <ImageIcon size={15} />
+              </ToolbarBtn>
+
+              <Divider />
+
+              {/* Shortcodes — edit the placeholder values after inserting */}
+              <ToolbarBtn onClick={() => insertShortcode(SHORTCODE_TEMPLATES.productbox)} title="Insert product box (Amazon, no price)">
+                <ShoppingCart size={15} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => insertShortcode(SHORTCODE_TEMPLATES.trustbox)} title="Insert “how we picked” box">
+                <ClipboardCheck size={15} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => insertShortcode(SHORTCODE_TEMPLATES.bedchart)} title="Insert bed size chart">
+                <Ruler size={15} />
               </ToolbarBtn>
 
               <Divider />

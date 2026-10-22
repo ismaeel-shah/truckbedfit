@@ -189,7 +189,7 @@ export default async function ArticlePage({ params }: Params) {
               </div>
             )}
 
-            <ArticleBody html={post.content} />
+            <ArticleBody html={post.content} trucks={post.trucks} />
 
             {post.tags.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mt-10 pt-6 border-t border-slate-100">

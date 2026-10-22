@@ -1,5 +1,5 @@
 import { CategoryRow, getD1, mapCategory, mapPost, postJoins, postSelect, PostRow } from "./d1";
-import { ArticleType, PILLAR_TYPES } from "@/lib/articleTypes";
+import { ArticleType, CATEGORY_GROUPS, PILLAR_TYPES } from "@/lib/articleTypes";
 import { Truck, TRUCKS } from "@/data/trucks";
 
 export type PostStatusFilter = "published" | "draft" | "scheduled" | "all";
@@ -86,6 +86,53 @@ export async function listLiveTrucks(): Promise<{ truck: Truck; count: number }[
   `).all<{ slug: string; count: number }>();
   const counts = new Map(results.map((row) => [row.slug, row.count]));
   return TRUCKS.filter((truck) => counts.has(truck.slug)).map((truck) => ({ truck, count: counts.get(truck.slug)! }));
+}
+
+export interface NavCategory {
+  name: string;
+  slug: string;
+  icon: string;
+  postCount: number;
+  /** CATEGORY_GROUPS ids that have published posts (for "By type / Reviews / Guides" anchors) */
+  groups: string[];
+}
+
+export interface NavData {
+  categories: NavCategory[];
+  /** Live trucks in data/trucks.ts order */
+  trucks: { name: string; slug: string }[];
+}
+
+/** Everything the header/footer menus need — live items only (visibility rules). */
+export async function getNavData(): Promise<NavData> {
+  const [categories, trucks, typeRows] = await Promise.all([
+    listLiveCategories(),
+    listLiveTrucks(),
+    getD1().prepare(`
+      SELECT DISTINCT p.category_id AS categoryId, p.type AS type
+      FROM posts p
+      WHERE p.status = 'published'
+    `).all<{ categoryId: string; type: string }>(),
+  ]);
+
+  const typesByCategory = new Map<string, Set<string>>();
+  for (const row of typeRows.results ?? []) {
+    if (!typesByCategory.has(row.categoryId)) typesByCategory.set(row.categoryId, new Set());
+    typesByCategory.get(row.categoryId)!.add(row.type);
+  }
+
+  return {
+    categories: categories.map((c) => ({
+      name: c.name,
+      slug: c.slug,
+      icon: c.icon,
+      postCount: c.postCount,
+      groups: CATEGORY_GROUPS
+        .filter((g) => g.types.some((t) => typesByCategory.get(c._id)?.has(t)))
+        .map((g) => g.id),
+    })),
+    trucks: trucks.map(({ truck }) => ({ name: truck.name, slug: truck.slug })),
+  };
 }
 
 /** A category's published pillar/hub article (renders on /[category]). */

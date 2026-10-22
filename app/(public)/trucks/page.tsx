@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import PageHeader from "@/components/public/PageHeader";
 import { listLiveTrucks } from "@/lib/db/content";
@@ -15,8 +16,10 @@ export const metadata = staticPageMetadata(
 );
 
 export default async function TrucksIndexPage() {
-  // Only trucks with at least one published article get a hub (visibility rule).
+  // Only trucks with at least one published article get a hub (visibility rule);
+  // with none live the index itself is a 404 rather than an empty page.
   const trucks = await listLiveTrucks();
+  if (!trucks.length) notFound();
 
   return (
     <div className="bg-background">
@@ -29,10 +32,7 @@ export default async function TrucksIndexPage() {
       />
 
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        {trucks.length === 0 ? (
-          <p className="card p-10 text-center text-slate-500">Truck guides are on the way — check back soon.</p>
-        ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {trucks.map(({ truck, count }) => {
               const beds = truck.generations.flatMap((g) => g.beds.map((b) => b.label));
               return (
@@ -62,7 +62,6 @@ export default async function TrucksIndexPage() {
               );
             })}
           </ul>
-        )}
       </div>
     </div>
   );

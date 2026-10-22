@@ -113,7 +113,7 @@ export default async function CategoryPage({ params }: { params: { category: str
               Last updated {format(new Date(`${pillar.updatedOn}T12:00:00Z`), "MMMM d, yyyy")}
             </p>
             <AffiliateNotice />
-            <ArticleBody html={pillar.content} />
+            <ArticleBody html={pillar.content} trucks={pillar.trucks} />
             <FaqSection faqs={pillar.faqs} />
           </article>
         )}

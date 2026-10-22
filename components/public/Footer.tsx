@@ -10,14 +10,15 @@ export interface FooterCategory {
   icon: string;
 }
 
-const QUICK_LINKS = [
+const BASE_QUICK_LINKS = [
   { label: "About Us",  href: "/about"   },
-  { label: "Contact",   href: "/contact" },
   { label: "How We Research", href: "/how-we-research" },
-  { label: "Trucks",    href: "/trucks"  },
+  { label: "Contact",   href: "/contact" },
 ];
 
-export default function Footer({ categories = [] }: { categories?: FooterCategory[] }) {
+export default function Footer({ categories = [], showTrucks = false }: { categories?: FooterCategory[]; showTrucks?: boolean }) {
+  // The trucks index only appears once at least one truck hub is live.
+  const QUICK_LINKS = showTrucks ? [...BASE_QUICK_LINKS, { label: "Shop by Truck", href: "/trucks" }] : BASE_QUICK_LINKS;
   return (
     <footer className="bg-primary text-white mt-24">
       {/* Top accent line */}

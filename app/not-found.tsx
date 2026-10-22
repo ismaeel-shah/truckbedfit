@@ -2,27 +2,30 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
-import { listCategories } from "@/lib/db/content";
+import { getNavData, NavData } from "@/lib/db/content";
 import { categoryPath } from "@/lib/urls";
 
 export const metadata = { title: "Page not found" };
 
-async function getCategories() {
+async function loadNav(): Promise<NavData> {
+  // `next build` prerenders a static fallback 404 where D1 isn't available; real 404s render
+  // per request (via [...catchAll] / notFound()) and get the live menus.
+  if (process.env.NEXT_PHASE === "phase-production-build") return { categories: [], trucks: [] };
   try {
-    return await listCategories();
+    return await getNavData();
   } catch {
-    return [];
+    return { categories: [], trucks: [] };
   }
 }
 
 // Root-level 404: rendered outside the (public) layout, so it brings its own navbar/footer.
 export default async function NotFound() {
-  const categories = await getCategories();
-  const withPosts = categories.filter((c) => c.postCount > 0);
+  const nav = await loadNav();
+  const withPosts = nav.categories;
 
   return (
     <>
-      <Navbar categories={withPosts.map(({ name, slug, icon, postCount }) => ({ name, slug, icon, postCount }))} />
+      <Navbar nav={nav} />
       <main className="bg-background">
         <section className="relative overflow-hidden bg-primary text-white">
           <div className="absolute inset-0 bg-stripes" aria-hidden="true" />
@@ -35,12 +38,14 @@ export default async function NotFound() {
               The page you&apos;re looking for doesn&apos;t exist or has moved. Try one of our guides instead.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/trucks"
-                className="inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 font-heading text-lg font-bold uppercase tracking-wide text-primary transition-colors hover:bg-orange-500"
-              >
-                Find gear for your truck <ArrowRight size={18} aria-hidden="true" />
-              </Link>
+              {nav.trucks.length > 0 && (
+                <Link
+                  href="/trucks"
+                  className="inline-flex items-center gap-2 rounded-md bg-accent px-6 py-3 font-heading text-lg font-bold uppercase tracking-wide text-primary transition-colors hover:bg-orange-500"
+                >
+                  Find gear for your truck <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+              )}
               <Link
                 href="/"
                 className="inline-flex items-center gap-2 rounded-md border-2 border-white/20 px-6 py-3 font-heading text-lg font-bold uppercase tracking-wide transition-colors hover:border-accent hover:text-accent"
@@ -71,7 +76,7 @@ export default async function NotFound() {
           </section>
         )}
       </main>
-      <Footer categories={withPosts.map(({ name, slug, icon }) => ({ name, slug, icon }))} />
+      <Footer categories={nav.categories} showTrucks={nav.trucks.length > 0} />
     </>
   );
 }

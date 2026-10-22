@@ -31,7 +31,8 @@
            border border-slate-100 dark:border-slate-700/50 backdrop-blur-sm;
   }
   .amazon-btn {
-    @apply inline-flex items-center justify-center gap-2 bg-amazon text-white font-bold
+    /* Dark text: white on Amazon orange is only ~2:1 contrast */
+    @apply inline-flex items-center justify-center gap-2 bg-amazon text-primary font-bold
            px-5 py-2.5 rounded-xl hover:brightness-110 active:scale-95 transition-all duration-150
            shadow-md shadow-amazon/30;
   }
@@ -88,8 +89,8 @@
   outline-offset: 3px !important;
 }
 
-/* ── Blog content links ───────────────────────────────────────── */
-.prose a {
+/* ── Blog content links (not inside not-prose components like ProductBox) ── */
+.prose a:not(:where(.not-prose *)) {
   color: #EA580C;
   font-weight: 600;
   text-decoration: none;
@@ -98,7 +99,7 @@
   transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
   border-radius: 2px;
 }
-.prose a:hover {
+.prose a:not(:where(.not-prose *)):hover {
   color: #C2410C;
   border-bottom-color: #EA580C;
   background: rgba(234, 88, 12, 0.08);

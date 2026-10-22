@@ -1,41 +1,103 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, X, Home, Truck, Info, LayoutGrid, ChevronDown, ArrowRight } from "lucide-react";
+import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef, useId } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import Logo from "@/components/Logo";
-import { categoryPath } from "@/lib/urls";
+import { categoryPath, truckPath } from "@/lib/urls";
+import { PILLAR_CATEGORY_SLUG, UMBRELLA_CATEGORY_SLUG } from "@/lib/articleTypes";
+import type { NavData } from "@/lib/db/content";
 
-export interface NavCategory {
-  name: string;
-  slug: string;
-  icon: string;
-  postCount: number;
+interface NavLinkItem {
+  label: string;
+  href: string;
 }
 
-const LINKS_BEFORE = [
-  { label: "Home", href: "/",     icon: Home },
-  { label: "Trucks", href: "/trucks", icon: Truck },
+type NavItem =
+  | { kind: "link"; label: string; href: string }
+  | { kind: "menu"; label: string; items: NavLinkItem[]; footer?: NavLinkItem; activePrefixes: string[] };
+
+/** Navbar trucks list length (spec: top 8 trucks + "All trucks"). */
+const NAV_TRUCK_LIMIT = 8;
+/** Categories with their own header link (spec order); every other live category goes under "More". */
+const HEADER_CATEGORY_SLUGS = ["bed-liners", "toolboxes", "bed-racks"];
+/** Anchors on the Tonneau Covers page offered in its menu (spec: By type · Reviews · Guides). */
+const TONNEAU_ANCHORS = [
+  { group: "best-by-type", label: "By type" },
+  { group: "reviews", label: "Reviews" },
+  { group: "guides", label: "Guides" },
 ];
-const LINKS_AFTER = [
-  { label: "About", href: "/about", icon: Info },
-];
+
+/**
+ * Header menu, per the spec:
+ * Trucks ▾ · Tonneau Covers ▾ · Bed Liners · Toolboxes · Bed Racks · More ▾ · About
+ * Only live pages appear (visibility rules); categories added later land in "More".
+ */
+function buildNavItems({ categories, trucks }: NavData): NavItem[] {
+  const items: NavItem[] = [];
+  const bySlug = new Map(categories.map((c) => [c.slug, c]));
+
+  if (trucks.length) {
+    items.push({
+      kind: "menu",
+      label: "Trucks",
+      items: trucks.slice(0, NAV_TRUCK_LIMIT).map((t) => ({ label: t.name, href: truckPath(t.slug) })),
+      footer: { label: "All trucks", href: "/trucks" },
+      activePrefixes: ["/trucks"],
+    });
+  }
+
+  const tonneau = bySlug.get(PILLAR_CATEGORY_SLUG);
+  if (tonneau) {
+    const anchors = TONNEAU_ANCHORS.filter((a) => tonneau.groups.includes(a.group)).map((a) => ({
+      label: a.label,
+      href: `${categoryPath(tonneau.slug)}#${a.group}`,
+    }));
+    items.push(
+      anchors.length
+        ? {
+            kind: "menu",
+            label: tonneau.name,
+            items: anchors,
+            footer: { label: `All ${tonneau.name.toLowerCase()}`, href: categoryPath(tonneau.slug) },
+            activePrefixes: [categoryPath(tonneau.slug)],
+          }
+        : { kind: "link", label: tonneau.name, href: categoryPath(tonneau.slug) }
+    );
+  }
+
+  for (const slug of HEADER_CATEGORY_SLUGS) {
+    const category = bySlug.get(slug);
+    // Short labels keep the header on one line ("Bed Liners", not "Bed Liners & Mats").
+    if (category) items.push({ kind: "link", label: category.name.split(" & ")[0], href: categoryPath(slug) });
+  }
+
+  const handled = new Set([PILLAR_CATEGORY_SLUG, UMBRELLA_CATEGORY_SLUG, ...HEADER_CATEGORY_SLUGS]);
+  const more = categories.filter((c) => !handled.has(c.slug)).map((c) => ({ label: c.name, href: categoryPath(c.slug) }));
+  const umbrella = bySlug.get(UMBRELLA_CATEGORY_SLUG);
+  if (more.length || umbrella) {
+    items.push({
+      kind: "menu",
+      label: "More",
+      items: more,
+      footer: umbrella ? { label: "All accessories", href: categoryPath(umbrella.slug) } : undefined,
+      activePrefixes: [...more.map((m) => m.href), ...(umbrella ? [categoryPath(umbrella.slug)] : [])],
+    });
+  }
+
+  items.push({ kind: "link", label: "About", href: "/about" });
+  return items;
+}
 
 const HOVER_CLOSE_DELAY_MS = 150;
 
-function isActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
-}
-
-function guideCount(n: number) {
-  return `${n} ${n === 1 ? "guide" : "guides"}`;
-}
+const isActivePath = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
 const desktopLinkClass = (active: boolean) =>
   clsx(
-    "inline-flex items-center gap-1 px-3 py-2 rounded-md font-heading text-[15px] font-semibold uppercase tracking-wide transition-colors duration-150",
+    "inline-flex items-center gap-1 whitespace-nowrap px-2.5 py-2 rounded-md font-heading text-[15px] font-semibold uppercase tracking-wide transition-colors duration-150",
     active ? "bg-accent/10 text-accent" : "text-slate-700 hover:bg-slate-100 hover:text-primary"
   );
 
@@ -45,12 +107,12 @@ const mobileLinkClass = (active: boolean) =>
     active ? "bg-accent/10 text-accent" : "text-slate-700 hover:bg-slate-50"
   );
 
-export default function Navbar({ categories = [] }: { categories?: NavCategory[] }) {
-  const [open, setOpen]                     = useState(false);
-  const [mobileCatsOpen, setMobileCatsOpen] = useState(false);
-  const [scrolled, setScrolled]             = useState(false);
+export default function Navbar({ nav }: { nav: NavData }) {
+  const [open, setOpen]               = useState(false);
+  const [mobileMenu, setMobileMenu]   = useState<string | null>(null);
+  const [scrolled, setScrolled]       = useState(false);
   const pathname = usePathname();
-  const mobileCatsId = useId();
+  const items = buildNavItems(nav);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -61,7 +123,7 @@ export default function Navbar({ categories = [] }: { categories?: NavCategory[]
   // Close the mobile menu after navigating.
   useEffect(() => {
     setOpen(false);
-    setMobileCatsOpen(false);
+    setMobileMenu(null);
   }, [pathname]);
 
   // While the mobile menu is open: freeze page scroll (overflow on <html> keeps the
@@ -73,7 +135,7 @@ export default function Navbar({ categories = [] }: { categories?: NavCategory[]
     const previousOverflow = html.style.overflow;
     html.style.overflow = "hidden";
 
-    const desktop = window.matchMedia("(min-width: 768px)");
+    const desktop = window.matchMedia("(min-width: 1024px)");
     const onViewportChange = (e: MediaQueryListEvent) => { if (e.matches) setOpen(false); };
     const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     desktop.addEventListener("change", onViewportChange);
@@ -86,15 +148,13 @@ export default function Navbar({ categories = [] }: { categories?: NavCategory[]
     };
   }, [open]);
 
-  const categoriesActive = pathname.startsWith("/category");
-
   return (
     <>
     {/* Backdrop behind the mobile menu. Rendered outside <header> because the header's
         backdrop-blur would otherwise trap this fixed element inside it. */}
     {open && (
       <div
-        className="fixed inset-x-0 bottom-0 top-[68px] z-40 touch-none bg-black/40 md:hidden"
+        className="fixed inset-x-0 bottom-0 top-[68px] z-40 touch-none bg-black/40 lg:hidden"
         onClick={() => setOpen(false)}
         aria-hidden="true"
       />
@@ -116,20 +176,20 @@ export default function Navbar({ categories = [] }: { categories?: NavCategory[]
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1" aria-label="Main">
-            {LINKS_BEFORE.map((l) => (
-              <Link key={l.href} href={l.href} className={desktopLinkClass(isActive(pathname, l.href))}>
-                {l.label}
-              </Link>
-            ))}
-            {categories.length > 0 && (
-              <CategoriesDropdown categories={categories} active={categoriesActive} />
+          <nav className="hidden lg:flex items-center gap-0.5" aria-label="Main">
+            {items.map((item) =>
+              item.kind === "link" ? (
+                <Link key={item.href} href={item.href} className={desktopLinkClass(isActivePath(pathname, item.href))}>
+                  {item.label}
+                </Link>
+              ) : (
+                <NavDropdown
+                  key={item.label}
+                  item={item}
+                  active={item.activePrefixes.some((p) => isActivePath(pathname, p))}
+                />
+              )
             )}
-            {LINKS_AFTER.map((l) => (
-              <Link key={l.href} href={l.href} className={desktopLinkClass(isActive(pathname, l.href))}>
-                {l.label}
-              </Link>
-            ))}
           </nav>
 
           {/* Mobile menu button */}
@@ -137,7 +197,7 @@ export default function Navbar({ categories = [] }: { categories?: NavCategory[]
             onClick={() => setOpen(!open)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-700 transition-colors"
+            className="lg:hidden w-9 h-9 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-700 transition-colors"
           >
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -145,59 +205,24 @@ export default function Navbar({ categories = [] }: { categories?: NavCategory[]
 
         {/* Mobile menu */}
         {open && (
-          <div className="md:hidden max-h-[calc(100dvh-68px)] overflow-y-auto overscroll-contain py-4 border-t border-slate-100">
+          <div className="lg:hidden max-h-[calc(100dvh-68px)] overflow-y-auto overscroll-contain py-4 border-t border-slate-100">
             <nav className="flex flex-col gap-1" aria-label="Main">
-              {LINKS_BEFORE.map((l) => (
-                <Link key={l.href} href={l.href} className={mobileLinkClass(isActive(pathname, l.href))}>
-                  <l.icon size={16} />
-                  {l.label}
-                </Link>
-              ))}
-
-              {categories.length > 0 && (
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setMobileCatsOpen((v) => !v)}
-                    aria-expanded={mobileCatsOpen}
-                    aria-controls={mobileCatsId}
-                    className={mobileLinkClass(categoriesActive)}
-                  >
-                    <LayoutGrid size={16} />
-                    Categories
-                    <ChevronDown
-                      size={16}
-                      className={clsx("ml-auto transition-transform duration-200", mobileCatsOpen && "rotate-180")}
-                    />
-                  </button>
-                  {mobileCatsOpen && (
-                    <ul id={mobileCatsId} className="mt-1 ml-5 border-l-2 border-accent/40 pl-3 space-y-0.5">
-                      {categories.map((c) => (
-                        <li key={c.slug}>
-                          <Link
-                            href={categoryPath(c.slug)}
-                            className={clsx(
-                              "flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors",
-                              pathname === categoryPath(c.slug) ? "bg-accent/10 text-accent" : "text-slate-700 hover:bg-slate-50"
-                            )}
-                          >
-                            <span className="text-lg" aria-hidden="true">{c.icon || "🛻"}</span>
-                            <span className="flex-1 font-medium">{c.name}</span>
-                            <span className="text-xs text-slate-400">{guideCount(c.postCount)}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+              <Link href="/" className={mobileLinkClass(pathname === "/")}>Home</Link>
+              {items.map((item) =>
+                item.kind === "link" ? (
+                  <Link key={item.href} href={item.href} className={mobileLinkClass(isActivePath(pathname, item.href))}>
+                    {item.label}
+                  </Link>
+                ) : (
+                  <MobileMenuSection
+                    key={item.label}
+                    item={item}
+                    expanded={mobileMenu === item.label}
+                    onToggle={() => setMobileMenu((m) => (m === item.label ? null : item.label))}
+                    active={item.activePrefixes.some((p) => isActivePath(pathname, p))}
+                  />
+                )
               )}
-
-              {LINKS_AFTER.map((l) => (
-                <Link key={l.href} href={l.href} className={mobileLinkClass(isActive(pathname, l.href))}>
-                  <l.icon size={16} />
-                  {l.label}
-                </Link>
-              ))}
             </nav>
           </div>
         )}
@@ -207,8 +232,36 @@ export default function Navbar({ categories = [] }: { categories?: NavCategory[]
   );
 }
 
-/** Desktop "Categories" disclosure: opens on mouse hover or click, closes on outside click, Escape, focus loss or navigation. */
-function CategoriesDropdown({ categories, active }: { categories: NavCategory[]; active: boolean }) {
+type MenuItem = Extract<NavItem, { kind: "menu" }>;
+
+function MobileMenuSection({ item, expanded, onToggle, active }: {
+  item: MenuItem; expanded: boolean; onToggle: () => void; active: boolean;
+}) {
+  const listId = useId();
+  const links = item.footer ? [...item.items, item.footer] : item.items;
+  return (
+    <div>
+      <button type="button" onClick={onToggle} aria-expanded={expanded} aria-controls={listId} className={mobileLinkClass(active)}>
+        {item.label}
+        <ChevronDown size={16} className={clsx("ml-auto transition-transform duration-200", expanded && "rotate-180")} aria-hidden="true" />
+      </button>
+      {expanded && (
+        <ul id={listId} className="mt-1 ml-5 border-l-2 border-accent/40 pl-3 space-y-0.5">
+          {links.map((link) => (
+            <li key={link.href}>
+              <Link href={link.href} className="block rounded-md px-2 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Desktop dropdown: opens on mouse hover or click, closes on outside click, Escape, focus loss or navigation. */
+function NavDropdown({ item, active }: { item: MenuItem; active: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panelId = useId();
@@ -281,54 +334,40 @@ function CategoriesDropdown({ categories, active }: { categories: NavCategory[];
         aria-controls={panelId}
         className={desktopLinkClass(active || open)}
       >
-        Categories
-        <ChevronDown size={15} className={clsx("transition-transform duration-200", open && "rotate-180")} />
+        {item.label}
+        <ChevronDown size={15} className={clsx("transition-transform duration-200", open && "rotate-180")} aria-hidden="true" />
       </button>
 
       {open && (
         // pt-3 bridges the gap so the panel doesn't close while the mouse moves onto it
-        <div id={panelId} className="absolute right-0 top-full w-[min(36rem,calc(100vw-2rem))] pt-3">
+        <div id={panelId} className="absolute right-0 top-full w-64 pt-3">
           <div className="overflow-hidden rounded-md border-2 border-primary bg-white shadow-2xl">
             <div className="h-1.5 hazard-stripe" aria-hidden="true" />
-            <div className="flex items-baseline justify-between px-5 pb-2 pt-4">
-              <p className="font-heading text-sm font-bold uppercase tracking-[0.2em] text-slate-500">Gear categories</p>
-              <span className="text-xs text-slate-400">{categories.length} total</span>
-            </div>
-            <ul className="grid max-h-[60vh] gap-1 overflow-y-auto px-3 pb-3 sm:grid-cols-2">
-              {categories.map((c) => {
-                const current = pathname === categoryPath(c.slug);
-                return (
-                  <li key={c.slug}>
+            {item.items.length > 0 && (
+              <ul className="max-h-[60vh] overflow-y-auto p-2">
+                {item.items.map((link) => (
+                  <li key={link.href}>
                     <Link
-                      href={categoryPath(c.slug)}
+                      href={link.href}
                       onClick={() => setOpen(false)}
-                      aria-current={current ? "page" : undefined}
-                      className={clsx(
-                        "group flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-background",
-                        current && "bg-accent/10"
-                      )}
+                      aria-current={pathname === link.href ? "page" : undefined}
+                      className="block rounded-md px-3 py-2 font-heading text-base font-bold uppercase text-primary transition-colors hover:bg-background hover:text-accent"
                     >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center bg-background text-xl transition-colors group-hover:bg-accent/15" aria-hidden="true">
-                        {c.icon || "🛻"}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate font-heading text-lg font-bold uppercase leading-tight text-primary transition-colors group-hover:text-accent">
-                          {c.name}
-                        </span>
-                        <span className="text-xs text-slate-500">{guideCount(c.postCount)}</span>
-                      </span>
+                      {link.label}
                     </Link>
                   </li>
-                );
-              })}
-            </ul>
-            <Link
-              href="/trucks"
-              onClick={() => setOpen(false)}
-              className="flex items-center justify-between bg-primary px-5 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white transition-colors hover:text-accent"
-            >
-              Shop by truck <ArrowRight size={16} aria-hidden="true" />
-            </Link>
+                ))}
+              </ul>
+            )}
+            {item.footer && (
+              <Link
+                href={item.footer.href}
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between bg-primary px-4 py-3 font-heading text-sm font-bold uppercase tracking-wider text-white transition-colors hover:text-accent"
+              >
+                {item.footer.label} <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            )}
           </div>
         </div>
       )}

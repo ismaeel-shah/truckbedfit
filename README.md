@@ -85,21 +85,32 @@ Useful checks: `npm run typecheck`, `npm run lint`. Builds fail on type or lint 
 
 ## Writing posts
 
-- Fill in the SEO tab (focus keyword, meta title ≤ 60 chars, meta description 50–160 chars); the checklist shows what's missing.
-- Affiliate products render as "Our Top Picks" cards above the post body. **Put your Associates tag in every Amazon URL** (`?tag=yourtag-20`) — the site does not add it automatically.
+- Every post has a **type** (pillar, category-hub, best-list-vehicle, best-list-type, review, brand, comparison, guide, parts) and optional **trucks**. The type decides which group it appears in on the category page; trucks put it on `/trucks/[truck]`. One pillar per category; it renders at `/[category]` itself.
+- URLs are `/[category]/[slug]`. A category or truck page only exists once it has at least one published post.
+- Fill in the SEO tab (primary keyword, SEO title — `{year}` becomes the current year — description, updated date). Saving a published post without these is rejected.
+- Shortcodes (toolbar buttons in the editor), each on its own line:
+  - `[productbox name="…" asin="B0XXXXXXXX" bullets="One|Two|Three"]` — Amazon box with a "Check price" button. No prices are shown (Amazon policy). The tag from `NEXT_PUBLIC_AMAZON_TAG` is added automatically.
+  - `[trustbox]` — "How we picked" note linking to `/how-we-research`.
+  - `[bedchart trucks="ford-f-150,ram-1500"]` — bed-size table from `data/trucks.ts` (omit `trucks` to use the post's trucks).
 - FAQs render at the end of the post and as FAQPage structured data.
+
+**Amazon tag:** set `NEXT_PUBLIC_AMAZON_TAG` in `.env.local` for local dev and as a GitHub Actions **variable** (Settings → Secrets and variables → Actions → Variables) for CI builds. It is baked in at build time, so redeploy after changing it.
+
+**Placeholder content (local only):** `npm run db:seed-placeholders:local` adds three `[PLACEHOLDER]` posts so menus and pages have something to show; `npm run db:remove-placeholders:local` deletes them.
 
 ## Project layout
 
 ```
-app/(public)/        public site: home, blog, post, category, about, contact
+app/(public)/        public site: home, [category], [category]/[slug], trucks, static pages
+data/trucks.ts       the 16 trucks and their verified bed sizes
 app/(dashboard)/     admin dashboard
 app/api/             API routes (posts, categories, authors, users, redirects, settings, upload, auth)
 components/          public/, dashboard/, Logo.tsx
 lib/site.ts          branding constants
+lib/utils/shortcodes.ts  [productbox]/[trustbox]/[bedchart] parser
 lib/auth.ts          NextAuth config + requireUser() guard for API routes
 lib/db/              D1 access (d1.ts mappers/types, content.ts shared queries)
 migrations/          D1 schema
-scripts/             create-admin, OpenNext asset sync
-middleware.ts        www redirect + dashboard auth
+scripts/             create-admin, OpenNext asset sync, placeholder seed SQL
+middleware.ts        www→bare redirect, noindex on non-canonical hosts, dashboard auth
 ```

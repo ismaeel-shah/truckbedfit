@@ -1,15 +1,17 @@
 import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
-import { listLiveCategories } from "@/lib/db/content";
+import { getNavData, NavData } from "@/lib/db/content";
 
-// Navbar/footer categories come from D1 at request time.
+// Navbar/footer menus come from D1 at request time.
 export const dynamic = "force-dynamic";
 
-async function getLiveCategories() {
+const EMPTY_NAV: NavData = { categories: [], trucks: [] };
+
+async function loadNav(): Promise<NavData> {
   try {
-    return await listLiveCategories();
+    return await getNavData();
   } catch {
-    return [];
+    return EMPTY_NAV;
   }
 }
 
@@ -18,16 +20,14 @@ export default async function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Visibility rule: menus only link to categories that have a published article.
-  const categories = await getLiveCategories();
-  const navCategories = categories.map(({ name, slug, icon, postCount }) => ({ name, slug, icon, postCount }));
-  const footerCategories = categories.map(({ name, slug, icon }) => ({ name, slug, icon }));
+  // Visibility rule: menus only link to categories and trucks that have a published article.
+  const nav = await loadNav();
 
   return (
     <>
-      <Navbar categories={navCategories} />
+      <Navbar nav={nav} />
       <main>{children}</main>
-      <Footer categories={footerCategories} />
+      <Footer categories={nav.categories} showTrucks={nav.trucks.length > 0} />
     </>
   );
 }

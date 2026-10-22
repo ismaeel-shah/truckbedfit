@@ -28,6 +28,9 @@ jobs:
 
       - name: Build for Cloudflare
         run: npm run cf:build
+        env:
+          # Inlined into the client bundle at build time (repo Settings → Variables → Actions).
+          NEXT_PUBLIC_AMAZON_TAG: ${{ vars.NEXT_PUBLIC_AMAZON_TAG }}
 
       - name: Deploy Worker
         run: npx wrangler deploy
