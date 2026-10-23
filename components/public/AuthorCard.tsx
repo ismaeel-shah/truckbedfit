@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { AtSign, Globe, User, ChevronDown, ChevronUp } from "lucide-react";
+import Link from "next/link";
+import { AtSign, Globe, User, ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
+import { authorPath, twitterUrl } from "@/lib/urls";
 
 interface Author {
   name: string;
+  slug?: string;
   bio?: string;
   photo?: string;
   twitter?: string;
@@ -14,7 +17,7 @@ interface Author {
 export default function AuthorCard({ author }: { author: Author }) {
   const [expanded, setExpanded] = useState(false);
   const hasBio = !!author.bio;
-  const hasLinks = !!(author.twitter || author.website);
+  const hasLinks = !!(author.slug || author.twitter || author.website);
 
   return (
     <div className="mt-12 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
@@ -35,7 +38,7 @@ export default function AuthorCard({ author }: { author: Author }) {
           </div>
           <div className="text-center">
             <p className="text-xs font-semibold text-accent uppercase tracking-widest mb-0.5">Written by</p>
-            <h3 className="font-heading font-bold text-primary dark:text-white text-lg">{author.name}</h3>
+            <h3 className="font-heading font-bold text-primary dark:text-white text-lg"><AuthorName author={author} /></h3>
           </div>
         </div>
 
@@ -60,10 +63,11 @@ export default function AuthorCard({ author }: { author: Author }) {
 
         {/* Row 3: Links */}
         {hasLinks && (
-          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700 flex items-center gap-4">
+          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700 flex flex-wrap items-center gap-4">
+            <AllArticlesLink author={author} />
             {author.twitter && (
               <a
-                href={`https://twitter.com/${author.twitter.replace("@", "")}`}
+                href={twitterUrl(author.twitter)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-accent transition-colors"
@@ -98,15 +102,16 @@ export default function AuthorCard({ author }: { author: Author }) {
         </div>
         <div className="min-w-0">
           <p className="text-xs font-semibold text-accent uppercase tracking-wide mb-1">Written by</p>
-          <h3 className="font-heading font-bold text-primary dark:text-white text-lg leading-tight">{author.name}</h3>
+          <h3 className="font-heading font-bold text-primary dark:text-white text-lg leading-tight"><AuthorName author={author} /></h3>
           {hasBio && (
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">{author.bio}</p>
           )}
           {hasLinks && (
-            <div className="flex items-center gap-3 mt-3">
+            <div className="flex flex-wrap items-center gap-3 mt-3">
+              <AllArticlesLink author={author} />
               {author.twitter && (
                 <a
-                  href={`https://twitter.com/${author.twitter.replace("@", "")}`}
+                  href={twitterUrl(author.twitter)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-accent transition-colors"
@@ -130,5 +135,27 @@ export default function AuthorCard({ author }: { author: Author }) {
       </div>
 
     </div>
+  );
+}
+
+/** The author name, linked to their author page when it has a slug. */
+function AuthorName({ author }: { author: Author }) {
+  if (!author.slug) return <>{author.name}</>;
+  return (
+    <Link href={authorPath(author.slug)} rel="author" className="hover:text-accent transition-colors">
+      {author.name}
+    </Link>
+  );
+}
+
+function AllArticlesLink({ author }: { author: Author }) {
+  if (!author.slug) return null;
+  return (
+    <Link
+      href={authorPath(author.slug)}
+      className="flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-primary transition-colors"
+    >
+      All articles by {author.name} <ArrowRight size={13} aria-hidden="true" />
+    </Link>
   );
 }

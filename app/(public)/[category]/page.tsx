@@ -1,18 +1,20 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { format } from "date-fns";
+import Link from "next/link";
 import PageHeader from "@/components/public/PageHeader";
 import ArticleGrid from "@/components/public/ArticleGrid";
 import GearTypeGrid from "@/components/public/home/GearTypeGrid";
 import AffiliateNotice from "@/components/public/article/AffiliateNotice";
 import ArticleBody from "@/components/public/article/ArticleBody";
 import FaqSection from "@/components/public/article/FaqSection";
+import AuthorCard from "@/components/public/AuthorCard";
 import JsonLd from "@/components/public/JsonLd";
 import { getCategoryBySlug, getCategoryPillar, listLiveCategories, listPosts } from "@/lib/db/content";
 import { articleSchema, faqSchema, itemListSchema } from "@/lib/utils/schema";
 import { redirectIfMoved } from "@/lib/db/redirects";
 import { CATEGORY_GROUPS, PILLAR_TYPES, UMBRELLA_CATEGORY_SLUG } from "@/lib/articleTypes";
-import { categoryPath } from "@/lib/urls";
+import { authorPath, categoryPath } from "@/lib/urls";
 import { articleSeoTitle, buildCanonical, buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
 import { SITE_NAME } from "@/lib/site";
 
@@ -110,11 +112,21 @@ export default async function CategoryPage({ params }: { params: { category: str
         {pillar && (
           <article className="max-w-3xl space-y-8">
             <p className="text-sm text-slate-500">
+              {pillar.author?.slug && (
+                <>
+                  By{" "}
+                  <Link href={authorPath(pillar.author.slug)} rel="author" className="font-semibold text-primary hover:text-accent">
+                    {pillar.author.name}
+                  </Link>
+                  {" · "}
+                </>
+              )}
               Last updated {format(new Date(`${pillar.updatedOn}T12:00:00Z`), "MMMM d, yyyy")}
             </p>
             <AffiliateNotice />
             <ArticleBody html={pillar.content} trucks={pillar.trucks} />
             <FaqSection faqs={pillar.faqs} />
+            {pillar.author && <AuthorCard author={pillar.author} />}
           </article>
         )}
 

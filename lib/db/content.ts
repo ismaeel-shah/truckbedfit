@@ -1,4 +1,4 @@
-import { CategoryRow, getD1, mapCategory, mapPost, postJoins, postSelect, PostRow } from "./d1";
+import { AuthorRow, CategoryRow, getD1, mapAuthor, mapCategory, mapPost, postJoins, postSelect, PostRow } from "./d1";
 import { ArticleType, CATEGORY_GROUPS, PILLAR_TYPES } from "@/lib/articleTypes";
 import { Truck, TRUCKS } from "@/data/trucks";
 
@@ -18,6 +18,8 @@ type ListPostsOptions = {
   excludeTypes?: readonly ArticleType[];
   /** Only posts tagged with this truck slug */
   truck?: string;
+  /** Only posts by this author id */
+  authorId?: string;
   /** Leave out one post (e.g. the article being viewed) */
   excludeId?: string;
 };
@@ -201,6 +203,11 @@ export async function listPosts(options: ListPostsOptions = {}) {
     values.push(options.truck);
   }
 
+  if (options.authorId) {
+    where.push("p.author_id = ?");
+    values.push(options.authorId);
+  }
+
   if (options.excludeId) {
     where.push("p.id != ?");
     values.push(options.excludeId);
@@ -235,6 +242,24 @@ export async function listPosts(options: ListPostsOptions = {}) {
 export async function getCategoryBySlug(slug: string) {
   const categories = await listCategories();
   return categories.find((category) => category.slug === slug) ?? null;
+}
+
+export async function getAuthorBySlug(slug: string) {
+  const row = await getD1().prepare("SELECT * FROM authors WHERE slug = ?").bind(slug).first<AuthorRow>();
+  return mapAuthor(row);
+}
+
+/** Slugs of authors with at least one published article, with their latest "updated" date (for the sitemap). */
+export async function listLiveAuthors(): Promise<{ slug: string; updatedOn: string }[]> {
+  await publishDueScheduledPosts();
+  const { results = [] } = await getD1().prepare(`
+    SELECT a.slug AS slug, MAX(COALESCE(p.updated_on, substr(p.published_at, 1, 10))) AS updatedOn
+    FROM authors a
+    JOIN posts p ON p.author_id = a.id AND p.status = 'published'
+    GROUP BY a.id
+    ORDER BY a.name
+  `).all<{ slug: string; updatedOn: string }>();
+  return results;
 }
 
 export async function getPublishedPostBySlug(slug: string) {

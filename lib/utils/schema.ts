@@ -1,5 +1,6 @@
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { buildCanonical } from "@/lib/utils/seo";
+import { authorPath, twitterUrl } from "@/lib/urls";
 
 // schema.org JSON-LD builders. Rendered with <JsonLd />.
 
@@ -18,7 +19,7 @@ export function articleSchema(post: {
   featuredImage: string;
   publishedAt: string;
   updatedOn: string;
-  author?: { name: string } | null;
+  author?: { name: string; slug?: string } | null;
 }) {
   const url = buildCanonical(post.url);
   return {
@@ -32,9 +33,40 @@ export function articleSchema(post: {
     datePublished: post.publishedAt,
     dateModified: `${post.updatedOn}T12:00:00Z`,
     author: post.author?.name
-      ? { "@type": "Person", name: post.author.name }
+      ? {
+          "@type": "Person",
+          name: post.author.name,
+          ...(post.author.slug && { url: buildCanonical(authorPath(post.author.slug)) }),
+        }
       : { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
     publisher,
+  };
+}
+
+/** Author page: a ProfilePage about the Person, linking their other profiles via sameAs. */
+export function profilePageSchema(author: {
+  name: string;
+  slug: string;
+  bio: string;
+  photo: string;
+  twitter: string;
+  website: string;
+}) {
+  const url = buildCanonical(authorPath(author.slug));
+  const sameAs = [author.website, author.twitter && twitterUrl(author.twitter)].filter(Boolean);
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    url,
+    mainEntity: {
+      "@type": "Person",
+      name: author.name,
+      url,
+      ...(author.bio && { description: author.bio }),
+      ...(author.photo && { image: author.photo }),
+      ...(sameAs.length && { sameAs }),
+      worksFor: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    },
   };
 }
 

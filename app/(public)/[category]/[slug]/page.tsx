@@ -17,7 +17,7 @@ import JsonLd from "@/components/public/JsonLd";
 import { getPublishedArticle, incrementPostViews, listPosts } from "@/lib/db/content";
 import { redirectIfMoved } from "@/lib/db/redirects";
 import { PILLAR_TYPES } from "@/lib/articleTypes";
-import { categoryPath, truckPath } from "@/lib/urls";
+import { authorPath, categoryPath, truckPath } from "@/lib/urls";
 import { getTruck } from "@/data/trucks";
 import { articleSchema, breadcrumbSchema, faqSchema } from "@/lib/utils/schema";
 import { articleSeoTitle, buildCanonical, buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
@@ -150,6 +150,14 @@ export default async function ArticlePage({ params }: Params) {
                 <p className="text-slate-500 text-lg leading-relaxed mb-6">{post.excerpt}</p>
               )}
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
+                {post.author?.slug && (
+                  <span>
+                    By{" "}
+                    <Link href={authorPath(post.author.slug)} rel="author" className="font-semibold text-primary hover:text-accent">
+                      {post.author.name}
+                    </Link>
+                  </span>
+                )}
                 <span className="flex items-center gap-1.5">
                   <Calendar size={14} aria-hidden="true" /> Last updated {updated}
                 </span>

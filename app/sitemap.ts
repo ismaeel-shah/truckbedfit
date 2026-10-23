@@ -1,8 +1,8 @@
 import { MetadataRoute } from "next";
-import { listCategories, listPosts } from "@/lib/db/content";
+import { listCategories, listLiveAuthors, listPosts } from "@/lib/db/content";
 import { LEGAL_LAST_UPDATED, LEGAL_PAGES, PAGES_LAST_UPDATED, SITE_URL as base } from "@/lib/site";
 import { isPillarType } from "@/lib/articleTypes";
-import { categoryPath, truckPath } from "@/lib/urls";
+import { authorPath, categoryPath, truckPath } from "@/lib/urls";
 import { TRUCKS } from "@/data/trucks";
 
 export const dynamic = "force-dynamic";
@@ -23,9 +23,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const [{ posts }, categories] = await Promise.all([
+    const [{ posts }, categories, authors] = await Promise.all([
       listPosts({ limit: 5000, status: "published" }),
       listCategories(),
+      listLiveAuthors(),
     ]);
 
     const byCategory = new Map<string, string>();
@@ -50,12 +51,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .filter((truck) => byTruck.has(truck.slug))
       .map((truck) => ({ url: `${base}${truckPath(truck.slug)}`, lastModified: byTruck.get(truck.slug)! }));
 
+    const authorUrls = authors.map((author) => ({ url: `${base}${authorPath(author.slug)}`, lastModified: author.updatedOn }));
+
     return [
       { url: base, lastModified: siteDate },
       ...(truckUrls.length ? [{ url: `${base}/trucks`, lastModified: siteDate }] : []),
       ...categoryUrls,
       ...truckUrls,
       ...articleUrls,
+      ...authorUrls,
       ...fixedPages,
     ];
   } catch {

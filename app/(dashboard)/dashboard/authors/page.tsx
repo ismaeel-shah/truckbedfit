@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { Plus, Trash2, Pencil, X, Check, User, AtSign, Globe } from "lucide-react";
+import { authorPath } from "@/lib/urls";
+import { Plus, Trash2, Pencil, X, Check, User, AtSign, Globe, ExternalLink } from "lucide-react";
 
 interface Author {
   _id: string;
   name: string;
+  slug?: string;
   bio?: string;
   photo?: string;
   twitter?: string;
@@ -128,12 +130,15 @@ export default function AuthorsPage() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Bio</label>
                 <textarea
-                  rows={3}
+                  rows={5}
                   value={form.bio}
                   onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                  placeholder="Short bio shown below posts…"
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                  placeholder="Who you are and why readers can trust you: your experience with trucks, what you drive, how you research…"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent resize-y"
                 />
+                <p className="mt-1 text-xs text-slate-400">
+                  Shown below articles and on the author page. Each line becomes its own paragraph on the author page.
+                </p>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3">
@@ -203,6 +208,17 @@ export default function AuthorsPage() {
                     </span>
                   )}
                 </div>
+                {a.slug && (
+                  <a
+                    href={authorPath(a.slug)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Goes live once this author has a published article"
+                    className="mt-2 inline-flex items-center gap-1 text-xs text-slate-400 hover:text-accent"
+                  >
+                    {authorPath(a.slug)} <ExternalLink size={11} />
+                  </a>
+                )}
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => openEdit(a)}
