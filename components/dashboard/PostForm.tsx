@@ -177,11 +177,19 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     }));
   };
 
-  const handleSave = async (status?: PostData["status"]) => {
+  // One save button whose action follows the status picked above it.
+  const live = initial?.status === "published";
+  const action =
+    form.status === "draft" ? { label: "Save draft", busy: "Saving…", done: "Draft saved" }
+    : form.status === "scheduled" ? { label: "Schedule", busy: "Scheduling…", done: "Post scheduled" }
+    : live ? { label: "Update", busy: "Updating…", done: "Post updated" }
+    : { label: "Publish", busy: "Publishing…", done: "Post published!" };
+
+  const handleSave = async () => {
     if (!form.title) { toast.error("Title is required"); return; }
     if (!form.category) { toast.error("Category is required"); return; }
 
-    const nextStatus = status ?? form.status;
+    const nextStatus = form.status;
     const scheduledAt = localInputToIso(form.scheduledAt);
     if (nextStatus === "scheduled" && !scheduledAt) {
       toast.error("Pick a schedule date");
@@ -212,7 +220,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
 
     setSaving(false);
     if (res.ok) {
-      toast.success(nextStatus === "published" ? "Post published!" : "Post saved");
+      toast.success(action.done);
       router.push("/dashboard/posts");
       router.refresh();
     } else {
@@ -499,7 +507,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
           )}
 
           {/* Dates are automatic; an already-published post can opt out of the "Updated" bump. */}
-          {initial?.status === "published" && (
+          {live && form.status === "published" && (
             <div className="space-y-3">
               {form.publishedAt && (
                 <div className="space-y-0.5 rounded-lg bg-slate-50 px-3 py-2.5 text-xs text-slate-500 dark:bg-slate-800">
@@ -528,14 +536,15 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
             </div>
           )}
 
-          <div className="flex gap-2">
-            <button type="button" onClick={() => handleSave()} disabled={saving} className="btn-secondary flex-1 text-sm">
-              Save
-            </button>
-            <button type="button" onClick={() => handleSave("published")} disabled={saving} className="btn-primary flex-1 text-sm">
-              {saving ? "Saving…" : "Publish"}
-            </button>
-          </div>
+          {live && form.status !== "published" && (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+              This post is live. Saving it as {form.status === "draft" ? "a draft" : "scheduled"} takes it off the site.
+            </p>
+          )}
+
+          <button type="button" onClick={handleSave} disabled={saving} className="btn-primary w-full justify-center text-sm disabled:opacity-60">
+            {saving ? action.busy : action.label}
+          </button>
         </div>
 
         {/* Category + type */}
