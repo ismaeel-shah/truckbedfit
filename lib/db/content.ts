@@ -56,8 +56,16 @@ export async function publishDueScheduledPosts() {
   }
 }
 
+/** One reader view: the post's all-time total and today's (UTC) count for the dashboard chart. */
 export async function incrementPostViews(id: string) {
-  await getD1().prepare("UPDATE posts SET views = views + 1 WHERE id = ?").bind(id).run();
+  const db = getD1();
+  await Promise.all([
+    db.prepare("UPDATE posts SET views = views + 1 WHERE id = ?").bind(id).run(),
+    db.prepare(`
+      INSERT INTO post_views_daily (post_id, day, views) VALUES (?, ?, 1)
+      ON CONFLICT(post_id, day) DO UPDATE SET views = views + 1
+    `).bind(id, new Date().toISOString().slice(0, 10)).run(),
+  ]);
 }
 
 export async function listCategories() {

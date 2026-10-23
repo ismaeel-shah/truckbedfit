@@ -160,6 +160,7 @@ export async function DELETE(
   const existing = await db.prepare("SELECT id FROM posts WHERE id = ?").bind(params.id).first();
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  await db.prepare("DELETE FROM post_views_daily WHERE post_id = ?").bind(params.id).run();
   await db.prepare("DELETE FROM posts WHERE id = ?").bind(params.id).run();
   return NextResponse.json({ success: true });
 }

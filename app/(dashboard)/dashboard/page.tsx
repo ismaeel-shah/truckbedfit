@@ -1,30 +1,28 @@
-import { FileText, CalendarClock, BookOpen, Clock, Pencil, Eye } from "lucide-react";
+import { FileText, CalendarClock, BookOpen, Clock, Pencil, Eye, TrendingUp } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
+import ContentHealth from "@/components/dashboard/ContentHealth";
+import ChartCard from "@/components/dashboard/charts/ChartCard";
+import ViewsTrendChart from "@/components/dashboard/charts/ViewsTrendChart";
+import BarList from "@/components/dashboard/charts/BarList";
+import WeeklyColumns from "@/components/dashboard/charts/WeeklyColumns";
 import Link from "next/link";
 import { getD1, mapPost, postJoins, postSelect, PostRow } from "@/lib/db/d1";
-import { publishDueScheduledPosts } from "@/lib/db/content";
+import { DashboardData, getDashboardData, RHYTHM_WEEKS, TREND_DAYS } from "@/lib/db/dashboardStats";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard" };
 
-async function getStats() {
+async function loadDashboard(): Promise<DashboardData | null> {
   try {
-    await publishDueScheduledPosts();
-    const row = await getD1().prepare(`
-      SELECT
-        COUNT(*) AS total,
-        COALESCE(SUM(status = 'published'), 0) AS published,
-        COALESCE(SUM(status = 'draft'), 0) AS drafts,
-        COALESCE(SUM(status = 'scheduled'), 0) AS scheduled,
-        COALESCE(SUM(views), 0) AS views
-      FROM posts
-    `).first<{ total: number; published: number; drafts: number; scheduled: number; views: number }>();
-
-    return row ?? { total: 0, published: 0, drafts: 0, scheduled: 0, views: 0 };
-  } catch {
-    return { total: 0, published: 0, drafts: 0, scheduled: 0, views: 0 };
+    return await getDashboardData();
+  } catch (err) {
+    console.error("dashboard stats failed:", err);
+    return null;
   }
 }
+
+const shortDate = (day: string) =>
+  new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
 async function getRecentPosts() {
   try {
@@ -43,7 +41,8 @@ async function getRecentPosts() {
 }
 
 export default async function DashboardPage() {
-  const [stats, recentPosts] = await Promise.all([getStats(), getRecentPosts()]);
+  const [data, recentPosts] = await Promise.all([loadDashboard(), getRecentPosts()]);
+  const stats = data?.counts ?? { total: 0, published: 0, drafts: 0, scheduled: 0, views: 0, views30: 0 };
 
   return (
     <div>
@@ -56,13 +55,69 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
-        <StatsCard label="Total Posts" value={stats.total} icon={FileText} />
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 mb-6">
+        <StatsCard label="Total posts" value={stats.total} icon={FileText} />
         <StatsCard label="Published" value={stats.published} icon={BookOpen} color="text-green-500" />
         <StatsCard label="Drafts" value={stats.drafts} icon={Clock} color="text-yellow-500" />
         <StatsCard label="Scheduled" value={stats.scheduled} icon={CalendarClock} color="text-blue-500" />
-        <StatsCard label="Total Views" value={stats.views} icon={Eye} color="text-orange-500" />
+        <StatsCard label={`Views (${TREND_DAYS} days)`} value={stats.views30.toLocaleString("en-US")} icon={TrendingUp} color="text-orange-500" />
+        <StatsCard label="All-time views" value={stats.views.toLocaleString("en-US")} icon={Eye} color="text-orange-500" />
       </div>
+
+      {data && (
+        <div className="mb-10 space-y-6">
+          {/* items-start: each card keeps its own height instead of stretching to its neighbour's */}
+          <div className="grid items-start gap-6 lg:grid-cols-3">
+            <ChartCard
+              className="lg:col-span-2"
+              title="Reader views"
+              subtitle={`Per day, last ${TREND_DAYS} days (UTC) · signed-in editors and bots aren't counted`}
+              empty={data.viewsByDay.some((d) => d.views) ? null : "No reader views yet — they'll show here as people read your articles."}
+              table={{ columns: ["Day", "Views"], rows: data.viewsByDay.map((d) => [shortDate(d.day), d.views]) }}
+            >
+              <ViewsTrendChart data={data.viewsByDay} />
+            </ChartCard>
+            <ChartCard
+              title="Publishing rhythm"
+              subtitle={`Articles published per week, last ${RHYTHM_WEEKS} weeks`}
+              empty={data.publishedPerWeek.some((w) => w.count) ? null : "Nothing published in the last 12 weeks yet."}
+              table={{ columns: ["Week of", "Published"], rows: data.publishedPerWeek.map((w) => [shortDate(w.weekStart), w.count]) }}
+            >
+              <WeeklyColumns data={data.publishedPerWeek} />
+            </ChartCard>
+          </div>
+
+          <div className="grid items-start gap-6 lg:grid-cols-3">
+            <ChartCard
+              className="lg:col-span-2"
+              title="Most-read articles"
+              subtitle="All-time reader views"
+              empty={data.topPosts.length ? null : "Your most-read articles will show here."}
+              table={{ columns: ["Article", "Views"], rows: data.topPosts.map((p) => [p.title, p.views]) }}
+            >
+              <BarList unit="views" items={data.topPosts.map((p) => ({ label: p.title, value: p.views, href: `/dashboard/posts/edit/${p.id}` }))} />
+            </ChartCard>
+            <ContentHealth checks={data.health} published={stats.published} />
+          </div>
+
+          <div className="grid items-start gap-6 lg:grid-cols-2">
+            <ChartCard
+              title="Truck coverage"
+              subtitle="Published articles tagged with each truck — short bars show what to write next"
+              table={{ columns: ["Truck", "Articles"], rows: data.trucks.map((t) => [t.name, t.count]) }}
+            >
+              <BarList unit="articles" items={data.trucks.map((t) => ({ label: t.name, value: t.count }))} />
+            </ChartCard>
+            <ChartCard
+              title="Articles by category"
+              subtitle="Published articles in each category"
+              table={{ columns: ["Category", "Articles"], rows: data.categories.map((c) => [c.name, c.count]) }}
+            >
+              <BarList unit="articles" items={data.categories.map((c) => ({ label: c.name, value: c.count }))} />
+            </ChartCard>
+          </div>
+        </div>
+      )}
 
       <div>
         <div className="mb-5">
