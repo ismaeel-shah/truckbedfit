@@ -14,6 +14,7 @@ import JsonLd from "@/components/public/JsonLd";
 import { getCategoryBySlug, getCategoryPillar, listLiveCategories, listPosts } from "@/lib/db/content";
 import { articleSchema, faqSchema, itemListSchema } from "@/lib/utils/schema";
 import { redirectIfMoved } from "@/lib/db/redirects";
+import { countView } from "@/lib/views";
 import { getProductImages } from "@/lib/amazon/productImages";
 import { CATEGORY_GROUPS, PILLAR_TYPES, UMBRELLA_CATEGORY_SLUG } from "@/lib/articleTypes";
 import { authorPath, categoryPath } from "@/lib/urls";
@@ -63,6 +64,8 @@ export default async function CategoryPage({ params }: { params: { category: str
     notFound();
   }
   const { category, pillar, posts } = data;
+  // The category page is where its pillar/hub article is read, so the view counts for that post.
+  if (pillar) countView(pillar._id);
 
   const groups = CATEGORY_GROUPS
     .map((group) => ({ ...group, posts: posts.filter((post) => group.types.includes(post.type)) }))

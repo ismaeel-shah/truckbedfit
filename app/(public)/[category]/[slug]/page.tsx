@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { headers } from "next/headers";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { Clock, Calendar, Tag } from "lucide-react";
 import Link from "next/link";
 import Breadcrumbs, { Crumb } from "@/components/public/Breadcrumbs";
@@ -14,7 +12,8 @@ import ArticleBody from "@/components/public/article/ArticleBody";
 import TopPicks from "@/components/public/content/TopPicks";
 import FaqSection from "@/components/public/article/FaqSection";
 import JsonLd from "@/components/public/JsonLd";
-import { getPublishedArticle, incrementPostViews, listPosts } from "@/lib/db/content";
+import { getPublishedArticle, listPosts } from "@/lib/db/content";
+import { countView } from "@/lib/views";
 import { redirectIfMoved } from "@/lib/db/redirects";
 import { getProductImages } from "@/lib/amazon/productImages";
 import { PILLAR_TYPES } from "@/lib/articleTypes";
@@ -28,23 +27,9 @@ import { articleDates } from "@/lib/utils/articleDates";
 export const dynamic = "force-dynamic";
 
 const RELATED_LIMIT = 6;
-const BOT_UA = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|lighthouse|headless/i;
 
 type Params = { params: { category: string; slug: string } };
 type Article = NonNullable<Awaited<ReturnType<typeof getPublishedArticle>>>;
-
-/** Counts a human page view without delaying the response. */
-function countView(postId: string) {
-  const userAgent = headers().get("user-agent") ?? "";
-  if (!userAgent || BOT_UA.test(userAgent)) return;
-
-  const update = incrementPostViews(postId).catch((err) => console.error("view count failed:", err));
-  try {
-    getCloudflareContext().ctx.waitUntil(update);
-  } catch {
-    // Outside the Workers runtime the promise simply runs on its own.
-  }
-}
 
 /** "More for your [truck]": the first of the post's trucks that has other articles. */
 async function moreForTruck(post: Article) {
