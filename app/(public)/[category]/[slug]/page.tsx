@@ -17,6 +17,7 @@ import FaqSection from "@/components/public/article/FaqSection";
 import JsonLd from "@/components/public/JsonLd";
 import { getPublishedArticle, incrementPostViews, listPosts } from "@/lib/db/content";
 import { redirectIfMoved } from "@/lib/db/redirects";
+import { getProductImages } from "@/lib/amazon/productImages";
 import { PILLAR_TYPES } from "@/lib/articleTypes";
 import { authorPath, categoryPath, truckPath } from "@/lib/urls";
 import { getTruck } from "@/data/trucks";
@@ -112,7 +113,10 @@ export default async function ArticlePage({ params }: Params) {
 
   countView(post._id);
 
-  const truckBox = await moreForTruck(post);
+  const [truckBox, productImages] = await Promise.all([
+    moreForTruck(post),
+    getProductImages(post.products.map((product) => product.asin)),
+  ]);
   const categoryPosts = await moreInCategory(post, new Set(truckBox?.posts.map((p) => p._id)));
 
   const crumbs: Crumb[] = [
@@ -198,8 +202,8 @@ export default async function ArticlePage({ params }: Params) {
               </div>
             )}
 
-            <TopPicks products={post.products} />
-            <ArticleBody html={post.content} trucks={post.trucks} products={post.products} />
+            <TopPicks products={post.products} images={productImages} />
+            <ArticleBody html={post.content} trucks={post.trucks} products={post.products} images={productImages} />
 
             {post.tags.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mt-10 pt-6 border-t border-slate-100">

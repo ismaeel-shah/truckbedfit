@@ -14,6 +14,7 @@ import JsonLd from "@/components/public/JsonLd";
 import { getCategoryBySlug, getCategoryPillar, listLiveCategories, listPosts } from "@/lib/db/content";
 import { articleSchema, faqSchema, itemListSchema } from "@/lib/utils/schema";
 import { redirectIfMoved } from "@/lib/db/redirects";
+import { getProductImages } from "@/lib/amazon/productImages";
 import { CATEGORY_GROUPS, PILLAR_TYPES, UMBRELLA_CATEGORY_SLUG } from "@/lib/articleTypes";
 import { authorPath, categoryPath } from "@/lib/urls";
 import { articleSeoTitle, buildCanonical, buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
@@ -73,6 +74,7 @@ export default async function CategoryPage({ params }: { params: { category: str
     : [];
 
   const listed = groups.flatMap((group) => group.posts);
+  const productImages = pillar ? await getProductImages(pillar.products.map((product) => product.asin)) : {};
 
   return (
     <div className="bg-background">
@@ -125,8 +127,8 @@ export default async function CategoryPage({ params }: { params: { category: str
               Last updated {format(new Date(`${pillar.updatedOn}T12:00:00Z`), "MMMM d, yyyy")}
             </p>
             <AffiliateNotice />
-            <TopPicks products={pillar.products} />
-            <ArticleBody html={pillar.content} trucks={pillar.trucks} products={pillar.products} />
+            <TopPicks products={pillar.products} images={productImages} />
+            <ArticleBody html={pillar.content} trucks={pillar.trucks} products={pillar.products} images={productImages} />
             <FaqSection faqs={pillar.faqs} />
             {pillar.author && <AuthorCard author={pillar.author} />}
           </article>

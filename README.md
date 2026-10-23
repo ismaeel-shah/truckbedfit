@@ -88,7 +88,7 @@ Useful checks: `npm run typecheck`, `npm run lint`. Builds fail on type or lint 
 - Every post has a **type** (pillar, category-hub, best-list-vehicle, best-list-type, review, brand, comparison, guide, parts) and optional **trucks**. The type decides which group it appears in on the category page; trucks put it on `/trucks/[truck]`. One pillar per category; it renders at `/[category]` itself.
 - URLs are `/[category]/[slug]`. A category or truck page only exists once it has at least one published post.
 - Fill in the SEO tab (primary keyword, SEO title — `{year}` becomes the current year — description, updated date). Saving a published post without these is rejected.
-- **Products tab:** "Add product" for each pick — label ("Best overall"), name, ASIN (or paste the Amazon link), a one-line reason and key points. They show as "Our top picks" cards at the top of the article, in the tab's order. Each links to Amazon with `rel="sponsored"` and the `NEXT_PUBLIC_AMAZON_TAG` tag. No prices or Amazon images (Amazon only allows those through its API). Publishing is blocked while a product lacks a name or valid ASIN.
+- **Products tab:** "Add product" for each pick — label ("Best overall"), name, ASIN (or paste the Amazon link), a one-line reason and key points. They show as "Our top picks" cards at the top of the article, in the tab's order. Each links to Amazon with `rel="sponsored"` and the `NEXT_PUBLIC_AMAZON_TAG` tag. Product images come from the Amazon Creators API when it is configured (see below); prices are never shown. Publishing is blocked while a product lacks a name or valid ASIN.
 - Shortcodes, each on its own line:
   - `[product 2]` — full box (with key points) for product #2 from the Products tab; copy the code from the product's card.
   - `[trustbox]` — "How we picked" note linking to `/how-we-research`.
@@ -96,6 +96,8 @@ Useful checks: `npm run typecheck`, `npm run lint`. Builds fail on type or lint 
 - FAQs render at the end of the post and as FAQPage structured data.
 
 **Amazon tag:** set `NEXT_PUBLIC_AMAZON_TAG` in `.env.local` for local dev and as a GitHub Actions **variable** (Settings → Secrets and variables → Actions → Variables) for CI builds. It is baked in at build time, so redeploy after changing it.
+
+**Amazon product images (Creators API):** create an app in Associates Central → Tools → Creators API, then store the keys as Worker secrets — `npx wrangler secret put AMAZON_CREDENTIAL_ID` and `npx wrangler secret put AMAZON_CREDENTIAL_SECRET` (and in `.env.local` for local testing). Optional `AMAZON_CREDENTIAL_VERSION` (default `3.1`, North America). Amazon grants access only with at least 10 qualifying sales in the last 30 days; review can take 48 hours. Images are fetched by ASIN and cached in the `amazon_items` D1 table for at most 1 day (Amazon policy); after an API error an ASIN isn't retried for 15 minutes. Without credentials, or whenever the API fails, product cards simply show no image. The Products tab shows "Found on Amazon" with a thumbnail, or "Not found on Amazon", under each ASIN.
 
 **Placeholder content (local only):** `npm run db:seed-placeholders:local` adds three `[PLACEHOLDER]` posts so menus and pages have something to show; `npm run db:remove-placeholders:local` deletes them.
 
@@ -110,6 +112,7 @@ components/          public/, dashboard/, Logo.tsx
 lib/site.ts          branding constants
 lib/utils/shortcodes.ts  [product N]/[trustbox]/[bedchart] parser
 lib/products.ts      Products-tab data (ASIN helpers, cleaning)
+lib/amazon/          Creators API client + 1-day D1 image cache
 lib/auth.ts          NextAuth config + requireUser() guard for API routes
 lib/db/              D1 access (d1.ts mappers/types, content.ts shared queries)
 migrations/          D1 schema

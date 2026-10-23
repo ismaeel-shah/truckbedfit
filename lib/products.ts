@@ -1,3 +1,5 @@
+import { AMAZON_TAG } from "@/lib/site";
+
 // Products added in the dashboard's Products tab. Stored on the post (affiliate_products_json),
 // shown as "Our top picks" cards above the article, and as a full box wherever the body says
 // [product N]. No prices or images: Amazon only allows those through its API.
@@ -14,6 +16,12 @@ export interface PostProduct {
 }
 
 export const MAX_PRODUCTS = 20;
+
+/** Amazon product page with our Associates tag (when set). */
+export function amazonProductUrl(asin: string): string {
+  const tag = AMAZON_TAG ? `?tag=${encodeURIComponent(AMAZON_TAG)}` : "";
+  return `https://www.amazon.com/dp/${asin}/${tag}`;
+}
 
 const ASIN_RE = /^[A-Z0-9]{10}$/;
 

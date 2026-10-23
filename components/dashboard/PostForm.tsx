@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import PostEditor from "./PostEditor";
 import SEOPanel from "./SEOPanel";
 import MediaUploader from "./MediaUploader";
+import AmazonPreview from "./AmazonPreview";
 import { slugify } from "@/lib/utils/slugify";
 import { ARTICLE_TYPES, ARTICLE_TYPE_LABELS, ArticleType, isPillarType, PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
 import { articlePath } from "@/lib/urls";
@@ -386,7 +387,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
               Products show as &quot;Our top picks&quot; cards at the top of the article, in this order. To also show a
               product&apos;s full box (with key points) inside the article, copy its code, e.g.{" "}
               <code className="font-mono text-slate-700 dark:text-slate-300">{productShortcode(1)}</code>, into the text.
-              No prices or Amazon images — Amazon doesn&apos;t allow them outside its API.
+              Product images come automatically from Amazon&apos;s Creators API (when it&apos;s set up); prices are never shown.
             </p>
             {form.products.length === 0 && (
               <div className="text-center py-10 text-slate-400 text-sm">
@@ -461,6 +462,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                         {asinError ?? `✓ ASIN ${product.asin}`}
                       </p>
                     )}
+                    <AmazonPreview asin={product.asin} />
                   </div>
 
                   <div>
