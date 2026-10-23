@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
     metaTitle: body.metaTitle ?? "",
     metaDescription: body.metaDescription ?? "",
     focusKeyword: body.focusKeyword ?? "",
-    updatedOn: body.updatedOn ?? null,
+    // Set automatically: a scheduled post's date is its publish day; preparePostWrite stamps today on publish.
+    updatedOn: status === "scheduled" && scheduledAt ? scheduledAt.slice(0, 10) : null,
     faqs: body.faqs ?? [],
     products: body.products ?? [],
     content: body.content ?? "",

@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { headers } from "next/headers";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { format } from "date-fns";
 import { Clock, Calendar, Tag } from "lucide-react";
 import Link from "next/link";
 import Breadcrumbs, { Crumb } from "@/components/public/Breadcrumbs";
@@ -24,6 +23,7 @@ import { getTruck } from "@/data/trucks";
 import { articleSchema, breadcrumbSchema, faqSchema } from "@/lib/utils/schema";
 import { articleSeoTitle, buildCanonical, buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
 import { imgLoadingProps } from "@/lib/utils/imageProps";
+import { articleDates } from "@/lib/utils/articleDates";
 
 export const dynamic = "force-dynamic";
 
@@ -124,7 +124,7 @@ export default async function ArticlePage({ params }: Params) {
     { label: post.category.name, href: categoryPath(post.category.slug) },
     { label: post.title },
   ];
-  const updated = format(new Date(`${post.updatedOn}T12:00:00Z`), "MMM d, yyyy");
+  const dates = articleDates(post);
   const trucks = post.trucks.map(getTruck).filter((t): t is NonNullable<typeof t> => Boolean(t));
 
   return (
@@ -164,7 +164,8 @@ export default async function ArticlePage({ params }: Params) {
                   </span>
                 )}
                 <span className="flex items-center gap-1.5">
-                  <Calendar size={14} aria-hidden="true" /> Last updated {updated}
+                  <Calendar size={14} aria-hidden="true" />
+                  {dates.updated ? `Published ${dates.published} · Updated ${dates.updated}` : `Published ${dates.published}`}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock size={14} aria-hidden="true" /> {post.readingTime} min read

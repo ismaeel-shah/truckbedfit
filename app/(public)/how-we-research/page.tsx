@@ -56,8 +56,8 @@ export default function HowWeResearchPage() {
 
           <h2>Keeping guides current</h2>
           <p>
-            Every article shows a &quot;Last updated&quot; date. We revisit guides when products, prices or truck models
-            change, and we only move that date when the content actually changes.
+            Every article shows when it was published and, once we&apos;ve revised it, when it was last updated. We
+            revisit guides when products, prices or truck models change; small fixes like typos don&apos;t change that date.
           </p>
 
           <h2>How we make money</h2>

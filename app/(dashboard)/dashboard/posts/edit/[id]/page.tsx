@@ -44,6 +44,7 @@ export default async function EditPostPage({ params }: { params: { id: string } 
     type: post.type,
     trucks: post.trucks,
     updatedOn: post.updatedOn,
+    publishedAt: post.status === "published" ? post.publishedAt : "",
   };
 
   return (

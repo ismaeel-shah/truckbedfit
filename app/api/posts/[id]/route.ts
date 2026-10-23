@@ -3,6 +3,7 @@ import { getSessionUser, requireUser } from "@/lib/auth";
 import { calculateReadingTime } from "@/lib/utils/readingTime";
 import { getD1, isPostStatus, mapPost, nowIso, parseJson, PostPayload, postJoins, postSelect, PostRow, toIsoOrNull } from "@/lib/db/d1";
 import { preparePostWrite } from "@/lib/db/postWrite";
+import { todayIsoDate } from "@/lib/validation/post";
 
 async function getPostById(id: string) {
   const db = getD1();
@@ -49,6 +50,15 @@ export async function PATCH(
     return NextResponse.json({ error: "Scheduled posts need a valid schedule date" }, { status: 400 });
   }
 
+  // The "last updated" date is automatic: a full save of a published post moves it to today unless
+  // the editor marked it a minor edit; partial saves (alt-text autosave) never move it; a scheduled
+  // post takes its publish day; a first publish gets today (preparePostWrite fills it in).
+  const updatedOn = status === "scheduled" && scheduledAt
+    ? scheduledAt.slice(0, 10)
+    : status === "published" && body.markUpdated === true
+      ? todayIsoDate()
+      : existing.updated_on;
+
   // Partial updates (e.g. the alt-text autosave) send one field, so validate the
   // stored post merged with whatever changed.
   const prepared = await preparePostWrite({
@@ -62,7 +72,7 @@ export async function PATCH(
     metaTitle: body.metaTitle ?? existing.meta_title,
     metaDescription: body.metaDescription ?? existing.meta_description,
     focusKeyword: body.focusKeyword ?? existing.focus_keyword,
-    updatedOn: body.updatedOn !== undefined ? body.updatedOn : existing.updated_on,
+    updatedOn,
     faqs: body.faqs ?? parseJson(existing.faqs_json, []),
     products: body.products ?? parseJson(existing.affiliate_products_json, []),
     content: body.content ?? existing.content,

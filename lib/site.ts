@@ -29,7 +29,7 @@ export const LEGAL_LAST_UPDATED = "2026-10-20";
  * Sitemap date for pages whose content lives in code (About, Contact) — bump it when
  * you edit them. Also used for Home/Blog until the first post is published.
  */
-export const PAGES_LAST_UPDATED = "2026-10-21";
+export const PAGES_LAST_UPDATED = "2026-10-23";
 
 export const LEGAL_PAGES = [
   { label: "Privacy Policy",       href: "/privacy-policy" },

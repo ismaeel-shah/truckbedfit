@@ -46,7 +46,8 @@ export async function publishDueScheduledPosts() {
   try {
     await getD1().prepare(`
       UPDATE posts
-      SET status = 'published', published_at = scheduled_at, updated_at = scheduled_at
+      SET status = 'published', published_at = scheduled_at, updated_at = scheduled_at,
+          updated_on = substr(scheduled_at, 1, 10)
       WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= ?
     `).bind(new Date(nowMs).toISOString()).run();
   } catch (err) {

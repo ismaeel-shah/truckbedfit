@@ -54,7 +54,9 @@ interface PostData {
   author: string;
   type: ArticleType;
   trucks: string[];
+  /** Read-only: shown in the Publish box; both dates are set by the server */
   updatedOn: string;
+  publishedAt: string;
 }
 
 /** UTC ISO string -> "YYYY-MM-DDTHH:mm" in the browser's timezone */
@@ -71,11 +73,9 @@ function localInputToIso(value: string) {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 }
 
-/** Today in the browser's timezone, as YYYY-MM-DD */
-function todayLocal() {
-  const d = new Date();
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
-}
+/** "YYYY-MM-DD" → "Oct 23, 2026" (noon UTC, so no timezone can shift the day) */
+const displayDay = (day: string) =>
+  new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 
 const fieldClass =
   "w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent";
@@ -86,6 +86,8 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
   const [authors, setAuthors]       = useState<Author[]>([]);
   const [saving, setSaving] = useState(false);
   const [altStatus, setAltStatus] = useState<"idle" | "saving" | "saved">("idle");
+  // Ticked for typo-level fixes so the article's "Updated" date doesn't move.
+  const [minorEdit, setMinorEdit] = useState(false);
   const [activeTab, setActiveTab] = useState<"write" | "products" | "seo" | "faqs">("write");
 
   const normaliseInitial = (init?: Partial<PostData>) => {
@@ -118,6 +120,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     type: "guide",
     trucks: [],
     updatedOn: "",
+    publishedAt: "",
     ...normaliseInitial(initial),
   });
 
@@ -126,16 +129,11 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     fetch("/api/authors").then((r) => r.json()).then(setAuthors);
   }, []);
 
-  // Browser-dependent defaults are applied after mount so server and client render the same markup:
-  // scheduledAt is stored as UTC ISO (datetime-local needs browser time) and new posts default
-  // their "last updated" date to today.
+  // scheduledAt is stored as UTC ISO but datetime-local needs browser time; converted after
+  // mount so server and client render the same markup.
   useEffect(() => {
     const iso = initial?.scheduledAt;
-    setForm((prev) => ({
-      ...prev,
-      ...(iso && { scheduledAt: isoToLocalInput(iso) }),
-      ...(!prev.updatedOn && !initial?._id && { updatedOn: todayLocal() }),
-    }));
+    if (iso) setForm((prev) => ({ ...prev, scheduledAt: isoToLocalInput(iso) }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -193,9 +191,12 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     setSaving(true);
     const payload = {
       ...form,
+      // Both dates are set by the server (undefined fields aren't sent).
+      updatedOn: undefined,
+      publishedAt: undefined,
       status: nextStatus,
       scheduledAt,
-      updatedOn: form.updatedOn || null,
+      markUpdated: !minorEdit,
       tags: (form.tags as string).split(",").map((t: string) => t.trim()).filter(Boolean),
       products: form.products.map((p) => ({ ...p, bullets: p.bullets.split("\n").map((b) => b.trim()).filter(Boolean) })),
     };
@@ -497,18 +498,35 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Last updated</label>
-            <input
-              type="date"
-              value={form.updatedOn}
-              onChange={(e) => set("updatedOn", e.target.value)}
-              className={fieldClass}
-            />
-            <p className="text-xs text-slate-400 mt-1">
-              Shown on the article. Change it only for real content updates, not typo fixes.
-            </p>
-          </div>
+          {/* Dates are automatic; an already-published post can opt out of the "Updated" bump. */}
+          {initial?.status === "published" && (
+            <div className="space-y-3">
+              {form.publishedAt && (
+                <div className="space-y-0.5 rounded-lg bg-slate-50 px-3 py-2.5 text-xs text-slate-500 dark:bg-slate-800">
+                  <p>
+                    Published: <span className="font-medium text-slate-700 dark:text-slate-200">{displayDay(form.publishedAt.slice(0, 10))}</span>
+                  </p>
+                  {form.updatedOn > form.publishedAt.slice(0, 10) && (
+                    <p>
+                      Last updated: <span className="font-medium text-slate-700 dark:text-slate-200">{displayDay(form.updatedOn)}</span>
+                    </p>
+                  )}
+                </div>
+              )}
+              <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={minorEdit}
+                  onChange={(e) => setMinorEdit(e.target.checked)}
+                  className="mt-1 accent-[#EA580C]"
+                />
+                <span>
+                  Minor edit
+                  <span className="block text-xs text-slate-400">Typo or small fix — keep the article&apos;s &quot;Updated&quot; date.</span>
+                </span>
+              </label>
+            </div>
+          )}
 
           <div className="flex gap-2">
             <button type="button" onClick={() => handleSave()} disabled={saving} className="btn-secondary flex-1 text-sm">

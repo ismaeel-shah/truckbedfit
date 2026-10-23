@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { format } from "date-fns";
+import { articleDates } from "@/lib/utils/articleDates";
 import Link from "next/link";
 import PageHeader from "@/components/public/PageHeader";
 import ArticleGrid from "@/components/public/ArticleGrid";
@@ -74,6 +74,7 @@ export default async function CategoryPage({ params }: { params: { category: str
     : [];
 
   const listed = groups.flatMap((group) => group.posts);
+  const pillarDates = pillar ? articleDates(pillar, "MMMM d, yyyy") : null;
   const productImages = pillar ? await getProductImages(pillar.products.map((product) => product.asin)) : {};
 
   return (
@@ -124,7 +125,9 @@ export default async function CategoryPage({ params }: { params: { category: str
                   {" · "}
                 </>
               )}
-              Last updated {format(new Date(`${pillar.updatedOn}T12:00:00Z`), "MMMM d, yyyy")}
+              {pillarDates?.updated
+                ? `Published ${pillarDates.published} · Updated ${pillarDates.updated}`
+                : `Published ${pillarDates?.published}`}
             </p>
             <AffiliateNotice />
             <TopPicks products={pillar.products} images={productImages} />

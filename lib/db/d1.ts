@@ -146,8 +146,8 @@ export interface PostPayload {
   type?: string;
   /** Truck slugs from data/trucks.ts */
   trucks?: string[];
-  /** Editorial "last updated" date, YYYY-MM-DD */
-  updatedOn?: string | null;
+  /** Full saves of a live post send true to move its "last updated" date to today (false = minor edit) */
+  markUpdated?: boolean;
 }
 
 export const POST_STATUSES = ["draft", "published", "scheduled"] as const;
