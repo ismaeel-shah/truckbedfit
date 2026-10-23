@@ -1,6 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { ArticleType } from "@/lib/articleTypes";
 import { articlePath } from "@/lib/urls";
+import { cleanProducts } from "@/lib/products";
 
 export interface D1Result<T = Record<string, unknown>> {
   results?: T[];
@@ -140,7 +141,7 @@ export interface PostPayload {
   /** Primary keyword */
   focusKeyword?: string;
   ogImage?: string;
-  affiliateProducts?: unknown[];
+  products?: unknown[];
   faqs?: unknown[];
   type?: string;
   /** Truck slugs from data/trucks.ts */
@@ -274,7 +275,7 @@ export function mapPost(row: PostRow) {
     metaDescription: row.meta_description ?? "",
     focusKeyword: row.focus_keyword ?? "",
     ogImage: row.og_image ?? "",
-    affiliateProducts: parseJson(row.affiliate_products_json, []),
+    products: cleanProducts(parseJson(row.affiliate_products_json, [])),
     faqs: parseJson<{ question: string; answer: string }[]>(row.faqs_json, []),
     type: row.type ?? "guide",
     trucks: parseJson<string[]>(row.trucks_json, []),

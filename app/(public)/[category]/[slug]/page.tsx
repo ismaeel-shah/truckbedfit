@@ -12,6 +12,7 @@ import AuthorCard from "@/components/public/AuthorCard";
 import ArticleGrid from "@/components/public/ArticleGrid";
 import AffiliateNotice from "@/components/public/article/AffiliateNotice";
 import ArticleBody from "@/components/public/article/ArticleBody";
+import TopPicks from "@/components/public/content/TopPicks";
 import FaqSection from "@/components/public/article/FaqSection";
 import JsonLd from "@/components/public/JsonLd";
 import { getPublishedArticle, incrementPostViews, listPosts } from "@/lib/db/content";
@@ -197,7 +198,8 @@ export default async function ArticlePage({ params }: Params) {
               </div>
             )}
 
-            <ArticleBody html={post.content} trucks={post.trucks} />
+            <TopPicks products={post.products} />
+            <ArticleBody html={post.content} trucks={post.trucks} products={post.products} />
 
             {post.tags.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mt-10 pt-6 border-t border-slate-100">

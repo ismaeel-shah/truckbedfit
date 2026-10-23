@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ARTICLE_TYPES, PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
 import { TRUCK_SLUGS } from "@/data/trucks";
+import { isValidAsin, MAX_PRODUCTS } from "@/lib/products";
 
 // The dashboard's equivalent of "validate frontmatter and fail the build": every save is
 // checked against this schema and rejected with a readable message if it doesn't pass.
@@ -25,6 +26,17 @@ export const postRecordSchema = z
     faqs: z
       .array(z.object({ question: z.string(), answer: z.string() }))
       .max(30, "Too many FAQs (max 30)"),
+    products: z
+      .array(
+        z.object({
+          label: z.string().max(40, "Product label is too long (max 40 characters)"),
+          name: z.string().max(150, "Product name is too long (max 150 characters)"),
+          asin: z.string(),
+          note: z.string().max(220, "Product note is too long (max 220 characters)"),
+          bullets: z.array(z.string().max(150, "Product key point is too long (max 150 characters)")).max(8, "Max 8 key points per product"),
+        })
+      )
+      .max(MAX_PRODUCTS, `Too many products (max ${MAX_PRODUCTS})`),
   })
   .superRefine((post, ctx) => {
     const issue = (path: string, message: string) => ctx.addIssue({ code: "custom", path: [path], message });
@@ -40,6 +52,11 @@ export const postRecordSchema = z
     });
 
     if (post.status !== "draft") {
+      // Drafts may hold half-filled products; anything going live needs a working Amazon link.
+      post.products.forEach((product, i) => {
+        if (!product.name) issue("products", `Product ${i + 1} needs a name (Products tab)`);
+        else if (!isValidAsin(product.asin)) issue("products", `Product ${i + 1} needs a valid 10-character ASIN (Products tab)`);
+      });
       if (!post.metaDescription.trim()) issue("metaDescription", "Add a description (SEO tab) before publishing");
       if (!post.focusKeyword.trim()) issue("focusKeyword", "Add a primary keyword (SEO tab) before publishing");
     }

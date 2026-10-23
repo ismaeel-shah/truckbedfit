@@ -88,9 +88,9 @@ Useful checks: `npm run typecheck`, `npm run lint`. Builds fail on type or lint 
 - Every post has a **type** (pillar, category-hub, best-list-vehicle, best-list-type, review, brand, comparison, guide, parts) and optional **trucks**. The type decides which group it appears in on the category page; trucks put it on `/trucks/[truck]`. One pillar per category; it renders at `/[category]` itself.
 - URLs are `/[category]/[slug]`. A category or truck page only exists once it has at least one published post.
 - Fill in the SEO tab (primary keyword, SEO title — `{year}` becomes the current year — description, updated date). Saving a published post without these is rejected.
-- Shortcodes (toolbar buttons in the editor), each on its own line:
-  - `[toppick label="Best overall" name="…" asin="B0XXXXXXXX" note="Why it made the list"]` — quick-pick card. Consecutive toppicks render as one "Quick picks" grid (put it near the top of best-of articles). No images or prices: Amazon images are only allowed through Amazon's API.
-  - `[productbox name="…" asin="B0XXXXXXXX" bullets="One|Two|Three"]` — Amazon box with a "Check price" button. No prices are shown (Amazon policy). The tag from `NEXT_PUBLIC_AMAZON_TAG` is added automatically.
+- **Products tab:** "Add product" for each pick — label ("Best overall"), name, ASIN (or paste the Amazon link), a one-line reason and key points. They show as "Our top picks" cards at the top of the article, in the tab's order. Each links to Amazon with `rel="sponsored"` and the `NEXT_PUBLIC_AMAZON_TAG` tag. No prices or Amazon images (Amazon only allows those through its API). Publishing is blocked while a product lacks a name or valid ASIN.
+- Shortcodes, each on its own line:
+  - `[product 2]` — full box (with key points) for product #2 from the Products tab; copy the code from the product's card.
   - `[trustbox]` — "How we picked" note linking to `/how-we-research`.
   - `[bedchart trucks="ford-f-150,ram-1500"]` — bed-size table from `data/trucks.ts` (omit `trucks` to use the post's trucks).
 - FAQs render at the end of the post and as FAQPage structured data.
@@ -108,7 +108,8 @@ app/(dashboard)/     admin dashboard
 app/api/             API routes (posts, categories, authors, users, redirects, settings, upload, auth)
 components/          public/, dashboard/, Logo.tsx
 lib/site.ts          branding constants
-lib/utils/shortcodes.ts  [productbox]/[trustbox]/[bedchart] parser
+lib/utils/shortcodes.ts  [product N]/[trustbox]/[bedchart] parser
+lib/products.ts      Products-tab data (ASIN helpers, cleaning)
 lib/auth.ts          NextAuth config + requireUser() guard for API routes
 lib/db/              D1 access (d1.ts mappers/types, content.ts shared queries)
 migrations/          D1 schema

@@ -40,6 +40,7 @@ export default async function EditPostPage({ params }: { params: { id: string } 
     focusKeyword: post.focusKeyword,
     ogImage: post.ogImage,
     faqs: post.faqs,
+    products: post.products.map((product) => ({ ...product, bullets: product.bullets.join("\n") })),
     type: post.type,
     trucks: post.trucks,
     updatedOn: post.updatedOn,

@@ -1,6 +1,8 @@
 import { getD1 } from "./d1";
 import { isPillarType } from "@/lib/articleTypes";
 import { slugify } from "@/lib/utils/slugify";
+import { cleanProducts } from "@/lib/products";
+import { productShortcode, splitShortcodes } from "@/lib/utils/shortcodes";
 import { cleanFaqs, firstIssue, PostRecord, postRecordSchema, todayIsoDate } from "@/lib/validation/post";
 
 /** Everything a create/update needs validated, already merged with the stored post on updates. */
@@ -18,6 +20,9 @@ export interface PostWriteInput {
   focusKeyword: string;
   updatedOn: string | null;
   faqs: unknown;
+  products: unknown;
+  /** Article HTML, to check its [product N] references */
+  content: string;
 }
 
 type PrepareResult =
@@ -29,7 +34,7 @@ type PrepareResult =
  * - a pillar/category-hub article takes its category's slug (it renders on /[category]),
  *   so slug uniqueness also guarantees one main article per category;
  * - publishing without an "updated" date stamps today;
- * - empty FAQ rows are dropped; then the zod schema runs;
+ * - empty FAQ and product rows are dropped (Amazon links become ASINs); then the zod schema runs;
  * - the slug must not clash with another post or with a category page.
  */
 export async function preparePostWrite(input: PostWriteInput): Promise<PrepareResult> {
@@ -56,8 +61,22 @@ export async function preparePostWrite(input: PostWriteInput): Promise<PrepareRe
     focusKeyword: input.focusKeyword ?? "",
     updatedOn,
     faqs: cleanFaqs(input.faqs),
+    products: cleanProducts(input.products),
   });
   if (!parsed.success) return { ok: false, status: 400, error: firstIssue(parsed.error) };
+
+  if (parsed.data.status !== "draft") {
+    const productCount = parsed.data.products.length;
+    const missing = splitShortcodes(input.content)
+      .find((segment) => segment.kind === "product" && (segment.number < 1 || segment.number > productCount));
+    if (missing?.kind === "product") {
+      return {
+        ok: false,
+        status: 400,
+        error: `The article uses ${productShortcode(missing.number)} but the Products tab has ${productCount} product${productCount === 1 ? "" : "s"}`,
+      };
+    }
+  }
 
   const clash = await db
     .prepare("SELECT id FROM posts WHERE slug = ? AND id != ?")

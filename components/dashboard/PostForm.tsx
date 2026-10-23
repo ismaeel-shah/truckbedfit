@@ -10,7 +10,9 @@ import { slugify } from "@/lib/utils/slugify";
 import { ARTICLE_TYPES, ARTICLE_TYPE_LABELS, ArticleType, isPillarType, PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
 import { articlePath } from "@/lib/urls";
 import { TRUCKS } from "@/data/trucks";
-import { Plus, Trash2, Check, Loader2 } from "lucide-react";
+import { asinProblem, extractAsin, MAX_PRODUCTS } from "@/lib/products";
+import { productShortcode } from "@/lib/utils/shortcodes";
+import { Plus, Trash2, Check, Loader2, ArrowUp, ArrowDown, Copy } from "lucide-react";
 
 interface Category {
   _id: string;
@@ -30,6 +32,17 @@ interface FAQ {
   answer: string;
 }
 
+/** A product row in the Products tab; key points are edited as one-per-line text. */
+interface FormProduct {
+  label: string;
+  name: string;
+  asin: string;
+  note: string;
+  bullets: string;
+}
+
+const emptyProduct = (): FormProduct => ({ label: "", name: "", asin: "", note: "", bullets: "" });
+
 interface PostData {
   _id?: string;
   title: string;
@@ -47,6 +60,7 @@ interface PostData {
   focusKeyword: string;
   ogImage: string;
   faqs: FAQ[];
+  products: FormProduct[];
   author: string;
   type: ArticleType;
   trucks: string[];
@@ -82,7 +96,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
   const [authors, setAuthors]       = useState<Author[]>([]);
   const [saving, setSaving] = useState(false);
   const [altStatus, setAltStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [activeTab, setActiveTab] = useState<"write" | "seo" | "faqs">("write");
+  const [activeTab, setActiveTab] = useState<"write" | "products" | "seo" | "faqs">("write");
 
   const normaliseInitial = (init?: Partial<PostData>) => {
     if (!init) return {};
@@ -109,6 +123,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     focusKeyword: "",
     ogImage: "",
     faqs: [],
+    products: [],
     author: "",
     type: "guide",
     trucks: [],
@@ -192,6 +207,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
       scheduledAt,
       updatedOn: form.updatedOn || null,
       tags: (form.tags as string).split(",").map((t: string) => t.trim()).filter(Boolean),
+      products: form.products.map((p) => ({ ...p, bullets: p.bullets.split("\n").map((b) => b.trim()).filter(Boolean) })),
     };
 
     const url = initial?._id ? `/api/posts/${initial._id}` : "/api/posts";
@@ -252,6 +268,32 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
   const removeFaq = (i: number) =>
     set("faqs", form.faqs.filter((_, idx) => idx !== i));
 
+  /* Product helpers */
+  const addProduct = () => set("products", [...form.products, emptyProduct()]);
+
+  const updateProduct = (i: number, field: keyof FormProduct, value: string) => {
+    const updated = [...form.products];
+    updated[i] = { ...updated[i], [field]: field === "asin" ? extractAsin(value) : value };
+    set("products", updated);
+  };
+
+  const moveProduct = (i: number, by: -1 | 1) => {
+    const j = i + by;
+    if (j < 0 || j >= form.products.length) return;
+    const updated = [...form.products];
+    [updated[i], updated[j]] = [updated[j], updated[i]];
+    set("products", updated);
+  };
+
+  const removeProduct = (i: number) =>
+    set("products", form.products.filter((_, idx) => idx !== i));
+
+  const copyShortcode = (code: string) =>
+    navigator.clipboard.writeText(code).then(
+      () => toast.success(`Copied ${code} — paste it in the article where the box should go`),
+      () => toast.error("Copy failed — type it in the article instead")
+    );
+
   return (
     <div className="grid lg:grid-cols-[1fr_320px] gap-6">
       {/* Left — main */}
@@ -301,7 +343,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
 
         {/* Tabs */}
         <div className="flex border-b border-slate-200 dark:border-slate-700">
-          {(["write", "seo", "faqs"] as const).map((tab) => (
+          {(["write", "products", "seo", "faqs"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
@@ -312,7 +354,9 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                   : "text-slate-500 hover:text-primary dark:hover:text-white"
               }`}
             >
-              {tab === "faqs" ? `FAQs${form.faqs.length ? ` (${form.faqs.length})` : ""}` : tab === "seo" ? "SEO" : "Write"}
+              {tab === "faqs" ? `FAQs${form.faqs.length ? ` (${form.faqs.length})` : ""}`
+                : tab === "products" ? `Products${form.products.length ? ` (${form.products.length})` : ""}`
+                : tab === "seo" ? "SEO" : "Write"}
             </button>
           ))}
         </div>
@@ -334,6 +378,123 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
             urlPath={urlPath}
             onChange={(field, value) => set(field, value)}
           />
+        )}
+
+        {activeTab === "products" && (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-500">
+              Products show as &quot;Our top picks&quot; cards at the top of the article, in this order. To also show a
+              product&apos;s full box (with key points) inside the article, copy its code, e.g.{" "}
+              <code className="font-mono text-slate-700 dark:text-slate-300">{productShortcode(1)}</code>, into the text.
+              No prices or Amazon images — Amazon doesn&apos;t allow them outside its API.
+            </p>
+            {form.products.length === 0 && (
+              <div className="text-center py-10 text-slate-400 text-sm">
+                No products yet. Click &quot;Add product&quot; to add your first pick.
+              </div>
+            )}
+
+            {form.products.map((product, i) => {
+              const asinError = asinProblem(product.asin);
+              const code = productShortcode(i + 1);
+              return (
+                <div key={i} className="card p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-primary dark:text-white">Product {i + 1}</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => copyShortcode(code)}
+                        title="Copy the code that places this product's full box in the article"
+                        className="mr-2 flex items-center gap-1 rounded border border-slate-200 px-2 py-1 font-mono text-xs text-slate-500 hover:border-accent hover:text-accent dark:border-slate-700"
+                      >
+                        <Copy size={12} /> {code}
+                      </button>
+                      <button type="button" onClick={() => moveProduct(i, -1)} disabled={i === 0} aria-label={`Move product ${i + 1} up`} className="p-1 text-slate-400 hover:text-primary disabled:opacity-30 dark:hover:text-white">
+                        <ArrowUp size={15} />
+                      </button>
+                      <button type="button" onClick={() => moveProduct(i, 1)} disabled={i === form.products.length - 1} aria-label={`Move product ${i + 1} down`} className="p-1 text-slate-400 hover:text-primary disabled:opacity-30 dark:hover:text-white">
+                        <ArrowDown size={15} />
+                      </button>
+                      <button type="button" onClick={() => removeProduct(i)} aria-label={`Remove product ${i + 1}`} className="p-1 text-red-400 hover:text-red-500">
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Label</label>
+                      <input
+                        type="text"
+                        value={product.label}
+                        onChange={(e) => updateProduct(i, "label", e.target.value)}
+                        placeholder="e.g. Best overall"
+                        maxLength={40}
+                        className={fieldClass}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Product name *</label>
+                      <input
+                        type="text"
+                        value={product.name}
+                        onChange={(e) => updateProduct(i, "name", e.target.value)}
+                        placeholder="e.g. BAKFlip MX4 Hard Folding Cover"
+                        maxLength={150}
+                        className={fieldClass}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">ASIN or Amazon link *</label>
+                    <input
+                      type="text"
+                      value={product.asin}
+                      onChange={(e) => updateProduct(i, "asin", e.target.value)}
+                      placeholder="B0ABCD1234 — or paste the product's Amazon URL"
+                      className={`${fieldClass} font-mono`}
+                    />
+                    {product.asin && (
+                      <p className={`mt-1 text-xs ${asinError ? "text-red-500" : "text-green-600"}`}>
+                        {asinError ?? `✓ ASIN ${product.asin}`}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Why it&apos;s a pick (one line, shown on the card)</label>
+                    <input
+                      type="text"
+                      value={product.note}
+                      onChange={(e) => updateProduct(i, "note", e.target.value)}
+                      placeholder="e.g. Low-profile, lockable and fits 5.5 ft and 6.5 ft beds"
+                      maxLength={220}
+                      className={fieldClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Key points (one per line, shown in the full box)</label>
+                    <textarea
+                      rows={3}
+                      value={product.bullets}
+                      onChange={(e) => updateProduct(i, "bullets", e.target.value)}
+                      placeholder={"Folds up to the cab\nWorks with most bed racks\nAluminum panels"}
+                      className={`${fieldClass} resize-y`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+
+            {form.products.length < MAX_PRODUCTS && (
+              <button type="button" onClick={addProduct} className="btn-secondary flex items-center gap-2 text-sm">
+                <Plus size={16} /> Add product
+              </button>
+            )}
+          </div>
         )}
 
         {activeTab === "faqs" && (

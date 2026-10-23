@@ -28,12 +28,9 @@ INSERT OR REPLACE INTO posts (
   'placeholder-f150', '[PLACEHOLDER] Best Tonneau Covers for Ford F-150', 'best-tonneau-covers-ford-f-150',
   'Placeholder best-list for one truck. Lorem ipsum dolor sit amet.',
   '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>'
-  || '<p>[toppick label="Best overall" name="[PLACEHOLDER] Cover A" asin="B0PLACEHL1" note="Placeholder reason one."]</p>'
-  || '<p>[toppick label="Best budget" name="[PLACEHOLDER] Cover B" asin="B0PLACEHL2" note="Placeholder reason two, a little longer so the cards differ in height."]</p>'
-  || '<p>[toppick label="Best for short beds" name="[PLACEHOLDER] Cover C" asin="B0PLACEHL3" note="Placeholder reason three."]</p>'
   || '<p>[trustbox]</p>'
   || '<h2>Placeholder pick</h2>'
-  || '<p>[productbox name="[PLACEHOLDER] Example Cover" asin="B0PLACEHL1" bullets="Placeholder point one|Placeholder point two|Placeholder point three"]</p>'
+  || '<p>[product 1]</p>'
   || '<p>Curabitur blandit tempus porttitor. Maecenas faucibus mollis interdum.</p>'
   || '<h2>Bed sizes</h2><p>[bedchart trucks="ford-f-150"]</p>',
   'cat-tonneau-covers', 'published', '2026-10-19T09:00:00.000Z',
@@ -55,3 +52,10 @@ INSERT OR REPLACE INTO posts (
   '[]',
   '2026-10-18T09:00:00.000Z', '2026-10-18T09:00:00.000Z'
 );
+
+-- Products tab for the F-150 best-list (shown as "Our top picks"; [product 1] places the full box).
+UPDATE posts SET affiliate_products_json = '[
+  {"label":"Best overall","name":"[PLACEHOLDER] Cover A","asin":"B0PLACEHL1","note":"Placeholder reason one.","bullets":["Placeholder point one","Placeholder point two","Placeholder point three"]},
+  {"label":"Best budget","name":"[PLACEHOLDER] Cover B","asin":"B0PLACEHL2","note":"Placeholder reason two, a little longer so the cards differ in height.","bullets":[]},
+  {"label":"Best for short beds","name":"[PLACEHOLDER] Cover C","asin":"B0PLACEHL3","note":"Placeholder reason three.","bullets":[]}
+]' WHERE id = 'placeholder-f150';

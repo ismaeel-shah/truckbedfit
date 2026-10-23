@@ -64,6 +64,8 @@ export async function PATCH(
     focusKeyword: body.focusKeyword ?? existing.focus_keyword,
     updatedOn: body.updatedOn !== undefined ? body.updatedOn : existing.updated_on,
     faqs: body.faqs ?? parseJson(existing.faqs_json, []),
+    products: body.products ?? parseJson(existing.affiliate_products_json, []),
+    content: body.content ?? existing.content,
   });
   if (!prepared.ok) return NextResponse.json({ error: prepared.error }, { status: prepared.status });
   const post = prepared.record;
@@ -120,8 +122,7 @@ export async function PATCH(
       post.metaDescription,
       post.focusKeyword,
       body.ogImage ?? existing.og_image,
-      // Manual product boxes with prices were removed (Amazon policy); clear any old data.
-      "[]",
+      JSON.stringify(post.products),
       JSON.stringify(post.faqs),
       post.type,
       JSON.stringify(post.trucks),

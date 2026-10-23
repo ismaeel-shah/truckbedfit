@@ -7,6 +7,7 @@ import ArticleGrid from "@/components/public/ArticleGrid";
 import GearTypeGrid from "@/components/public/home/GearTypeGrid";
 import AffiliateNotice from "@/components/public/article/AffiliateNotice";
 import ArticleBody from "@/components/public/article/ArticleBody";
+import TopPicks from "@/components/public/content/TopPicks";
 import FaqSection from "@/components/public/article/FaqSection";
 import AuthorCard from "@/components/public/AuthorCard";
 import JsonLd from "@/components/public/JsonLd";
@@ -124,7 +125,8 @@ export default async function CategoryPage({ params }: { params: { category: str
               Last updated {format(new Date(`${pillar.updatedOn}T12:00:00Z`), "MMMM d, yyyy")}
             </p>
             <AffiliateNotice />
-            <ArticleBody html={pillar.content} trucks={pillar.trucks} />
+            <TopPicks products={pillar.products} />
+            <ArticleBody html={pillar.content} trucks={pillar.trucks} products={pillar.products} />
             <FaqSection faqs={pillar.faqs} />
             {pillar.author && <AuthorCard author={pillar.author} />}
           </article>

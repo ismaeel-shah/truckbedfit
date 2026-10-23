@@ -1,24 +1,24 @@
 import { ExternalLink, Star } from "lucide-react";
-import type { TopPick } from "@/lib/utils/shortcodes";
-import { amazonProductUrl, isValidAsin } from "./ProductBox";
+import { isCompleteProduct, PostProduct } from "@/lib/products";
+import { amazonProductUrl } from "./ProductBox";
 
 // TODO(Amazon Creators API): add each product's image from the API once access is approved.
 // Never download or hotlink Amazon images directly, and never show a price (Amazon policy).
 
-/** "Quick picks" grid from consecutive [toppick] shortcodes: label, name, one-line reason, Amazon button. */
-export default function TopPicks({ picks }: { picks: TopPick[] }) {
-  // Skip picks with a missing name or bad ASIN rather than render a broken affiliate link.
-  const valid = picks.filter((pick) => pick.name && isValidAsin(pick.asin));
-  if (!valid.length) return null;
+/** "Our top picks" cards from the post's Products tab: label, name, one-line reason, Amazon button. */
+export default function TopPicks({ products }: { products: PostProduct[] }) {
+  // Skip products with a missing name or bad ASIN rather than render a broken affiliate link.
+  const picks = products.filter(isCompleteProduct);
+  if (!picks.length) return null;
 
   return (
-    <aside className="not-prose my-8" aria-label="Quick picks">
-      <p className="mb-4 flex items-center gap-2 font-heading text-lg font-bold uppercase tracking-wide text-primary">
-        <Star size={18} className="fill-accent text-accent" aria-hidden="true" /> Quick picks
+    <section className="mb-10" aria-labelledby="top-picks-heading">
+      <p id="top-picks-heading" className="mb-4 flex items-center gap-2 font-heading text-xl font-bold uppercase tracking-wide text-primary">
+        <Star size={20} className="fill-accent text-accent" aria-hidden="true" /> Our top picks
       </p>
       <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {valid.map((pick) => (
-          <li key={`${pick.asin}-${pick.label}`} className="flex flex-col rounded-md border-2 border-slate-200 bg-white p-5">
+        {picks.map((pick, i) => (
+          <li key={i} className="flex flex-col rounded-md border-2 border-slate-200 bg-white p-5">
             {pick.label && (
               <span className="self-start rounded-sm bg-primary px-2 py-1 text-xs font-bold uppercase tracking-wider text-white">
                 {pick.label}
@@ -39,6 +39,6 @@ export default function TopPicks({ picks }: { picks: TopPick[] }) {
           </li>
         ))}
       </ol>
-    </aside>
+    </section>
   );
 }

@@ -58,6 +58,8 @@ export async function POST(req: NextRequest) {
     focusKeyword: body.focusKeyword ?? "",
     updatedOn: body.updatedOn ?? null,
     faqs: body.faqs ?? [],
+    products: body.products ?? [],
+    content: body.content ?? "",
   });
   if (!prepared.ok) return NextResponse.json({ error: prepared.error }, { status: prepared.status });
   const post = prepared.record;
@@ -95,7 +97,7 @@ export async function POST(req: NextRequest) {
     post.metaDescription,
     post.focusKeyword,
     body.ogImage ?? "",
-    "[]",
+    JSON.stringify(post.products),
     JSON.stringify(post.faqs),
     post.type,
     JSON.stringify(post.trucks),
