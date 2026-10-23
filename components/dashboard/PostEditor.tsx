@@ -19,7 +19,7 @@ import {
   Link as LinkIcon, Image as ImageIcon, X, Check,
   UnderlineIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Highlighter, Palette, Table as TableIcon, Eye, FileCode, MonitorPlay,
-  ShoppingCart, ClipboardCheck, Ruler,
+  ShoppingCart, ClipboardCheck, Ruler, Star,
 } from "lucide-react";
 import { SHORTCODE_TEMPLATES } from "@/lib/utils/shortcodes";
 
@@ -154,8 +154,9 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
 
   /* ── Shortcode insert (rendered as components on the site) ── */
-  const insertShortcode = (code: string) =>
-    editor.chain().focus().insertContent(`<p>${code}</p>`).run();
+  // One paragraph per shortcode; several in a row (e.g. top picks) render as one grid.
+  const insertShortcode = (code: string | readonly string[]) =>
+    editor.chain().focus().insertContent((typeof code === "string" ? [code] : code).map((c) => `<p>${c}</p>`).join("")).run();
 
   /* ── Toolbar button ────────────────────────────────── */
   const ToolbarBtn = ({
@@ -358,6 +359,9 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
               <Divider />
 
               {/* Shortcodes — edit the placeholder values after inserting */}
+              <ToolbarBtn onClick={() => insertShortcode(SHORTCODE_TEMPLATES.toppicks)} title="Insert quick picks (3 cards; copy a line to add more)">
+                <Star size={15} />
+              </ToolbarBtn>
               <ToolbarBtn onClick={() => insertShortcode(SHORTCODE_TEMPLATES.productbox)} title="Insert product box (Amazon, no price)">
                 <ShoppingCart size={15} />
               </ToolbarBtn>

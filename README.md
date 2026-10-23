@@ -89,6 +89,7 @@ Useful checks: `npm run typecheck`, `npm run lint`. Builds fail on type or lint 
 - URLs are `/[category]/[slug]`. A category or truck page only exists once it has at least one published post.
 - Fill in the SEO tab (primary keyword, SEO title — `{year}` becomes the current year — description, updated date). Saving a published post without these is rejected.
 - Shortcodes (toolbar buttons in the editor), each on its own line:
+  - `[toppick label="Best overall" name="…" asin="B0XXXXXXXX" note="Why it made the list"]` — quick-pick card. Consecutive toppicks render as one "Quick picks" grid (put it near the top of best-of articles). No images or prices: Amazon images are only allowed through Amazon's API.
   - `[productbox name="…" asin="B0XXXXXXXX" bullets="One|Two|Three"]` — Amazon box with a "Check price" button. No prices are shown (Amazon policy). The tag from `NEXT_PUBLIC_AMAZON_TAG` is added automatically.
   - `[trustbox]` — "How we picked" note linking to `/how-we-research`.
   - `[bedchart trucks="ford-f-150,ram-1500"]` — bed-size table from `data/trucks.ts` (omit `trucks` to use the post's trucks).

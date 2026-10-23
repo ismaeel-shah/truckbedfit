@@ -28,6 +28,9 @@ INSERT OR REPLACE INTO posts (
   'placeholder-f150', '[PLACEHOLDER] Best Tonneau Covers for Ford F-150', 'best-tonneau-covers-ford-f-150',
   'Placeholder best-list for one truck. Lorem ipsum dolor sit amet.',
   '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>'
+  || '<p>[toppick label="Best overall" name="[PLACEHOLDER] Cover A" asin="B0PLACEHL1" note="Placeholder reason one."]</p>'
+  || '<p>[toppick label="Best budget" name="[PLACEHOLDER] Cover B" asin="B0PLACEHL2" note="Placeholder reason two, a little longer so the cards differ in height."]</p>'
+  || '<p>[toppick label="Best for short beds" name="[PLACEHOLDER] Cover C" asin="B0PLACEHL3" note="Placeholder reason three."]</p>'
   || '<p>[trustbox]</p>'
   || '<h2>Placeholder pick</h2>'
   || '<p>[productbox name="[PLACEHOLDER] Example Cover" asin="B0PLACEHL1" bullets="Placeholder point one|Placeholder point two|Placeholder point three"]</p>'

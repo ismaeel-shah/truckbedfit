@@ -7,6 +7,8 @@ import { AMAZON_TAG } from "@/lib/site";
 
 const ASIN_RE = /^[A-Z0-9]{10}$/;
 
+export const isValidAsin = (asin: string) => ASIN_RE.test(asin);
+
 export function amazonProductUrl(asin: string): string {
   const tag = AMAZON_TAG ? `?tag=${encodeURIComponent(AMAZON_TAG)}` : "";
   return `https://www.amazon.com/dp/${asin}/${tag}`;
@@ -23,7 +25,7 @@ interface ProductBoxProps {
 /** Text-only product box: name, the editor's bullet points and a "Check price on Amazon" button. */
 export default function ProductBox({ name, asin, bullets }: ProductBoxProps) {
   // A bad ASIN would produce a broken affiliate link — render nothing rather than that.
-  if (!name || !ASIN_RE.test(asin)) return null;
+  if (!name || !isValidAsin(asin)) return null;
 
   return (
     <aside className="not-prose my-8 rounded-md border-2 border-primary bg-white">
