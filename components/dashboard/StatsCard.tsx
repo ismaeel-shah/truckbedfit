@@ -1,22 +1,31 @@
+import type { ReactNode } from "react";
 import { LucideIcon } from "lucide-react";
 
 interface StatsCardProps {
   label: string;
   value: number | string;
   icon: LucideIcon;
-  color?: string;
+  /** One short line under the value, e.g. "of 12 posts" */
+  caption?: ReactNode;
+  /** Optional mini chart shown beside the value (e.g. a sparkline) */
+  trend?: ReactNode;
 }
 
-export default function StatsCard({ label, value, icon: Icon, color = "text-accent" }: StatsCardProps) {
+/** Stat tile: label + icon on top, the number large below, a muted caption, optional trend. */
+export default function StatsCard({ label, value, icon: Icon, caption, trend }: StatsCardProps) {
   return (
-    <div className="card p-6 flex items-center gap-4">
-      <div className={`p-3 rounded-xl bg-slate-100 dark:bg-slate-700 ${color}`}>
-        <Icon size={22} />
+    <div className="card flex flex-col p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="truncate text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+          <Icon size={18} aria-hidden="true" />
+        </span>
       </div>
-      <div>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
-        <p className="text-2xl font-bold text-primary dark:text-white">{value}</p>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <p className="text-3xl font-bold leading-none text-primary dark:text-white">{value}</p>
+        {trend}
       </div>
+      {caption && <p className="mt-2 truncate text-xs text-slate-400">{caption}</p>}
     </div>
   );
 }

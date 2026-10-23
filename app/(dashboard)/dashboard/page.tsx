@@ -1,10 +1,11 @@
-import { FileText, CalendarClock, BookOpen, Clock, Pencil, Eye, TrendingUp } from "lucide-react";
+import { BookOpen, Clock, Pencil, Eye, TrendingUp } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import ContentHealth from "@/components/dashboard/ContentHealth";
 import ChartCard from "@/components/dashboard/charts/ChartCard";
 import ViewsTrendChart from "@/components/dashboard/charts/ViewsTrendChart";
 import BarList from "@/components/dashboard/charts/BarList";
 import WeeklyColumns from "@/components/dashboard/charts/WeeklyColumns";
+import Sparkline from "@/components/dashboard/charts/Sparkline";
 import Link from "next/link";
 import { getD1, mapPost, postJoins, postSelect, PostRow } from "@/lib/db/d1";
 import { DashboardData, getDashboardData, RHYTHM_WEEKS, TREND_DAYS } from "@/lib/db/dashboardStats";
@@ -55,13 +56,32 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 mb-6">
-        <StatsCard label="Total posts" value={stats.total} icon={FileText} />
-        <StatsCard label="Published" value={stats.published} icon={BookOpen} color="text-green-500" />
-        <StatsCard label="Drafts" value={stats.drafts} icon={Clock} color="text-yellow-500" />
-        <StatsCard label="Scheduled" value={stats.scheduled} icon={CalendarClock} color="text-blue-500" />
-        <StatsCard label={`Views (${TREND_DAYS} days)`} value={stats.views30.toLocaleString("en-US")} icon={TrendingUp} color="text-orange-500" />
-        <StatsCard label="All-time views" value={stats.views.toLocaleString("en-US")} icon={Eye} color="text-orange-500" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
+        <StatsCard
+          label="Published"
+          value={stats.published}
+          icon={BookOpen}
+          caption={`of ${stats.total} ${stats.total === 1 ? "post" : "posts"}`}
+        />
+        <StatsCard
+          label="Not live yet"
+          value={stats.drafts + stats.scheduled}
+          icon={Clock}
+          caption={`${stats.drafts} ${stats.drafts === 1 ? "draft" : "drafts"} · ${stats.scheduled} scheduled`}
+        />
+        <StatsCard
+          label={`Views · last ${TREND_DAYS} days`}
+          value={stats.views30.toLocaleString("en-US")}
+          icon={TrendingUp}
+          caption="Readers only — no bots or editors"
+          trend={data && <Sparkline values={data.viewsByDay.map((d) => d.views)} />}
+        />
+        <StatsCard
+          label="All-time views"
+          value={stats.views.toLocaleString("en-US")}
+          icon={Eye}
+          caption="Across every article"
+        />
       </div>
 
       {data && (
