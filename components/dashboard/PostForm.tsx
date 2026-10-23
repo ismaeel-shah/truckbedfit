@@ -6,14 +6,14 @@ import toast from "react-hot-toast";
 import PostEditor from "./PostEditor";
 import SEOPanel from "./SEOPanel";
 import MediaUploader from "./MediaUploader";
-import AmazonPreview from "./AmazonPreview";
+import ProductCard, { emptyProduct, FormProduct } from "./ProductCard";
 import { slugify } from "@/lib/utils/slugify";
 import { ARTICLE_TYPES, ARTICLE_TYPE_LABELS, ArticleType, isPillarType, PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
 import { articlePath } from "@/lib/urls";
 import { TRUCKS } from "@/data/trucks";
-import { asinProblem, extractAsin, MAX_PRODUCTS } from "@/lib/products";
+import { extractAsin, MAX_PRODUCTS } from "@/lib/products";
 import { productShortcode } from "@/lib/utils/shortcodes";
-import { Plus, Trash2, Check, Loader2, ArrowUp, ArrowDown, Copy } from "lucide-react";
+import { Plus, Trash2, Check, Loader2, Package } from "lucide-react";
 
 interface Category {
   _id: string;
@@ -32,17 +32,6 @@ interface FAQ {
   question: string;
   answer: string;
 }
-
-/** A product row in the Products tab; key points are edited as one-per-line text. */
-interface FormProduct {
-  label: string;
-  name: string;
-  asin: string;
-  note: string;
-  bullets: string;
-}
-
-const emptyProduct = (): FormProduct => ({ label: "", name: "", asin: "", note: "", bullets: "" });
 
 interface PostData {
   _id?: string;
@@ -383,116 +372,40 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
 
         {activeTab === "products" && (
           <div className="space-y-4">
-            <p className="text-xs text-slate-500">
-              Products show as &quot;Our top picks&quot; cards at the top of the article, in this order. To also show a
-              product&apos;s full box (with key points) inside the article, copy its code, e.g.{" "}
-              <code className="font-mono text-slate-700 dark:text-slate-300">{productShortcode(1)}</code>, into the text.
-              Product images come automatically from Amazon&apos;s Creators API (when it&apos;s set up); prices are never shown.
-            </p>
+            <div className="rounded-lg border border-accent/20 bg-accent/5 px-4 py-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+              Products appear as <strong>&quot;Our top picks&quot;</strong> cards at the top of the article, in this order.
+              To show a product&apos;s full box inside the article, copy its code (e.g.{" "}
+              <code className="font-mono text-primary dark:text-white">{productShortcode(1)}</code>) into the text.
+              Images come from Amazon automatically; prices are never shown.
+            </div>
+
             {form.products.length === 0 && (
-              <div className="text-center py-10 text-slate-400 text-sm">
-                No products yet. Click &quot;Add product&quot; to add your first pick.
+              <div className="rounded-xl border-2 border-dashed border-slate-200 py-12 text-center dark:border-slate-700">
+                <Package size={32} className="mx-auto text-slate-300" />
+                <p className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-300">No products yet</p>
+                <p className="mt-1 text-xs text-slate-400">Add the products this article recommends.</p>
               </div>
             )}
 
-            {form.products.map((product, i) => {
-              const asinError = asinProblem(product.asin);
-              const code = productShortcode(i + 1);
-              return (
-                <div key={i} className="card p-4 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-primary dark:text-white">Product {i + 1}</span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => copyShortcode(code)}
-                        title="Copy the code that places this product's full box in the article"
-                        className="mr-2 flex items-center gap-1 rounded border border-slate-200 px-2 py-1 font-mono text-xs text-slate-500 hover:border-accent hover:text-accent dark:border-slate-700"
-                      >
-                        <Copy size={12} /> {code}
-                      </button>
-                      <button type="button" onClick={() => moveProduct(i, -1)} disabled={i === 0} aria-label={`Move product ${i + 1} up`} className="p-1 text-slate-400 hover:text-primary disabled:opacity-30 dark:hover:text-white">
-                        <ArrowUp size={15} />
-                      </button>
-                      <button type="button" onClick={() => moveProduct(i, 1)} disabled={i === form.products.length - 1} aria-label={`Move product ${i + 1} down`} className="p-1 text-slate-400 hover:text-primary disabled:opacity-30 dark:hover:text-white">
-                        <ArrowDown size={15} />
-                      </button>
-                      <button type="button" onClick={() => removeProduct(i)} aria-label={`Remove product ${i + 1}`} className="p-1 text-red-400 hover:text-red-500">
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Label</label>
-                      <input
-                        type="text"
-                        value={product.label}
-                        onChange={(e) => updateProduct(i, "label", e.target.value)}
-                        placeholder="e.g. Best overall"
-                        maxLength={40}
-                        className={fieldClass}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Product name *</label>
-                      <input
-                        type="text"
-                        value={product.name}
-                        onChange={(e) => updateProduct(i, "name", e.target.value)}
-                        placeholder="e.g. BAKFlip MX4 Hard Folding Cover"
-                        maxLength={150}
-                        className={fieldClass}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">ASIN or Amazon link *</label>
-                    <input
-                      type="text"
-                      value={product.asin}
-                      onChange={(e) => updateProduct(i, "asin", e.target.value)}
-                      placeholder="B0ABCD1234 — or paste the product's Amazon URL"
-                      className={`${fieldClass} font-mono`}
-                    />
-                    {product.asin && (
-                      <p className={`mt-1 text-xs ${asinError ? "text-red-500" : "text-green-600"}`}>
-                        {asinError ?? `✓ ASIN ${product.asin}`}
-                      </p>
-                    )}
-                    <AmazonPreview asin={product.asin} />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">Why it&apos;s a pick (one line, shown on the card)</label>
-                    <input
-                      type="text"
-                      value={product.note}
-                      onChange={(e) => updateProduct(i, "note", e.target.value)}
-                      placeholder="e.g. Low-profile, lockable and fits 5.5 ft and 6.5 ft beds"
-                      maxLength={220}
-                      className={fieldClass}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">Key points (one per line, shown in the full box)</label>
-                    <textarea
-                      rows={3}
-                      value={product.bullets}
-                      onChange={(e) => updateProduct(i, "bullets", e.target.value)}
-                      placeholder={"Folds up to the cab\nWorks with most bed racks\nAluminum panels"}
-                      className={`${fieldClass} resize-y`}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+            {form.products.map((product, i) => (
+              <ProductCard
+                key={i}
+                product={product}
+                index={i}
+                total={form.products.length}
+                onChange={(field, value) => updateProduct(i, field, value)}
+                onMove={(by) => moveProduct(i, by)}
+                onRemove={() => removeProduct(i)}
+                onCopyCode={copyShortcode}
+              />
+            ))}
 
             {form.products.length < MAX_PRODUCTS && (
-              <button type="button" onClick={addProduct} className="btn-secondary flex items-center gap-2 text-sm">
+              <button
+                type="button"
+                onClick={addProduct}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 py-3 text-sm font-semibold text-slate-500 transition-colors hover:border-accent hover:bg-accent/5 hover:text-accent dark:border-slate-600"
+              >
                 <Plus size={16} /> Add product
               </button>
             )}
