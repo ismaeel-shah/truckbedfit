@@ -79,6 +79,7 @@ export type PostRow = {
   meta_title: string;
   meta_description: string;
   focus_keyword: string;
+  secondary_keywords: string;
   og_image: string;
   affiliate_products_json: string;
   faqs_json: string;
@@ -140,6 +141,8 @@ export interface PostPayload {
   metaDescription?: string;
   /** Primary keyword */
   focusKeyword?: string;
+  /** One per line */
+  secondaryKeywords?: string;
   ogImage?: string;
   products?: unknown[];
   faqs?: unknown[];
@@ -274,6 +277,7 @@ export function mapPost(row: PostRow) {
     metaTitle: row.meta_title ?? "",
     metaDescription: row.meta_description ?? "",
     focusKeyword: row.focus_keyword ?? "",
+    secondaryKeywords: row.secondary_keywords ?? "",
     ogImage: row.og_image ?? "",
     products: cleanProducts(parseJson(row.affiliate_products_json, [])),
     faqs: parseJson<{ question: string; answer: string }[]>(row.faqs_json, []),

@@ -3,7 +3,7 @@ import { isPillarType } from "@/lib/articleTypes";
 import { slugify } from "@/lib/utils/slugify";
 import { cleanProducts } from "@/lib/products";
 import { productShortcode, splitShortcodes } from "@/lib/utils/shortcodes";
-import { cleanFaqs, firstIssue, PostRecord, postRecordSchema, todayIsoDate } from "@/lib/validation/post";
+import { cleanFaqs, cleanKeywordList, firstIssue, PostRecord, postRecordSchema, todayIsoDate } from "@/lib/validation/post";
 
 /** Everything a create/update needs validated, already merged with the stored post on updates. */
 export interface PostWriteInput {
@@ -18,6 +18,8 @@ export interface PostWriteInput {
   metaTitle: string;
   metaDescription: string;
   focusKeyword: string;
+  /** One per line */
+  secondaryKeywords?: string;
   updatedOn: string | null;
   faqs: unknown;
   products: unknown;
@@ -59,6 +61,7 @@ export async function preparePostWrite(input: PostWriteInput): Promise<PrepareRe
     metaTitle: input.metaTitle ?? "",
     metaDescription: input.metaDescription ?? "",
     focusKeyword: input.focusKeyword ?? "",
+    secondaryKeywords: cleanKeywordList(input.secondaryKeywords),
     updatedOn,
     faqs: cleanFaqs(input.faqs),
     products: cleanProducts(input.products),

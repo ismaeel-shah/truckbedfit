@@ -14,6 +14,8 @@ interface SEOPanelProps {
     content: string;
     /** The page's short answer (checked for 40–60 words when given) */
     shortAnswer?: string;
+    /** One per line; the field shows only when this is given */
+    secondaryKeywords?: string;
   };
   /** Public path of the article, e.g. /tonneau-covers/best-for-f-150 (null until a category is picked) */
   urlPath: string | null;
@@ -23,6 +25,13 @@ interface SEOPanelProps {
 export default function SEOPanel({ data, urlPath, onChange }: SEOPanelProps) {
   const shownTitle = withYear(data.metaTitle);
   const checks = runSEOChecklist({ ...data, metaTitle: shownTitle });
+  const plainContent = data.content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").toLowerCase();
+  const secondary = (data.secondaryKeywords ?? "")
+    .split(/\r?\n/)
+    .map((k) => k.trim())
+    .filter(Boolean)
+    .map((keyword) => ({ keyword, used: plainContent.includes(keyword.toLowerCase()) }));
+  const usedCount = secondary.filter((k) => k.used).length;
   const score = checks.filter((c) => c.pass).length;
 
   return (
@@ -75,6 +84,45 @@ export default function SEOPanel({ data, urlPath, onChange }: SEOPanelProps) {
           className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
+
+      {/* Secondary keywords (the plan's other target keywords for this page) */}
+      {data.secondaryKeywords !== undefined && (
+        <div>
+          <div className="mb-1 flex items-baseline justify-between gap-3">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Secondary keywords <span className="font-normal text-slate-400">(one per line)</span>
+            </label>
+            {secondary.length > 0 && (
+              <span className={`text-xs font-medium ${usedCount === secondary.length ? "text-green-600" : "text-amber-600"}`}>
+                {usedCount} of {secondary.length} used
+              </span>
+            )}
+          </div>
+          <textarea
+            rows={4}
+            value={data.secondaryKeywords}
+            onChange={(e) => onChange("secondaryKeywords", e.target.value)}
+            placeholder={"Paste the plan's other target keywords, one per line, e.g.\ntonneau cover f150 5.5 bed\nf150 hard folding tonneau cover"}
+            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent resize-y"
+          />
+          {secondary.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {secondary.map(({ keyword, used }) => (
+                <li key={keyword} className="flex items-center gap-2 text-xs">
+                  {used ? (
+                    <CheckCircle2 size={14} className="text-green-500 flex-shrink-0" />
+                  ) : (
+                    <XCircle size={14} className="text-slate-300 dark:text-slate-600 flex-shrink-0" />
+                  )}
+                  <span className={used ? "text-slate-600 dark:text-slate-300" : "text-slate-400"}>
+                    {keyword}{used ? "" : " — not in the article yet"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {/* SEO title */}
       <div>

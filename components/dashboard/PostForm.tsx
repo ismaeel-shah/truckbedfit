@@ -50,6 +50,7 @@ interface PostData {
   metaTitle: string;
   metaDescription: string;
   focusKeyword: string;
+  secondaryKeywords: string;
   ogImage: string;
   faqs: FAQ[];
   products: FormProduct[];
@@ -115,6 +116,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     metaTitle: "",
     metaDescription: "",
     focusKeyword: "",
+    secondaryKeywords: "",
     ogImage: "",
     faqs: [],
     products: [],
@@ -349,6 +351,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
               metaTitle: form.metaTitle,
               metaDescription: form.metaDescription,
               focusKeyword: form.focusKeyword,
+              secondaryKeywords: form.secondaryKeywords,
               slug: form.slug,
               content: form.content,
               shortAnswer: form.excerpt,

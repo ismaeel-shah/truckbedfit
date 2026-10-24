@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
     metaTitle: body.metaTitle ?? "",
     metaDescription: body.metaDescription ?? "",
     focusKeyword: body.focusKeyword ?? "",
+    secondaryKeywords: body.secondaryKeywords ?? "",
     // Set automatically: a scheduled post's date is its publish day; preparePostWrite stamps today on publish.
     updatedOn: status === "scheduled" && scheduledAt ? scheduledAt.slice(0, 10) : null,
     faqs: body.faqs ?? [],
@@ -73,11 +74,11 @@ export async function POST(req: NextRequest) {
     INSERT INTO posts (
       id, title, slug, excerpt, content, featured_image, featured_image_alt,
       category_id, author_id, tags_json, status, published_at, scheduled_at,
-      views, reading_time, meta_title, meta_description, focus_keyword, og_image,
+      views, reading_time, meta_title, meta_description, focus_keyword, secondary_keywords, og_image,
       affiliate_products_json, faqs_json, type, trucks_json, updated_on,
       created_at, updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id,
     post.title,
@@ -97,6 +98,7 @@ export async function POST(req: NextRequest) {
     post.metaTitle,
     post.metaDescription,
     post.focusKeyword,
+    post.secondaryKeywords,
     body.ogImage ?? "",
     JSON.stringify(post.products),
     JSON.stringify(post.faqs),

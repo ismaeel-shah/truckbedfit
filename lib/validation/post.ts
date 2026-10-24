@@ -22,6 +22,7 @@ export const postRecordSchema = z
     metaTitle: z.string().max(120, "SEO title is too long"),
     metaDescription: z.string().max(320, "Description is too long"),
     focusKeyword: z.string().max(120, "Primary keyword is too long"),
+    secondaryKeywords: z.string().max(3000, "Too many secondary keywords (max 3,000 characters)"),
     updatedOn: z.string().regex(DATE_RE, "Updated date must be a valid date").nullable(),
     faqs: z
       .array(z.object({ question: z.string(), answer: z.string() }))
@@ -63,6 +64,17 @@ export const postRecordSchema = z
   });
 
 export type PostRecord = z.infer<typeof postRecordSchema>;
+
+/** One keyword per line: trimmed, blanks and repeats (any letter case) dropped. */
+export function cleanKeywordList(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  const seen = new Set<string>();
+  return raw
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/\s+/g, " "))
+    .filter((line) => line && !seen.has(line.toLowerCase()) && seen.add(line.toLowerCase()))
+    .join("\n");
+}
 
 /** Drops FAQ rows the editor left completely empty. */
 export function cleanFaqs(faqs: unknown): { question: string; answer: string }[] {
