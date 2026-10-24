@@ -11,7 +11,7 @@ import FaqEditor from "./FaqEditor";
 import { slugify } from "@/lib/utils/slugify";
 import { ARTICLE_TYPES, ARTICLE_TYPE_LABELS, ArticleType, isPillarType, PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
 import { articlePath } from "@/lib/urls";
-import { TRUCKS } from "@/data/trucks";
+import { hasHub, TRUCKS } from "@/data/trucks";
 import { extractAsin, MAX_PRODUCTS } from "@/lib/products";
 import { productShortcode } from "@/lib/utils/shortcodes";
 import { Plus, Check, Loader2, Package } from "lucide-react";
@@ -526,7 +526,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
               </button>
             )}
           </div>
-          <p className="text-xs text-slate-400">The article is listed on each ticked truck&apos;s page.</p>
+          <p className="text-xs text-slate-400">The article is listed on each ticked truck&apos;s page (if it has one) and its bed chart uses these trucks.</p>
           <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
             {TRUCKS.map((truck) => (
               <label key={truck.slug} className="flex items-center gap-2 rounded px-1 py-1 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
@@ -537,6 +537,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
                   className="accent-[#EA580C]"
                 />
                 {truck.name}
+                {!hasHub(truck) && <span className="text-xs text-slate-400">(no truck page)</span>}
               </label>
             ))}
           </div>

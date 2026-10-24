@@ -8,7 +8,7 @@ import { listCategories, listPosts } from "@/lib/db/content";
 import { redirectIfMoved } from "@/lib/db/redirects";
 import JsonLd from "@/components/public/JsonLd";
 import { itemListSchema } from "@/lib/utils/schema";
-import { getTruck, truckYears } from "@/data/trucks";
+import { getTruck, hasHub, truckYears } from "@/data/trucks";
 import { categoryPath, truckPath } from "@/lib/urls";
 import { hubPageMetadata } from "@/lib/utils/seo";
 import { getHubPage } from "@/lib/db/hubPages";
@@ -21,7 +21,8 @@ type Params = { params: { truck: string } };
 /** The truck and its published articles grouped by category — or null if the hub isn't live. */
 async function loadTruckHub(slug: string) {
   const truck = getTruck(slug);
-  if (!truck) return null;
+  // Trucks without a hub (data/trucks.ts `hub: false`) can be tagged but have no page.
+  if (!truck || !hasHub(truck)) return null;
   const [{ posts }, categories, hub] = await Promise.all([
     listPosts({ truck: slug, status: "published", limit: 500 }),
     listCategories(),

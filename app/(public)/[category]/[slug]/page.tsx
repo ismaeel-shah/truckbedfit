@@ -18,7 +18,7 @@ import { redirectIfMoved } from "@/lib/db/redirects";
 import { getProductImages } from "@/lib/amazon/productImages";
 import { PILLAR_TYPES } from "@/lib/articleTypes";
 import { authorPath, categoryPath, truckPath } from "@/lib/urls";
-import { getTruck } from "@/data/trucks";
+import { getTruck, hasHub } from "@/data/trucks";
 import { articleSchema, breadcrumbSchema, faqSchema } from "@/lib/utils/schema";
 import { articleSeoTitle, buildCanonical, buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
 import { imgLoadingProps } from "@/lib/utils/imageProps";
@@ -160,9 +160,13 @@ export default async function ArticlePage({ params }: Params) {
                     Fits:
                     {trucks.map((truck, i) => (
                       <span key={truck.slug}>
-                        <Link href={truckPath(truck.slug)} className="font-semibold text-primary hover:text-accent">
-                          {truck.name}
-                        </Link>
+                        {hasHub(truck) ? (
+                          <Link href={truckPath(truck.slug)} className="font-semibold text-primary hover:text-accent">
+                            {truck.name}
+                          </Link>
+                        ) : (
+                          <span className="font-semibold text-primary">{truck.name}</span>
+                        )}
                         {i < trucks.length - 1 && ","}
                       </span>
                     ))}
@@ -222,7 +226,7 @@ export default async function ArticlePage({ params }: Params) {
             <ArticleGrid
               title={`More for your ${truckBox.truck.name}`}
               eyebrow="Same truck"
-              href={truckPath(truckBox.truck.slug)}
+              href={hasHub(truckBox.truck) ? truckPath(truckBox.truck.slug) : undefined}
               posts={truckBox.posts}
             />
           )}

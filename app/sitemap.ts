@@ -3,7 +3,7 @@ import { listCategories, listLiveAuthors, listPosts } from "@/lib/db/content";
 import { LEGAL_LAST_UPDATED, LEGAL_PAGES, PAGES_LAST_UPDATED, SITE_URL as base } from "@/lib/site";
 import { isPillarType } from "@/lib/articleTypes";
 import { authorPath, categoryPath, truckPath } from "@/lib/urls";
-import { TRUCKS } from "@/data/trucks";
+import { hasHub, TRUCKS } from "@/data/trucks";
 import { listHubPages, TRUCKS_INDEX_PATH } from "@/lib/db/hubPages";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +53,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const hubUpdated = new Map(hubs.filter((hub) => hub.updatedOn).map((hub) => [hub.path, hub.updatedOn!]));
     const latest = (...days: (string | undefined)[]) => days.filter(Boolean).sort().pop()!;
     const truckUrls = TRUCKS
-      .filter((truck) => byTruck.has(truck.slug))
+      .filter((truck) => hasHub(truck) && byTruck.has(truck.slug))
       .map((truck) => ({
         url: `${base}${truckPath(truck.slug)}`,
         lastModified: latest(byTruck.get(truck.slug), hubUpdated.get(truckPath(truck.slug))),

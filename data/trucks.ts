@@ -3,6 +3,8 @@
 // ONLY verified figures go here. Anything unknown stays empty with a TODO — never guess
 // a bed length: fitment advice is the whole point of the site.
 // Order matters: it is the display order, and the navbar's "Trucks" menu shows the first 8 live ones.
+// Older generations and trucks without a hub page are listed so articles can be tagged with them
+// and [bedchart] can show them once their figures are verified.
 
 export interface BedSize {
   /** As owners say it, e.g. "5.5 ft" or "5'7\"" */
@@ -24,6 +26,8 @@ export interface Truck {
   make: string;
   generations: TruckGeneration[];
   fitmentNotes: string[];
+  /** false = taggable on articles but no /trucks page, menu entry or sitemap URL (the content plan has no hub for it) */
+  hub?: false;
 }
 
 export const TRUCKS: Truck[] = [
@@ -40,6 +44,8 @@ export const TRUCKS: Truck[] = [
           { label: "8 ft", insideLengthIn: 97.6 },
         ],
       },
+      // TODO: bed sizes for 2004–2014 (content plan A50) — not verified yet.
+      { years: "2004–2014", beds: [] },
     ],
     fitmentNotes: [
       "2024+ models can have the Pro Access Tailgate — confirm an accessory supports it before buying.",
@@ -58,6 +64,8 @@ export const TRUCKS: Truck[] = [
           { label: "8'", insideLengthIn: 98.2 },
         ],
       },
+      // TODO: bed sizes for 2014–2018 + 2019 Legacy (content plan A51) — not verified yet.
+      { years: "2014–2018 + 2019 Legacy", beds: [] },
     ],
     fitmentNotes: [
       "Multi-Flex tailgate: confirm an accessory supports it before buying.",
@@ -78,6 +86,8 @@ export const TRUCKS: Truck[] = [
           { label: "8'", insideLengthIn: 98.2 },
         ],
       },
+      // TODO: bed sizes for 2014–2018 + 2019 Limited (content plan A51) — not verified yet.
+      { years: "2014–2018 + 2019 Limited", beds: [] },
     ],
     fitmentNotes: [
       "MultiPro tailgate: confirm an accessory supports it before buying.",
@@ -97,6 +107,8 @@ export const TRUCKS: Truck[] = [
           { label: "6'4\"", insideLengthIn: 76.3 },
         ],
       },
+      // TODO: bed sizes for 2009–2018 and the Ram 1500 Classic (content plan A52) — not verified yet.
+      { years: "2009–2018 + 1500 Classic", beds: [] },
     ],
     fitmentNotes: [
       "RamBox cargo management: confirm an accessory is listed as RamBox-compatible.",
@@ -247,9 +259,40 @@ export const TRUCKS: Truck[] = [
     generations: [],
     fitmentNotes: [],
   },
+  // Trucks the content plan writes about without a hub page of their own.
+  {
+    slug: "chevy-silverado-gmc-sierra-hd",
+    name: "Chevy Silverado HD / GMC Sierra HD",
+    make: "Chevrolet / GMC",
+    // TODO: bed sizes (content plan A53) — not verified yet.
+    generations: [],
+    fitmentNotes: [],
+    hub: false,
+  },
+  {
+    slug: "chevy-s10",
+    name: "Chevy S10",
+    make: "Chevrolet",
+    // TODO: generations and bed sizes (content plan A48) — not verified yet.
+    generations: [],
+    fitmentNotes: [],
+    hub: false,
+  },
+  {
+    slug: "rivian-r1t",
+    name: "Rivian R1T",
+    make: "Rivian",
+    // TODO: generations and bed sizes (content plan A49) — not verified yet.
+    generations: [],
+    fitmentNotes: [],
+    hub: false,
+  },
 ];
 
 export const TRUCK_SLUGS = TRUCKS.map((t) => t.slug);
+
+/** Whether the truck has its own /trucks/<slug> page. */
+export const hasHub = (truck: Truck) => truck.hub !== false;
 
 export function getTruck(slug: string): Truck | undefined {
   return TRUCKS.find((t) => t.slug === slug);

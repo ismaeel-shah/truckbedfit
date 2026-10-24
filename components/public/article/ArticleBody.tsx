@@ -32,7 +32,7 @@ export default function ArticleBody({ html, trucks = [], products = [], images =
           case "trustbox":
             return <TrustBox key={i} />;
           case "bedchart":
-            return <BedChart key={i} trucks={segment.trucks} fallbackTrucks={trucks} />;
+            return <BedChart key={i} trucks={segment.trucks} years={segment.years} fallbackTrucks={trucks} />;
         }
       })}
     </div>

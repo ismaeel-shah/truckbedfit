@@ -2,6 +2,7 @@
 //   [product 2]                                  full box for product #2 from the post's Products tab
 //   [trustbox]
 //   [bedchart trucks="ford-f-150,ram-1500"]      (trucks optional — defaults to the post's trucks)
+//   [bedchart trucks="ford-f-150" years="2004-2014"]   (years optional — only that generation's rows)
 // The editor wraps them in <p>…</p> and may encode quotes; both are handled here.
 
 export type ContentSegment =
@@ -9,7 +10,7 @@ export type ContentSegment =
   /** 1-based, as shown in the Products tab */
   | { kind: "product"; number: number }
   | { kind: "trustbox" }
-  | { kind: "bedchart"; trucks: string[] | null };
+  | { kind: "bedchart"; trucks: string[] | null; years: string | null };
 
 // Attribute text is quoted values (straight, smart or &quot;-encoded quotes, which may contain "]")
 // or any other character except "]".
@@ -48,7 +49,7 @@ function toSegment(name: string, rawAttrs: string): ContentSegment {
       return { kind: "trustbox" };
     default: {
       const attrs = parseAttrs(rawAttrs);
-      return { kind: "bedchart", trucks: attrs.trucks ? splitList(attrs.trucks, ",") : null };
+      return { kind: "bedchart", trucks: attrs.trucks ? splitList(attrs.trucks, ",") : null, years: attrs.years || null };
     }
   }
 }

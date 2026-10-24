@@ -92,7 +92,8 @@ Useful checks: `npm run typecheck`, `npm run lint`. Builds fail on type or lint 
 - Shortcodes, each on its own line:
   - `[product 2]` — full box (with key points) for product #2 from the Products tab; copy the code from the product's card.
   - `[trustbox]` — "How we picked" note linking to `/how-we-research`.
-  - `[bedchart trucks="ford-f-150,ram-1500"]` — bed-size table from `data/trucks.ts` (omit `trucks` to use the post's trucks).
+  - `[bedchart trucks="ford-f-150,ram-1500"]` — bed-size table from `data/trucks.ts` (omit `trucks` to use the post's trucks). Add `years="2004-2014"` to show only that generation (older-generation pages).
+- Trucks marked `hub: false` in `data/trucks.ts` (e.g. Chevy S10, Rivian R1T, Silverado/Sierra HD) can be tagged on articles and used in bed charts but have no `/trucks/<slug>` page. Bed sizes there are only ever verified figures; unknown ones stay empty with a TODO.
 - FAQs render at the end of the post and as FAQPage structured data.
 
 **Amazon tag:** set `NEXT_PUBLIC_AMAZON_TAG` in `.env.local` for local dev and as a GitHub Actions **variable** (Settings → Secrets and variables → Actions → Variables) for CI builds. It is baked in at build time, so redeploy after changing it.

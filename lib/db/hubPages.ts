@@ -1,5 +1,5 @@
 import { getD1, parseJson } from "./d1";
-import { TRUCKS, getTruck } from "@/data/trucks";
+import { TRUCKS, getTruck, hasHub } from "@/data/trucks";
 import { truckPath } from "@/lib/urls";
 
 // Written content for the generated hub pages (/trucks and each /trucks/<truck>), edited in the
@@ -32,7 +32,7 @@ type HubPageRow = {
 
 /** Every editable hub, in menu order: the trucks index, then each truck. */
 export function hubPaths(): string[] {
-  return [TRUCKS_INDEX_PATH, ...TRUCKS.map((truck) => truckPath(truck.slug))];
+  return [TRUCKS_INDEX_PATH, ...TRUCKS.filter(hasHub).map((truck) => truckPath(truck.slug))];
 }
 
 export const isHubPath = (path: string) => hubPaths().includes(path);

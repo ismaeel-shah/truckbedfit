@@ -1,6 +1,6 @@
 import { AuthorRow, CategoryRow, getD1, mapAuthor, mapCategory, mapPost, postJoins, postSelect, PostRow } from "./d1";
 import { ArticleType, CATEGORY_GROUPS, PILLAR_TYPES } from "@/lib/articleTypes";
-import { Truck, TRUCKS } from "@/data/trucks";
+import { hasHub, Truck, TRUCKS } from "@/data/trucks";
 
 export type PostStatusFilter = "published" | "draft" | "scheduled" | "all";
 
@@ -96,7 +96,7 @@ export async function listLiveTrucks(): Promise<{ truck: Truck; count: number }[
     GROUP BY j.value
   `).all<{ slug: string; count: number }>();
   const counts = new Map(results.map((row) => [row.slug, row.count]));
-  return TRUCKS.filter((truck) => counts.has(truck.slug)).map((truck) => ({ truck, count: counts.get(truck.slug)! }));
+  return TRUCKS.filter((truck) => hasHub(truck) && counts.has(truck.slug)).map((truck) => ({ truck, count: counts.get(truck.slug)! }));
 }
 
 export interface NavCategory {
