@@ -44,8 +44,24 @@ export const TRUCKS: Truck[] = [
           { label: "8 ft", insideLengthIn: 97.6 },
         ],
       },
-      // TODO: bed sizes for 2004–2014 (content plan A50) — not verified yet.
-      { years: "2004–2014", beds: [] },
+      {
+        // Source: Ford 2014 technical specifications.
+        years: "2009–2014",
+        beds: [
+          { label: "5.5 ft", insideLengthIn: 67.0 },
+          { label: "6.5 ft", insideLengthIn: 78.8 },
+          { label: "8 ft", insideLengthIn: 97.4 },
+        ],
+      },
+      {
+        // Source: dealer spec data (2007). TODO: 5.5 ft and 8 ft inside lengths — not verified yet.
+        years: "2004–2008",
+        beds: [
+          { label: "5.5 ft", insideLengthIn: null },
+          { label: "6.5 ft", insideLengthIn: 78.8 },
+          { label: "8 ft", insideLengthIn: null },
+        ],
+      },
     ],
     fitmentNotes: [
       "2024+ models can have the Pro Access Tailgate — confirm an accessory supports it before buying.",
@@ -64,8 +80,15 @@ export const TRUCKS: Truck[] = [
           { label: "8'", insideLengthIn: 98.2 },
         ],
       },
-      // TODO: bed sizes for 2014–2018 + 2019 Legacy (content plan A51) — not verified yet.
-      { years: "2014–2018 + 2019 Legacy", beds: [] },
+      {
+        // Source: GM 2014 spec sheet.
+        years: "2014–2018 + 2019 Legacy",
+        beds: [
+          { label: "5'8\"", insideLengthIn: 69.3 },
+          { label: "6'6\"", insideLengthIn: 78.9 },
+          { label: "8'", insideLengthIn: 97.8 },
+        ],
+      },
     ],
     fitmentNotes: [
       "Multi-Flex tailgate: confirm an accessory supports it before buying.",
@@ -86,8 +109,15 @@ export const TRUCKS: Truck[] = [
           { label: "8'", insideLengthIn: 98.2 },
         ],
       },
-      // TODO: bed sizes for 2014–2018 + 2019 Limited (content plan A51) — not verified yet.
-      { years: "2014–2018 + 2019 Limited", beds: [] },
+      {
+        // Same bed as the 2014–2018 Silverado 1500 (shared GM platform); source: GM 2014 spec sheet.
+        years: "2014–2018 + 2019 Limited",
+        beds: [
+          { label: "5'8\"", insideLengthIn: 69.3 },
+          { label: "6'6\"", insideLengthIn: 78.9 },
+          { label: "8'", insideLengthIn: 97.8 },
+        ],
+      },
     ],
     fitmentNotes: [
       "MultiPro tailgate: confirm an accessory supports it before buying.",
@@ -107,8 +137,15 @@ export const TRUCKS: Truck[] = [
           { label: "6'4\"", insideLengthIn: 76.3 },
         ],
       },
-      // TODO: bed sizes for 2009–2018 and the Ram 1500 Classic (content plan A52) — not verified yet.
-      { years: "2009–2018 + 1500 Classic", beds: [] },
+      {
+        // Source: Ram 2014 spec sheet.
+        years: "2009–2018 + 1500 Classic",
+        beds: [
+          { label: "5'7\"", insideLengthIn: 67.4 },
+          { label: "6'4\"", insideLengthIn: 76.3 },
+          { label: "8'", insideLengthIn: 98.3 },
+        ],
+      },
     ],
     fitmentNotes: [
       "RamBox cargo management: confirm an accessory is listed as RamBox-compatible.",
@@ -125,11 +162,17 @@ export const TRUCKS: Truck[] = [
         years: "2016–2023",
         beds: [
           { label: "5 ft", insideLengthIn: 60.5, notes: "approx." },
+          { label: "6 ft", insideLengthIn: 73.7 },
+        ],
+      },
+      {
+        // Source: Toyota 2024 product information (short and long bed).
+        years: "2024–2026",
+        beds: [
+          { label: "5 ft", insideLengthIn: 60.3 },
           { label: "6 ft", insideLengthIn: 73.5 },
         ],
       },
-      // TODO: 2024–2026 bed sizes — not verified yet.
-      { years: "2024–2026", beds: [] },
     ],
     fitmentNotes: [
       "Deck Rail system: confirm an accessory is listed as compatible with it.",
@@ -193,8 +236,8 @@ export const TRUCKS: Truck[] = [
           { label: "6 ft", insideLengthIn: 72.8 },
         ],
       },
-      // TODO: inside length for the 2024+ US 5 ft bed — not verified yet.
-      { years: "2024+", beds: [{ label: "5 ft", insideLengthIn: null, notes: "US models: 5 ft bed only" }] },
+      // Source: Ford 2024 technical specifications.
+      { years: "2024+", beds: [{ label: "5 ft", insideLengthIn: 59.6, notes: "US models: 5 ft bed only" }] },
     ],
     fitmentNotes: [],
   },
@@ -247,16 +290,40 @@ export const TRUCKS: Truck[] = [
     slug: "ford-super-duty",
     name: "Ford Super Duty (F-250/F-350)",
     make: "Ford",
-    // TODO: bed sizes — not verified yet.
-    generations: [],
+    generations: [
+      {
+        // Source: Ford 2026 technical specifications.
+        years: "2017–2026",
+        beds: [
+          { label: "6.75 ft", insideLengthIn: 81.9 },
+          { label: "8 ft", insideLengthIn: 98.1 },
+        ],
+      },
+      {
+        // Source: TruckDimensions database.
+        years: "2011–2016",
+        beds: [
+          { label: "6.75 ft", insideLengthIn: 81.8 },
+          { label: "8 ft", insideLengthIn: 98 },
+        ],
+      },
+    ],
     fitmentNotes: [],
   },
   {
     slug: "ram-2500-3500",
     name: "Ram 2500/3500",
     make: "Ram",
-    // TODO: bed sizes — not verified yet.
-    generations: [],
+    generations: [
+      {
+        // Source: Ram cargo box PDF. TODO: the model years these apply to — not given yet.
+        years: "Current models",
+        beds: [
+          { label: "6'4\"", insideLengthIn: 76.3 },
+          { label: "8'", insideLengthIn: 98.3 },
+        ],
+      },
+    ],
     fitmentNotes: [],
   },
   // Trucks the content plan writes about without a hub page of their own.
@@ -264,17 +331,33 @@ export const TRUCKS: Truck[] = [
     slug: "chevy-silverado-gmc-sierra-hd",
     name: "Chevy Silverado HD / GMC Sierra HD",
     make: "Chevrolet / GMC",
-    // TODO: bed sizes (content plan A53) — not verified yet.
-    generations: [],
+    generations: [
+      {
+        // Source: dealer spec data (2024).
+        years: "2020–2026",
+        beds: [
+          { label: "Standard bed", insideLengthIn: 82.25 },
+          { label: "Long bed", insideLengthIn: 98.27 },
+        ],
+      },
+    ],
     fitmentNotes: [],
     hub: false,
   },
   {
     slug: "chevy-s10",
-    name: "Chevy S10",
-    make: "Chevrolet",
-    // TODO: generations and bed sizes (content plan A48) — not verified yet.
-    generations: [],
+    name: "Chevy S10 / GMC Sonoma",
+    make: "Chevrolet / GMC",
+    generations: [
+      {
+        // Source: KBB (bed sizes). TODO: inside lengths — not verified yet.
+        years: "1994–2004",
+        beds: [
+          { label: "6 ft", insideLengthIn: null },
+          { label: "7.33 ft", insideLengthIn: null },
+        ],
+      },
+    ],
     fitmentNotes: [],
     hub: false,
   },
@@ -282,8 +365,13 @@ export const TRUCKS: Truck[] = [
     slug: "rivian-r1t",
     name: "Rivian R1T",
     make: "Rivian",
-    // TODO: generations and bed sizes (content plan A49) — not verified yet.
-    generations: [],
+    generations: [
+      {
+        // Source: Rivian official specifications.
+        years: "2022+",
+        beds: [{ label: "Standard bed", insideLengthIn: 54, notes: "83.6 in with the tailgate down" }],
+      },
+    ],
     fitmentNotes: [],
     hub: false,
   },
