@@ -8,6 +8,7 @@ import { cleanFaqs, firstIssue, todayIsoDate } from "@/lib/validation/post";
 const hubPageSchema = z.object({
   path: z.string().refine(isHubPath, { message: "Unknown hub page" }),
   title: z.string().trim().max(200, "H1 is too long (max 200 characters)"),
+  shortAnswer: z.string().trim().max(1000, "Short answer is too long"),
   metaTitle: z.string().trim().max(120, "SEO title is too long"),
   metaDescription: z.string().trim().max(320, "Description is too long"),
   focusKeyword: z.string().trim().max(120, "Primary keyword is too long"),
@@ -43,14 +44,14 @@ export async function PUT(req: NextRequest) {
   const now = nowIso();
 
   await getD1().prepare(`
-    INSERT INTO hub_pages (path, title, meta_title, meta_description, focus_keyword, content, faqs_json, updated_on, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO hub_pages (path, title, short_answer, meta_title, meta_description, focus_keyword, content, faqs_json, updated_on, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(path) DO UPDATE SET
-      title = excluded.title, meta_title = excluded.meta_title, meta_description = excluded.meta_description,
+      title = excluded.title, short_answer = excluded.short_answer, meta_title = excluded.meta_title, meta_description = excluded.meta_description,
       focus_keyword = excluded.focus_keyword, content = excluded.content, faqs_json = excluded.faqs_json,
       updated_on = excluded.updated_on, updated_at = excluded.updated_at
   `).bind(
-    hub.path, hub.title, hub.metaTitle, hub.metaDescription, hub.focusKeyword, hub.content,
+    hub.path, hub.title, hub.shortAnswer, hub.metaTitle, hub.metaDescription, hub.focusKeyword, hub.content,
     JSON.stringify(hub.faqs), updatedOn, now, now
   ).run();
 

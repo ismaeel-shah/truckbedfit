@@ -8,6 +8,7 @@ import SEOPanel from "./SEOPanel";
 import MediaUploader from "./MediaUploader";
 import ProductCard, { emptyProduct, FormProduct } from "./ProductCard";
 import FaqEditor from "./FaqEditor";
+import ShortAnswerField from "./ShortAnswerField";
 import { slugify } from "@/lib/utils/slugify";
 import { ARTICLE_TYPES, ARTICLE_TYPE_LABELS, ArticleType, isPillarType, PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
 import { articlePath } from "@/lib/urls";
@@ -314,19 +315,8 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
           </div>
         )}
 
-        {/* Excerpt */}
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Excerpt <span className="font-normal text-slate-400">(summary shown on cards)</span>
-          </label>
-          <textarea
-            rows={2}
-            value={form.excerpt}
-            onChange={(e) => set("excerpt", e.target.value)}
-            placeholder="One or two sentences shown in article cards…"
-            className={`${fieldClass} resize-none`}
-          />
-        </div>
+        {/* Short answer (stored as the post's excerpt) */}
+        <ShortAnswerField value={form.excerpt} onChange={(value) => set("excerpt", value)} />
 
         {/* Tabs */}
         <div className="flex border-b border-slate-200 dark:border-slate-700">
@@ -361,6 +351,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
               focusKeyword: form.focusKeyword,
               slug: form.slug,
               content: form.content,
+              shortAnswer: form.excerpt,
             }}
             urlPath={urlPath}
             onChange={(field, value) => set(field, value)}

@@ -9,7 +9,10 @@ interface BlogCardProps {
     title: string;
     slug: string;
     url: string;
+    /** The post's short answer — the card's fallback summary */
     excerpt: string;
+    /** Written for search results (120–155 chars), so it fits a card better than the short answer */
+    metaDescription?: string;
     featuredImage: string;
     readingTime: number;
     publishedAt: string | Date;
@@ -22,6 +25,7 @@ interface BlogCardProps {
 }
 
 export default function BlogCard({ post, featured = false, variant = "default", priority = false }: BlogCardProps) {
+  const summary = post.metaDescription?.trim() || post.excerpt;
   const timeAgo = post.publishedAt
     ? formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true })
     : "Draft";
@@ -68,7 +72,7 @@ export default function BlogCard({ post, featured = false, variant = "default", 
           </Link>
 
           <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6 line-clamp-3">
-            {post.excerpt}
+            {summary}
           </p>
 
           <Link
@@ -120,7 +124,7 @@ export default function BlogCard({ post, featured = false, variant = "default", 
           </h2>
         </Link>
         <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 mb-4">
-          {post.excerpt}
+          {summary}
         </p>
         <Link
           href={post.url}

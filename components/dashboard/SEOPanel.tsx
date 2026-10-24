@@ -12,6 +12,8 @@ interface SEOPanelProps {
     focusKeyword: string;
     slug: string;
     content: string;
+    /** The page's short answer (checked for 40–60 words when given) */
+    shortAnswer?: string;
   };
   /** Public path of the article, e.g. /tonneau-covers/best-for-f-150 (null until a category is picked) */
   urlPath: string | null;

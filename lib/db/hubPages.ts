@@ -11,6 +11,8 @@ export interface HubPage {
   path: string;
   /** H1; empty = the generated default */
   title: string;
+  /** 40–60 words shown in a box under the H1 */
+  shortAnswer: string;
   metaTitle: string;
   metaDescription: string;
   focusKeyword: string;
@@ -22,6 +24,7 @@ export interface HubPage {
 type HubPageRow = {
   path: string;
   title: string;
+  short_answer: string;
   meta_title: string;
   meta_description: string;
   focus_keyword: string;
@@ -45,13 +48,14 @@ export function defaultHubTitle(path: string): string {
 }
 
 export function emptyHubPage(path: string): HubPage {
-  return { path, title: "", metaTitle: "", metaDescription: "", focusKeyword: "", content: "", faqs: [], updatedOn: null };
+  return { path, title: "", shortAnswer: "", metaTitle: "", metaDescription: "", focusKeyword: "", content: "", faqs: [], updatedOn: null };
 }
 
 function mapHubPage(row: HubPageRow): HubPage {
   return {
     path: row.path,
     title: row.title ?? "",
+    shortAnswer: row.short_answer ?? "",
     metaTitle: row.meta_title ?? "",
     metaDescription: row.meta_description ?? "",
     focusKeyword: row.focus_keyword ?? "",

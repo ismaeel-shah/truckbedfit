@@ -76,6 +76,12 @@ export function buildTwitter(twitter: Twitter = {}): Twitter {
   } as Twitter;
 }
 
+/** Words in a piece of plain text or HTML. */
+export const wordCount = (text: string) => text.replace(/<[^>]*>/g, " ").trim().split(/\s+/).filter(Boolean).length;
+
+/** The content plan's short-answer length (featured-snippet sized). */
+export const SHORT_ANSWER_WORDS = { min: 40, max: 60 } as const;
+
 export interface SEOCheckResult {
   id: string;
   label: string;
@@ -89,13 +95,21 @@ export function runSEOChecklist(data: {
   focusKeyword: string;
   content: string;
   slug: string;
+  /** Checked only when given (pages that have a short-answer field) */
+  shortAnswer?: string;
 }): SEOCheckResult[] {
-  const { title, metaTitle, metaDescription, focusKeyword, content, slug } =
+  const { title, metaTitle, metaDescription, focusKeyword, content, slug, shortAnswer } =
     data;
   const kw = focusKeyword.toLowerCase();
   const plainContent = content.replace(/<[^>]*>/g, "").toLowerCase();
+  const answerWords = shortAnswer === undefined ? 0 : wordCount(shortAnswer);
 
   return [
+    ...(shortAnswer === undefined ? [] : [{
+      id: "short_answer_length",
+      label: `Short answer is ${SHORT_ANSWER_WORDS.min}–${SHORT_ANSWER_WORDS.max} words`,
+      pass: answerWords >= SHORT_ANSWER_WORDS.min && answerWords <= SHORT_ANSWER_WORDS.max,
+    }]),
     {
       id: "focus_keyword",
       label: "Focus keyword is set",

@@ -8,6 +8,7 @@ import GearTypeGrid from "@/components/public/home/GearTypeGrid";
 import AffiliateNotice from "@/components/public/article/AffiliateNotice";
 import ArticleBody from "@/components/public/article/ArticleBody";
 import TopPicks from "@/components/public/content/TopPicks";
+import ShortAnswer from "@/components/public/article/ShortAnswer";
 import FaqSection from "@/components/public/article/FaqSection";
 import AuthorCard from "@/components/public/AuthorCard";
 import JsonLd from "@/components/public/JsonLd";
@@ -118,6 +119,8 @@ export default async function CategoryPage({ params }: { params: { category: str
       <div className="mx-auto max-w-7xl space-y-16 px-4 py-14 sm:px-6 lg:px-8">
         {pillar && (
           <article className="max-w-3xl space-y-8">
+            {/* The pillar's H1 is in the page header above, so its short answer opens the content. */}
+            <ShortAnswer text={pillar.excerpt} />
             <p className="text-sm text-slate-500">
               {pillar.author?.slug && (
                 <>

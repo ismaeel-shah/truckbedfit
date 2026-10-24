@@ -1,15 +1,18 @@
 import ArticleBody from "@/components/public/article/ArticleBody";
 import FaqSection from "@/components/public/article/FaqSection";
+import ShortAnswer from "@/components/public/article/ShortAnswer";
 import JsonLd from "@/components/public/JsonLd";
 import { faqSchema } from "@/lib/utils/schema";
 import type { HubPage } from "@/lib/db/hubPages";
 
-/** A hub's written intro (shortcodes work), rendered above the page's generated sections. */
+/** A hub's short answer and written intro (shortcodes work), rendered above the page's generated sections. */
 export function HubIntro({ hub, trucks = [] }: { hub: HubPage | null; trucks?: string[] }) {
-  if (!hub?.content.replace(/<[^>]*>/g, "").trim()) return null;
+  const hasContent = Boolean(hub?.content.replace(/<[^>]*>/g, "").trim());
+  if (!hub || (!hasContent && !hub.shortAnswer.trim())) return null;
   return (
-    <section className="max-w-3xl">
-      <ArticleBody html={hub.content} trucks={trucks} />
+    <section className="max-w-3xl space-y-8">
+      <ShortAnswer text={hub.shortAnswer} />
+      {hasContent && <ArticleBody html={hub.content} trucks={trucks} />}
     </section>
   );
 }

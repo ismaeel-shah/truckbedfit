@@ -10,6 +10,7 @@ import ArticleGrid from "@/components/public/ArticleGrid";
 import AffiliateNotice from "@/components/public/article/AffiliateNotice";
 import ArticleBody from "@/components/public/article/ArticleBody";
 import TopPicks from "@/components/public/content/TopPicks";
+import ShortAnswer from "@/components/public/article/ShortAnswer";
 import FaqSection from "@/components/public/article/FaqSection";
 import JsonLd from "@/components/public/JsonLd";
 import { getPublishedArticle, listPosts } from "@/lib/db/content";
@@ -136,9 +137,7 @@ export default async function ArticlePage({ params }: Params) {
               <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-primary leading-tight mb-4">
                 {post.title}
               </h1>
-              {post.excerpt && (
-                <p className="text-slate-500 text-lg leading-relaxed mb-6">{post.excerpt}</p>
-              )}
+              <ShortAnswer text={post.excerpt} className="mb-6" />
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
                 {post.author?.slug && (
                   <span>

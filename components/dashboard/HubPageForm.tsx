@@ -8,6 +8,7 @@ import { ExternalLink } from "lucide-react";
 import PostEditor from "./PostEditor";
 import SEOPanel from "./SEOPanel";
 import FaqEditor from "./FaqEditor";
+import ShortAnswerField from "./ShortAnswerField";
 import type { HubPage } from "@/lib/db/hubPages";
 
 /** "YYYY-MM-DD" → "Oct 24, 2026" */
@@ -64,6 +65,8 @@ export default function HubPageForm({ initial, defaultTitle, live }: {
           URL: <span className="font-mono text-slate-700 dark:text-slate-200">{form.path}</span>
         </p>
 
+        <ShortAnswerField value={form.shortAnswer} onChange={(value) => set("shortAnswer", value)} />
+
         <div className="flex border-b border-slate-200 dark:border-slate-700">
           {(["write", "seo", "faqs"] as const).map((t) => (
             <button
@@ -98,6 +101,7 @@ export default function HubPageForm({ initial, defaultTitle, live }: {
               focusKeyword: form.focusKeyword,
               slug: form.path.split("/").pop() ?? "",
               content: form.content,
+              shortAnswer: form.shortAnswer,
             }}
             urlPath={form.path}
             onChange={(field, value) => set(field, value)}
