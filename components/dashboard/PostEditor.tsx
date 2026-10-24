@@ -19,7 +19,7 @@ import {
   Link as LinkIcon, Image as ImageIcon, X, Check,
   UnderlineIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Highlighter, Palette, Table as TableIcon, Eye, FileCode, MonitorPlay,
-  ClipboardCheck, Ruler,
+  ClipboardCheck, Ruler, Truck,
 } from "lucide-react";
 import { SHORTCODE_TEMPLATES } from "@/lib/utils/shortcodes";
 
@@ -363,6 +363,9 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
               </ToolbarBtn>
               <ToolbarBtn onClick={() => insertShortcode(SHORTCODE_TEMPLATES.bedchart)} title="Insert bed size chart">
                 <Ruler size={15} />
+              </ToolbarBtn>
+              <ToolbarBtn onClick={() => insertShortcode(SHORTCODE_TEMPLATES.trucktable)} title="Insert truck table (links to each truck's page in a category)">
+                <Truck size={15} />
               </ToolbarBtn>
 
               <Divider />

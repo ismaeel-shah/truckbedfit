@@ -3,6 +3,8 @@
 //   [trustbox]
 //   [bedchart trucks="ford-f-150,ram-1500"]      (trucks optional — defaults to the post's trucks)
 //   [bedchart trucks="ford-f-150" years="2004-2014"]   (years optional — only that generation's rows)
+//   [trucktable category="tonneau-covers"]       every truck → its published truck page in that category
+//                                                (category optional — defaults to the page's own category)
 // The editor wraps them in <p>…</p> and may encode quotes; both are handled here.
 
 export type ContentSegment =
@@ -10,13 +12,14 @@ export type ContentSegment =
   /** 1-based, as shown in the Products tab */
   | { kind: "product"; number: number }
   | { kind: "trustbox" }
-  | { kind: "bedchart"; trucks: string[] | null; years: string | null };
+  | { kind: "bedchart"; trucks: string[] | null; years: string | null }
+  | { kind: "trucktable"; category: string | null };
 
 // Attribute text is quoted values (straight, smart or &quot;-encoded quotes, which may contain "]")
 // or any other character except "]".
 const QUOTED = String.raw`"[^"<]*"|“[^”<]*”|&quot;(?:(?!&quot;)[^<])*&quot;`;
 const SHORTCODE_RE = new RegExp(
-  String.raw`(?:<p[^>]*>\s*)?\[(product|trustbox|bedchart)\b((?:${QUOTED}|[^\]"“&]|&(?!quot;))*)\](?:\s*<\/p>)?`,
+  String.raw`(?:<p[^>]*>\s*)?\[(product|trustbox|bedchart|trucktable)\b((?:${QUOTED}|[^\]"“&]|&(?!quot;))*)\](?:\s*<\/p>)?`,
   "gi"
 );
 const ATTR_RE = /([a-z]+)\s*=\s*"([^"]*)"/gi;
@@ -47,6 +50,8 @@ function toSegment(name: string, rawAttrs: string): ContentSegment {
       return { kind: "product", number: Number(rawAttrs.match(/\d+/)?.[0] ?? 0) };
     case "trustbox":
       return { kind: "trustbox" };
+    case "trucktable":
+      return { kind: "trucktable", category: parseAttrs(rawAttrs).category || null };
     default: {
       const attrs = parseAttrs(rawAttrs);
       return { kind: "bedchart", trucks: attrs.trucks ? splitList(attrs.trucks, ",") : null, years: attrs.years || null };
@@ -75,4 +80,5 @@ export const productShortcode = (number: number) => `[product ${number}]`;
 export const SHORTCODE_TEMPLATES = {
   trustbox: "[trustbox]",
   bedchart: '[bedchart trucks="ford-f-150"]',
+  trucktable: '[trucktable category="tonneau-covers"]',
 } as const;

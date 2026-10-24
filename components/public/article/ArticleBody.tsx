@@ -5,15 +5,19 @@ import type { AmazonImage } from "@/lib/amazon/creatorsApi";
 import ProductBox from "@/components/public/content/ProductBox";
 import TrustBox from "@/components/public/content/TrustBox";
 import BedChart from "@/components/public/content/BedChart";
+import TruckTable from "@/components/public/content/TruckTable";
+import { PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
 
 /**
- * Editor HTML rendered with the site's article typography, with [product N], [trustbox]
- * and [bedchart] shortcodes swapped for components. Everything stays inside one `.prose`
+ * Editor HTML rendered with the site's article typography, with [product N], [trustbox],
+ * [bedchart] and [trucktable] shortcodes swapped for components. Everything stays inside one `.prose`
  * wrapper so the table of contents still finds every heading.
  */
-export default function ArticleBody({ html, trucks = [], products = [], images = {} }: {
+export default function ArticleBody({ html, trucks = [], products = [], images = {}, categorySlug }: {
   html: string;
   trucks?: string[];
+  /** The page's category, the default for [trucktable] (tonneau covers when the page has none) */
+  categorySlug?: string;
   /** The post's Products tab, for [product N] */
   products?: PostProduct[];
   /** ASIN → Amazon image for those products */
@@ -33,6 +37,8 @@ export default function ArticleBody({ html, trucks = [], products = [], images =
             return <TrustBox key={i} />;
           case "bedchart":
             return <BedChart key={i} trucks={segment.trucks} years={segment.years} fallbackTrucks={trucks} />;
+          case "trucktable":
+            return <TruckTable key={i} category={segment.category ?? categorySlug ?? PILLAR_CATEGORY_SLUG} />;
         }
       })}
     </div>

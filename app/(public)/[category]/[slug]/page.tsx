@@ -192,7 +192,7 @@ export default async function ArticlePage({ params }: Params) {
             )}
 
             <TopPicks products={post.products} images={productImages} />
-            <ArticleBody html={post.content} trucks={post.trucks} products={post.products} images={productImages} />
+            <ArticleBody html={post.content} trucks={post.trucks} products={post.products} images={productImages} categorySlug={post.category.slug} />
 
             {post.tags.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mt-10 pt-6 border-t border-slate-100">

@@ -93,6 +93,7 @@ Useful checks: `npm run typecheck`, `npm run lint`. Builds fail on type or lint 
   - `[product 2]` — full box (with key points) for product #2 from the Products tab; copy the code from the product's card.
   - `[trustbox]` — "How we picked" note linking to `/how-we-research`.
   - `[bedchart trucks="ford-f-150,ram-1500"]` — bed-size table from `data/trucks.ts` (omit `trucks` to use the post's trucks). Add `years="2004-2014"` to show only that generation (older-generation pages).
+  - `[trucktable category="tonneau-covers"]` — every truck with its years and bed lengths, linked to that category's published "best list — by truck" page for it ("Coming soon" until it exists; a truck's first published page wins). Without `category` it uses the page's own category (tonneau covers on /trucks pages).
 - Trucks marked `hub: false` in `data/trucks.ts` (e.g. Chevy S10, Rivian R1T, Silverado/Sierra HD) can be tagged on articles and used in bed charts but have no `/trucks/<slug>` page. Bed sizes there are only ever verified figures; unknown ones stay empty with a TODO.
 - FAQs render at the end of the post and as FAQPage structured data.
 

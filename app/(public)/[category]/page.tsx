@@ -137,7 +137,7 @@ export default async function CategoryPage({ params }: { params: { category: str
             </p>
             <AffiliateNotice />
             <TopPicks products={pillar.products} images={productImages} />
-            <ArticleBody html={pillar.content} trucks={pillar.trucks} products={pillar.products} images={productImages} />
+            <ArticleBody html={pillar.content} trucks={pillar.trucks} products={pillar.products} images={productImages} categorySlug={category.slug} />
             <FaqSection faqs={pillar.faqs} />
             {pillar.author && <AuthorCard author={pillar.author} />}
           </article>
