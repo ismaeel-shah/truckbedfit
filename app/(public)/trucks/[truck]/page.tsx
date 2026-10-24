@@ -10,7 +10,9 @@ import JsonLd from "@/components/public/JsonLd";
 import { itemListSchema } from "@/lib/utils/schema";
 import { getTruck, truckYears } from "@/data/trucks";
 import { categoryPath, truckPath } from "@/lib/urls";
-import { buildCanonical, buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
+import { hubPageMetadata } from "@/lib/utils/seo";
+import { getHubPage } from "@/lib/db/hubPages";
+import { HubFaqs, HubIntro } from "@/components/public/HubContent";
 
 export const dynamic = "force-dynamic";
 
@@ -20,34 +22,29 @@ type Params = { params: { truck: string } };
 async function loadTruckHub(slug: string) {
   const truck = getTruck(slug);
   if (!truck) return null;
-  const [{ posts }, categories] = await Promise.all([
+  const [{ posts }, categories, hub] = await Promise.all([
     listPosts({ truck: slug, status: "published", limit: 500 }),
     listCategories(),
+    getHubPage(truckPath(slug)),
   ]);
   // Visibility rule: a truck hub exists only once an article is tagged with the truck.
   if (!posts.length) return null;
   const groups = categories
     .map((category) => ({ category, posts: posts.filter((post) => post.categoryId === category._id) }))
     .filter((group) => group.posts.length > 0);
-  return { truck, groups };
+  return { truck, groups, hub };
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const data = await loadTruckHub(params.truck);
   if (!data) return { title: "Page not found" };
-  const { truck } = data;
+  const { truck, hub } = data;
   // Keep the full <title> (with " | TruckBedFit", 14 chars) within ~60 characters for long truck names.
   const long = `${truck.name} Bed Accessories & Fitment`;
   const title = long.length <= 46 ? long : `${truck.name} Bed Accessories`;
   const description = `Bed sizes, fitment notes and our guides to tonneau covers, liners, toolboxes and racks for the ${truck.name}.`;
-  const canonical = buildCanonical(truckPath(truck.slug));
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: buildOpenGraph({ title, description, url: canonical }),
-    twitter: buildTwitter({ title, description }),
-  };
+  // An SEO title/description written under Dashboard → Truck pages wins over the generated ones.
+  return hubPageMetadata(hub, { title, description }, truckPath(truck.slug));
 }
 
 export default async function TruckHubPage({ params }: Params) {
@@ -56,7 +53,7 @@ export default async function TruckHubPage({ params }: Params) {
     await redirectIfMoved(`/trucks/${params.truck}`);
     notFound();
   }
-  const { truck, groups } = data;
+  const { truck, groups, hub } = data;
   const years = truckYears(truck);
 
   return (
@@ -66,11 +63,13 @@ export default async function TruckHubPage({ params }: Params) {
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Trucks", href: "/trucks" }, { label: truck.name }]}
         path={truckPath(truck.slug)}
         eyebrow={years ? `${truck.make} · ${years}` : truck.make}
-        title={`${truck.name} bed accessories`}
+        title={hub?.title || `${truck.name} bed accessories`}
         lead={`Bed sizes, fitment notes and every guide we've written for the ${truck.name}.`}
       />
 
       <div className="mx-auto max-w-7xl space-y-16 px-4 py-14 sm:px-6 lg:px-8">
+        <HubIntro hub={hub} trucks={[truck.slug]} />
+
         <section className="grid gap-8 lg:grid-cols-5">
           <div className="lg:col-span-3">
             <h2 className="mb-4 font-heading text-2xl font-extrabold uppercase text-primary">Bed sizes</h2>
@@ -106,6 +105,8 @@ export default async function TruckHubPage({ params }: Params) {
             posts={posts}
           />
         ))}
+
+        <HubFaqs hub={hub} />
       </div>
     </div>
   );

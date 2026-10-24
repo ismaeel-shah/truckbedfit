@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import {
-  LayoutDashboard, FileText, FolderOpen, Image, Settings, LogOut, ExternalLink, Users, UserCircle, ArrowLeftRight,
+  LayoutDashboard, FileText, FolderOpen, Image, Settings, LogOut, ExternalLink, Users, UserCircle, ArrowLeftRight, Truck,
 } from "lucide-react";
 import clsx from "clsx";
 import Logo from "@/components/Logo";
@@ -13,6 +13,7 @@ const NAV = [
   { label: "Dashboard",  href: "/dashboard",            icon: LayoutDashboard },
   { label: "Posts",      href: "/dashboard/posts",      icon: FileText },
   { label: "Categories", href: "/dashboard/categories", icon: FolderOpen },
+  { label: "Truck pages", href: "/dashboard/truck-pages", icon: Truck },
   { label: "Authors",    href: "/dashboard/authors",    icon: UserCircle },
   { label: "Media",      href: "/dashboard/media",      icon: Image },
   { label: "Users",      href: "/dashboard/users",      icon: Users,          adminOnly: true },

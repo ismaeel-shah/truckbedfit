@@ -5,20 +5,23 @@ import PageHeader from "@/components/public/PageHeader";
 import { listLiveTrucks } from "@/lib/db/content";
 import { truckPath } from "@/lib/urls";
 import { truckYears } from "@/data/trucks";
-import { staticPageMetadata } from "@/lib/utils/seo";
+import { hubPageMetadata } from "@/lib/utils/seo";
+import { defaultHubTitle, getHubPage, TRUCKS_INDEX_PATH } from "@/lib/db/hubPages";
+import { HubFaqs, HubIntro } from "@/components/public/HubContent";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = staticPageMetadata(
-  "Truck Bed Accessories by Truck",
-  "Pick your pickup to see its bed sizes, fitment notes and every tonneau cover, liner, toolbox and rack guide for it.",
-  "/trucks"
-);
+export async function generateMetadata() {
+  return hubPageMetadata(await getHubPage(TRUCKS_INDEX_PATH), {
+    title: "Truck Bed Accessories by Truck",
+    description: "Pick your pickup to see its bed sizes, fitment notes and every tonneau cover, liner, toolbox and rack guide for it.",
+  }, TRUCKS_INDEX_PATH);
+}
 
 export default async function TrucksIndexPage() {
   // Only trucks with at least one published article get a hub (visibility rule);
   // with none live the index itself is a 404 rather than an empty page.
-  const trucks = await listLiveTrucks();
+  const [trucks, hub] = await Promise.all([listLiveTrucks(), getHubPage(TRUCKS_INDEX_PATH)]);
   if (!trucks.length) notFound();
 
   return (
@@ -27,11 +30,12 @@ export default async function TrucksIndexPage() {
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Trucks" }]}
         path="/trucks"
         eyebrow="Shop by truck"
-        title="Find gear for your truck"
+        title={hub?.title || defaultHubTitle(TRUCKS_INDEX_PATH)}
         lead="Bed sizes, fitment notes and every guide we've written for your pickup."
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
+        <HubIntro hub={hub} />
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {trucks.map(({ truck, count }) => {
               const beds = truck.generations.flatMap((g) => g.beds.map((b) => b.label));
@@ -62,6 +66,7 @@ export default async function TrucksIndexPage() {
               );
             })}
           </ul>
+        <HubFaqs hub={hub} />
       </div>
     </div>
   );

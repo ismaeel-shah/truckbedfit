@@ -7,13 +7,14 @@ import PostEditor from "./PostEditor";
 import SEOPanel from "./SEOPanel";
 import MediaUploader from "./MediaUploader";
 import ProductCard, { emptyProduct, FormProduct } from "./ProductCard";
+import FaqEditor from "./FaqEditor";
 import { slugify } from "@/lib/utils/slugify";
 import { ARTICLE_TYPES, ARTICLE_TYPE_LABELS, ArticleType, isPillarType, PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
 import { articlePath } from "@/lib/urls";
 import { TRUCKS } from "@/data/trucks";
 import { extractAsin, MAX_PRODUCTS } from "@/lib/products";
 import { productShortcode } from "@/lib/utils/shortcodes";
-import { Plus, Trash2, Check, Loader2, Package } from "lucide-react";
+import { Plus, Check, Loader2, Package } from "lucide-react";
 
 interface Category {
   _id: string;
@@ -254,19 +255,6 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
     }
   };
 
-  /* FAQ helpers */
-  const addFaq = () =>
-    set("faqs", [...form.faqs, { question: "", answer: "" }]);
-
-  const updateFaq = (i: number, field: "question" | "answer", value: string) => {
-    const updated = [...form.faqs];
-    updated[i] = { ...updated[i], [field]: value };
-    set("faqs", updated);
-  };
-
-  const removeFaq = (i: number) =>
-    set("faqs", form.faqs.filter((_, idx) => idx !== i));
-
   /* Product helpers */
   const addProduct = () => set("products", [...form.products, emptyProduct()]);
 
@@ -422,60 +410,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
         )}
 
         {activeTab === "faqs" && (
-          <div className="space-y-4">
-            <p className="text-xs text-slate-500">
-              FAQs appear at the end of the article and as FAQ rich results in Google.
-            </p>
-            {form.faqs.length === 0 && (
-              <div className="text-center py-10 text-slate-400 text-sm">
-                No FAQs yet. Click &quot;Add FAQ&quot; to add your first question.
-              </div>
-            )}
-
-            {form.faqs.map((faq, i) => (
-              <div key={i} className="card p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-primary dark:text-white">
-                    FAQ {i + 1}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeFaq(i)}
-                    aria-label={`Remove FAQ ${i + 1}`}
-                    className="text-red-400 hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Question</label>
-                  <input
-                    type="text"
-                    value={faq.question}
-                    onChange={(e) => updateFaq(i, "question", e.target.value)}
-                    placeholder="e.g. Will this tonneau cover fit a 5.5 ft bed?"
-                    className={fieldClass}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Answer</label>
-                  <textarea
-                    rows={3}
-                    value={faq.answer}
-                    onChange={(e) => updateFaq(i, "answer", e.target.value)}
-                    placeholder="Write a detailed answer…"
-                    className={`${fieldClass} resize-none`}
-                  />
-                </div>
-              </div>
-            ))}
-
-            <button type="button" onClick={addFaq} className="btn-secondary flex items-center gap-2 text-sm">
-              <Plus size={16} /> Add FAQ
-            </button>
-          </div>
+          <FaqEditor faqs={form.faqs} onChange={(faqs) => set("faqs", faqs)} />
         )}
       </div>
 

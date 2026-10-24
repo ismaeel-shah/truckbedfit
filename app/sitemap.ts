@@ -4,6 +4,7 @@ import { LEGAL_LAST_UPDATED, LEGAL_PAGES, PAGES_LAST_UPDATED, SITE_URL as base }
 import { isPillarType } from "@/lib/articleTypes";
 import { authorPath, categoryPath, truckPath } from "@/lib/urls";
 import { TRUCKS } from "@/data/trucks";
+import { listHubPages, TRUCKS_INDEX_PATH } from "@/lib/db/hubPages";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +24,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const [{ posts }, categories, authors] = await Promise.all([
+    const [{ posts }, categories, authors, hubs] = await Promise.all([
       listPosts({ limit: 5000, status: "published" }),
       listCategories(),
       listLiveAuthors(),
+      listHubPages(),
     ]);
 
     const byCategory = new Map<string, string>();
@@ -47,15 +49,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .filter((category) => byCategory.has(category._id))
       .map((category) => ({ url: `${base}${categoryPath(category.slug)}`, lastModified: byCategory.get(category._id)! }));
 
+    // A hub's written content (Dashboard → Truck pages) counts toward its lastmod too.
+    const hubUpdated = new Map(hubs.filter((hub) => hub.updatedOn).map((hub) => [hub.path, hub.updatedOn!]));
+    const latest = (...days: (string | undefined)[]) => days.filter(Boolean).sort().pop()!;
     const truckUrls = TRUCKS
       .filter((truck) => byTruck.has(truck.slug))
-      .map((truck) => ({ url: `${base}${truckPath(truck.slug)}`, lastModified: byTruck.get(truck.slug)! }));
+      .map((truck) => ({
+        url: `${base}${truckPath(truck.slug)}`,
+        lastModified: latest(byTruck.get(truck.slug), hubUpdated.get(truckPath(truck.slug))),
+      }));
 
     const authorUrls = authors.map((author) => ({ url: `${base}${authorPath(author.slug)}`, lastModified: author.updatedOn }));
 
     return [
       { url: base, lastModified: siteDate },
-      ...(truckUrls.length ? [{ url: `${base}/trucks`, lastModified: siteDate }] : []),
+      ...(truckUrls.length ? [{ url: `${base}/trucks`, lastModified: latest(siteDate, hubUpdated.get(TRUCKS_INDEX_PATH)) }] : []),
       ...categoryUrls,
       ...truckUrls,
       ...articleUrls,

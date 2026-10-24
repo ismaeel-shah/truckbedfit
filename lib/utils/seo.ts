@@ -47,6 +47,27 @@ export function staticPageMetadata(title: string, description: string, path: str
   };
 }
 
+/**
+ * Metadata for a generated hub page (/trucks, /trucks/<truck>): the SEO title/description written in the
+ * dashboard when set (title used exactly as written, `{year}` filled in), otherwise the generated defaults.
+ */
+export function hubPageMetadata(
+  hub: { metaTitle: string; metaDescription: string } | null,
+  fallback: { title: string; description: string },
+  path: string
+): Metadata {
+  const description = hub?.metaDescription.trim() || fallback.description;
+  const custom = hub?.metaTitle.trim() ? withYear(hub.metaTitle.trim()) : "";
+  const base = staticPageMetadata(fallback.title, description, path);
+  if (!custom) return base;
+  return {
+    ...base,
+    title: { absolute: custom },
+    openGraph: buildOpenGraph({ title: custom, description, url: buildCanonical(path) }),
+    twitter: buildTwitter({ title: custom, description }),
+  };
+}
+
 export function buildTwitter(twitter: Twitter = {}): Twitter {
   return {
     card: "summary_large_image",
