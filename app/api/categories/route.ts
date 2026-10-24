@@ -11,11 +11,14 @@ async function checkCategorySlug(db: ReturnType<typeof getD1>, slug: string, exc
   if (isReservedRootSlug(slug)) return `"${slug}" is used by another page on the site — pick a different slug`;
   const category = await db.prepare("SELECT id FROM categories WHERE slug = ? AND id != ?").bind(slug, excludeId).first();
   if (category) return "Another category already uses this slug";
-  const article = await db
-    .prepare("SELECT id FROM posts WHERE slug = ? AND type NOT IN ('pillar', 'category-hub')")
-    .bind(slug)
-    .first();
-  if (article) return "An article already uses this slug — pick a different one";
+  // The category's main article takes the category slug, so no other article in it may already use it.
+  const article = excludeId
+    ? await db
+        .prepare("SELECT id FROM posts WHERE category_id = ? AND slug = ? AND type NOT IN ('pillar', 'category-hub')")
+        .bind(excludeId, slug)
+        .first()
+    : null;
+  if (article) return "An article in this category already uses this slug — pick a different one";
   return null;
 }
 

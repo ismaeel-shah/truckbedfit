@@ -32,10 +32,10 @@ type PrepareResult =
 /**
  * Normalises and validates a post before it is written:
  * - a pillar/category-hub article takes its category's slug (it renders on /[category]),
- *   so slug uniqueness also guarantees one main article per category;
+ *   so per-category slug uniqueness also guarantees one main article per category;
  * - publishing without an "updated" date stamps today;
  * - empty FAQ and product rows are dropped (Amazon links become ASINs); then the zod schema runs;
- * - the slug must not clash with another post or with a category page.
+ * - the slug must not clash with another post in the same category (UNIQUE(category_id, slug)).
  */
 export async function preparePostWrite(input: PostWriteInput): Promise<PrepareResult> {
   const db = getD1();
@@ -78,9 +78,15 @@ export async function preparePostWrite(input: PostWriteInput): Promise<PrepareRe
     }
   }
 
+  // The category's own slug is reserved for its main article (it renders on /[category]).
+  if (!pillar && slug === category.slug) {
+    return { ok: false, status: 400, error: `"${slug}" is this category's own name — pick a different slug` };
+  }
+
+  // URLs are /[category]/[slug], so a slug only has to be unique within its category.
   const clash = await db
-    .prepare("SELECT id FROM posts WHERE slug = ? AND id != ?")
-    .bind(slug, input.id ?? "")
+    .prepare("SELECT id FROM posts WHERE category_id = ? AND slug = ? AND id != ?")
+    .bind(input.categoryId, slug, input.id ?? "")
     .first();
   if (clash) {
     return {
@@ -88,13 +94,8 @@ export async function preparePostWrite(input: PostWriteInput): Promise<PrepareRe
       status: 409,
       error: pillar
         ? "This category already has a main article (pillar/hub). Edit that one instead."
-        : "Another post already uses this slug",
+        : "Another post in this category already uses this slug",
     };
-  }
-
-  if (!pillar) {
-    const categorySlug = await db.prepare("SELECT 1 FROM categories WHERE slug = ?").bind(slug).first();
-    if (categorySlug) return { ok: false, status: 400, error: `"${slug}" is a category name — pick a different slug` };
   }
 
   return { ok: true, record: parsed.data };
