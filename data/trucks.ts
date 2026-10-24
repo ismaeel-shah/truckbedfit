@@ -316,13 +316,15 @@ export const TRUCKS: Truck[] = [
     make: "Ram",
     generations: [
       {
-        // Source: Ram cargo box PDF. TODO: the model years these apply to — not given yet.
-        years: "Current models",
+        // 5th generation. Source: Ram cargo box PDF.
+        years: "2019–2026",
         beds: [
           { label: "6'4\"", insideLengthIn: 76.3 },
           { label: "8'", insideLengthIn: 98.3 },
         ],
       },
+      // TODO: bed sizes for the 2010–2018 Ram HD — not verified yet.
+      { years: "2010–2018", beds: [] },
     ],
     fitmentNotes: [],
   },
@@ -350,11 +352,13 @@ export const TRUCKS: Truck[] = [
     make: "Chevrolet / GMC",
     generations: [
       {
-        // Source: KBB (bed sizes). TODO: inside lengths — not verified yet.
+        // Source: KBB (bed sizes). The 6 ft length is a rounded range; TODO: the 7.3 ft and Crew Cab
+        // 4.5 ft inside lengths — not verified yet.
         years: "1994–2004",
         beds: [
-          { label: "6 ft", insideLengthIn: null },
-          { label: "7.33 ft", insideLengthIn: null },
+          { label: "6 ft", insideLengthIn: 72, notes: "approx. 72–73 in" },
+          { label: "7.3 ft", insideLengthIn: null },
+          { label: "4.5 ft", insideLengthIn: null, notes: "Crew Cab, 2001–2004" },
         ],
       },
     ],
