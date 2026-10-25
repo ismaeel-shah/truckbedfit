@@ -22,7 +22,7 @@ export default function BarList({ items, unit }: {
         return (
           <li
             key={`${item.label}-${i}`}
-            className="group grid grid-cols-[minmax(0,9rem)_1fr] items-center gap-3 rounded-md px-1.5 py-1 hover:bg-slate-50 sm:grid-cols-[minmax(0,12rem)_1fr] dark:hover:bg-slate-700/30"
+            className="group grid grid-cols-[minmax(0,42%)_1fr] items-center gap-3 rounded-md px-1.5 py-1 hover:bg-slate-50 dark:hover:bg-slate-700/30"
             aria-label={`${item.label}: ${item.value} ${unit}`}
           >
             {item.href ? (

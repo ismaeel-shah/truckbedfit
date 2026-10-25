@@ -1,14 +1,15 @@
-import { BookOpen, Clock, Pencil, Eye, TrendingUp } from "lucide-react";
-import StatsCard from "@/components/dashboard/StatsCard";
-import ContentHealth from "@/components/dashboard/ContentHealth";
+import DashboardHero, { VIEW_RANGES, ViewRange } from "@/components/dashboard/DashboardHero";
+import UpNext from "@/components/dashboard/UpNext";
+import GetStarted from "@/components/dashboard/GetStarted";
 import ChartCard from "@/components/dashboard/charts/ChartCard";
 import ViewsTrendChart from "@/components/dashboard/charts/ViewsTrendChart";
 import BarList from "@/components/dashboard/charts/BarList";
 import WeeklyColumns from "@/components/dashboard/charts/WeeklyColumns";
-import Sparkline from "@/components/dashboard/charts/Sparkline";
-import Link from "next/link";
-import { getD1, mapPost, postJoins, postSelect, PostRow } from "@/lib/db/d1";
-import { DashboardData, getDashboardData, RHYTHM_WEEKS, TREND_DAYS } from "@/lib/db/dashboardStats";
+import DonutChart from "@/components/dashboard/charts/DonutChart";
+import Histogram from "@/components/dashboard/charts/Histogram";
+import CoverageGrid from "@/components/dashboard/charts/CoverageGrid";
+import { getSessionUser } from "@/lib/auth";
+import { DashboardData, getDashboardData, RHYTHM_WEEKS, TARGET_WORDS } from "@/lib/db/dashboardStats";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard" };
@@ -25,91 +26,65 @@ async function loadDashboard(): Promise<DashboardData | null> {
 const shortDate = (day: string) =>
   new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
-async function getRecentPosts() {
-  try {
-    const db = getD1();
-    const { results = [] } = await db.prepare(`
-      SELECT ${postSelect}
-      FROM posts p
-      ${postJoins}
-      ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.created_at DESC
-      LIMIT 6
-    `).all<PostRow>();
-    return results.map(mapPost);
-  } catch {
-    return [];
-  }
-}
-
-export default async function DashboardPage() {
-  const [data, recentPosts] = await Promise.all([loadDashboard(), getRecentPosts()]);
-  const stats = data?.counts ?? { total: 0, published: 0, drafts: 0, scheduled: 0, views: 0, views30: 0 };
+export default async function DashboardPage({ searchParams }: { searchParams: { range?: string } }) {
+  const range: ViewRange = (VIEW_RANGES as readonly number[]).includes(Number(searchParams.range))
+    ? (Number(searchParams.range) as ViewRange)
+    : 30;
+  const [data, user] = await Promise.all([loadDashboard(), getSessionUser().catch(() => null)]);
+  const counts = data?.counts ?? { total: 0, published: 0, drafts: 0, scheduled: 0, views: 0, views30: 0 };
+  const viewsInRange = (data?.viewsByDay ?? []).slice(-range);
+  const firstName = user?.name?.split(" ")[0] ?? "";
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-heading text-3xl font-bold text-primary dark:text-white">
-          Dashboard
-        </h1>
-        <Link href="/dashboard/posts/new" className="btn-primary">
-          + New Post
-        </Link>
-      </div>
+      <DashboardHero
+        name={firstName}
+        counts={counts}
+        range={range}
+        viewsInRange={viewsInRange.reduce((sum, d) => sum + d.views, 0)}
+        sparkline={viewsInRange.map((d) => d.views)}
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
-        <StatsCard
-          label="Published"
-          value={stats.published}
-          icon={BookOpen}
-          caption={`of ${stats.total} ${stats.total === 1 ? "post" : "posts"}`}
-        />
-        <StatsCard
-          label="Not live yet"
-          value={stats.drafts + stats.scheduled}
-          icon={Clock}
-          caption={`${stats.drafts} ${stats.drafts === 1 ? "draft" : "drafts"} · ${stats.scheduled} scheduled`}
-        />
-        <StatsCard
-          label={`Views · last ${TREND_DAYS} days`}
-          value={stats.views30.toLocaleString("en-US")}
-          icon={TrendingUp}
-          caption="Readers only — no bots or editors"
-          trend={data && <Sparkline values={data.viewsByDay.map((d) => d.views)} />}
-        />
-        <StatsCard
-          label="All-time views"
-          value={stats.views.toLocaleString("en-US")}
-          icon={Eye}
-          caption="Across every article"
-        />
-      </div>
+      {data && !data.onboarding.hasPublished && (
+        <div className="grid items-start gap-6 lg:grid-cols-12">
+          <GetStarted onboarding={data.onboarding} className="lg:col-span-8" />
+          <UpNext items={data.upNext} className="lg:col-span-4" />
+        </div>
+      )}
 
-      {data && (
-        <div className="mb-10 space-y-6">
+      {data && data.onboarding.hasPublished && (
+        <div className="space-y-6">
           {/* items-start: each card keeps its own height instead of stretching to its neighbour's */}
-          <div className="grid items-start gap-6 lg:grid-cols-3">
+          <div className="grid items-start gap-6 lg:grid-cols-12">
+            <UpNext items={data.upNext} className="lg:col-span-4" />
             <ChartCard
-              className="lg:col-span-2"
+              className="lg:col-span-8"
               title="Reader views"
-              subtitle={`Per day, last ${TREND_DAYS} days (UTC) · signed-in editors and bots aren't counted`}
-              empty={data.viewsByDay.some((d) => d.views) ? null : "No reader views yet — they'll show here as people read your articles."}
-              table={{ columns: ["Day", "Views"], rows: data.viewsByDay.map((d) => [shortDate(d.day), d.views]) }}
+              subtitle={`Per day, last ${range} days (UTC) · signed-in editors and bots aren't counted`}
+              empty={viewsInRange.some((d) => d.views) ? null : `No reader views in the last ${range} days yet.`}
+              table={{ columns: ["Day", "Views"], rows: viewsInRange.map((d) => [shortDate(d.day), d.views]) }}
             >
-              <ViewsTrendChart data={data.viewsByDay} />
-            </ChartCard>
-            <ChartCard
-              title="Publishing rhythm"
-              subtitle={`Articles published per week, last ${RHYTHM_WEEKS} weeks`}
-              empty={data.publishedPerWeek.some((w) => w.count) ? null : "Nothing published in the last 12 weeks yet."}
-              table={{ columns: ["Week of", "Published"], rows: data.publishedPerWeek.map((w) => [shortDate(w.weekStart), w.count]) }}
-            >
-              <WeeklyColumns data={data.publishedPerWeek} />
+              <ViewsTrendChart data={viewsInRange} />
             </ChartCard>
           </div>
 
-          <div className="grid items-start gap-6 lg:grid-cols-3">
+          <div className="grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
             <ChartCard
-              className="lg:col-span-2"
+              title="Articles by category"
+              subtitle="Published articles"
+              table={{ columns: ["Category", "Articles"], rows: data.categories.map((c) => [c.name, c.count]) }}
+            >
+              <DonutChart items={data.categories.map((c) => ({ label: c.name, value: c.count }))} totalLabel="articles" />
+            </ChartCard>
+            <ChartCard
+              title="Articles by type"
+              subtitle="How the category pages group them"
+              table={{ columns: ["Type", "Articles"], rows: data.typeGroups.map((g) => [g.name, g.count]) }}
+            >
+              <DonutChart items={data.typeGroups.map((g) => ({ label: g.name, value: g.count }))} totalLabel="articles" />
+            </ChartCard>
+            <ChartCard
+              className="md:col-span-2 xl:col-span-1"
               title="Most-read articles"
               subtitle="All-time reader views"
               empty={data.topPosts.length ? null : "Your most-read articles will show here."}
@@ -117,92 +92,35 @@ export default async function DashboardPage() {
             >
               <BarList unit="views" items={data.topPosts.map((p) => ({ label: p.title, value: p.views, href: `/dashboard/posts/edit/${p.id}` }))} />
             </ChartCard>
-            <ContentHealth checks={data.health} published={stats.published} />
           </div>
 
           <div className="grid items-start gap-6 lg:grid-cols-2">
             <ChartCard
-              title="Truck coverage"
-              subtitle="Published articles tagged with each truck — short bars show what to write next"
-              table={{ columns: ["Truck", "Articles"], rows: data.trucks.map((t) => [t.name, t.count]) }}
+              title="Article length"
+              subtitle={`Words per published article · the plan aims for ${TARGET_WORDS.min.toLocaleString("en-US")}–${TARGET_WORDS.max.toLocaleString("en-US")}`}
+              table={{ columns: ["Words", "Articles"], rows: data.lengths.map((b) => [b.label, b.count]) }}
             >
-              <BarList unit="articles" items={data.trucks.map((t) => ({ label: t.name, value: t.count }))} />
+              <Histogram bins={data.lengths} target={{ ...TARGET_WORDS, label: "Plan target" }} />
             </ChartCard>
             <ChartCard
-              title="Articles by category"
-              subtitle="Published articles in each category"
-              table={{ columns: ["Category", "Articles"], rows: data.categories.map((c) => [c.name, c.count]) }}
+              title="Publishing rhythm"
+              subtitle={`Articles published per week, last ${RHYTHM_WEEKS} weeks`}
+              empty={data.publishedPerWeek.some((w) => w.count) ? null : `Nothing published in the last ${RHYTHM_WEEKS} weeks.`}
+              table={{ columns: ["Week of", "Published"], rows: data.publishedPerWeek.map((w) => [shortDate(w.weekStart), w.count]) }}
             >
-              <BarList unit="articles" items={data.categories.map((c) => ({ label: c.name, value: c.count }))} />
+              <WeeklyColumns data={data.publishedPerWeek} />
             </ChartCard>
           </div>
+
+          <ChartCard
+            title="Truck coverage"
+            subtitle="Published articles tagged with each truck — pale or dashed tiles show what to write next"
+            table={{ columns: ["Truck", "Articles"], rows: data.trucks.map((t) => [t.name, t.count]) }}
+          >
+            <CoverageGrid trucks={data.trucks} />
+          </ChartCard>
         </div>
       )}
-
-      <div>
-        <div className="mb-5">
-          <h2 className="font-heading font-bold text-xl text-primary dark:text-white">
-            Recent Posts
-          </h2>
-        </div>
-
-        {recentPosts.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentPosts.map((post) => (
-              <div key={post._id} className="card p-0 overflow-hidden group hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-300">
-                <div className="relative h-36 bg-gradient-to-br from-primary/80 to-accent/30 overflow-hidden flex-shrink-0">
-                  {post.featuredImage ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-4xl opacity-40">{post.category?.icon ?? ""}</span>
-                    </div>
-                  )}
-                  <span className={`absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide ${
-                    post.status === "published"
-                      ? "bg-green-500 text-white"
-                      : post.status === "scheduled"
-                      ? "bg-yellow-500 text-white"
-                      : "bg-slate-600 text-white"
-                  }`}>
-                    {post.status}
-                  </span>
-                </div>
-
-                <div className="p-4">
-                  {post.category && (
-                    <p className="text-xs text-accent font-semibold mb-1.5">
-                      {post.category.icon} {post.category.name}
-                    </p>
-                  )}
-                  <h3 className="font-heading font-bold text-sm text-primary dark:text-white leading-snug line-clamp-2 mb-3">
-                    {post.title}
-                  </h3>
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700">
-                    <span className="text-xs text-slate-400">{post.readingTime ?? 0}m read</span>
-                    <div className="flex items-center gap-2">
-                      <Link href={post.url} target="_blank" className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-accent transition-colors">
-                        <Eye size={14} />
-                      </Link>
-                      <Link href={`/dashboard/posts/edit/${post._id}`} className="p-1.5 rounded-lg hover:bg-accent/10 text-slate-400 hover:text-accent transition-colors">
-                        <Pencil size={14} />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="card p-12 text-center text-slate-400">
-            <p className="text-sm">No posts yet.</p>
-            <Link href="/dashboard/posts/new" className="btn-primary mt-4 inline-block text-sm">
-              Create your first post
-            </Link>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
