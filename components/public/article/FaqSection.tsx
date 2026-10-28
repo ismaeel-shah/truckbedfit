@@ -13,7 +13,8 @@ export default function FaqSection({ faqs }: { faqs: Faq[] }) {
         {faqs.map((faq, i) => (
           <details key={i} className="group card p-0 overflow-hidden">
             <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer list-none font-semibold text-primary text-sm select-none hover:text-accent transition-colors">
-              <span>{faq.question}</span>
+              {/* H3 for the outline; font-body keeps the question in the same text style */}
+              <h3 className="font-body">{faq.question}</h3>
               <span className="text-slate-400 group-open:rotate-180 transition-transform duration-200 shrink-0" aria-hidden="true">▾</span>
             </summary>
             <div className="px-5 pb-4 text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
