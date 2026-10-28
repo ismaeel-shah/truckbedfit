@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import clsx from "clsx";
-import { ArrowDown, ArrowUp, ChevronDown, Copy, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Copy, Image as ImageIcon, Trash2 } from "lucide-react";
 import { asinProblem } from "@/lib/products";
-import { productShortcode } from "@/lib/utils/shortcodes";
+import { productImageShortcode, productShortcode } from "@/lib/utils/shortcodes";
 import AmazonPreview from "./AmazonPreview";
 
 /** A product row in the Products tab; key points are edited as one-per-line text. */
@@ -29,6 +29,9 @@ const labelClass = "mb-1.5 block text-xs font-semibold text-slate-600 dark:text-
 const iconButtonClass =
   "flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-200/70 hover:text-primary " +
   "disabled:pointer-events-none disabled:opacity-30 dark:hover:bg-slate-700 dark:hover:text-white";
+const copyButtonClass =
+  "hidden items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 font-mono text-xs text-slate-600 transition-colors " +
+  "hover:border-accent hover:text-accent sm:flex dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300";
 
 interface ProductCardProps {
   product: FormProduct;
@@ -45,6 +48,7 @@ export default function ProductCard({ product, index, total, onChange, onMove, o
   const [open, setOpen] = useState(true);
   const number = index + 1;
   const code = productShortcode(number);
+  const imageCode = productImageShortcode(number);
   const asinError = product.asin ? asinProblem(product.asin) : null;
   const asinOk = Boolean(product.asin) && !asinError;
   const bulletCount = product.bullets.split("\n").filter((line) => line.trim()).length;
@@ -76,9 +80,17 @@ export default function ProductCard({ product, index, total, onChange, onMove, o
           type="button"
           onClick={() => onCopyCode(code)}
           title="Copy this code and paste it in the article to show the product's full box there"
-          className="hidden items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 font-mono text-xs text-slate-600 transition-colors hover:border-accent hover:text-accent sm:flex dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+          className={copyButtonClass}
         >
           <Copy size={12} /> {code}
+        </button>
+        <button
+          type="button"
+          onClick={() => onCopyCode(imageCode)}
+          title="Copy this code and paste it in the article to show only the product's photo there"
+          className={copyButtonClass}
+        >
+          <ImageIcon size={12} /> Photo
         </button>
         <div className="flex items-center">
           <button type="button" onClick={() => onMove(-1)} disabled={index === 0} aria-label={`Move product ${number} up`} className={iconButtonClass}>
@@ -202,7 +214,8 @@ export default function ProductCard({ product, index, total, onChange, onMove, o
               className={clsx(inputClass, "resize-y")}
             />
             <p className="mt-1.5 text-[11px] text-slate-400">
-              Shown in the full product box — place it in the article with <code className="font-mono">{code}</code>.
+              Shown in the full product box — place it in the article with <code className="font-mono">{code}</code>
+              {" "}(or just the photo with <code className="font-mono">{imageCode}</code>).
             </p>
           </div>
         </div>

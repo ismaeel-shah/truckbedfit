@@ -19,9 +19,10 @@ import {
   Link as LinkIcon, Image as ImageIcon, X, Check,
   UnderlineIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Highlighter, Palette, Table as TableIcon, Eye, FileCode, MonitorPlay,
-  ClipboardCheck, Ruler, Truck,
+  ClipboardCheck, Ruler, Truck, FolderOpen,
 } from "lucide-react";
 import { SHORTCODE_TEMPLATES } from "@/lib/utils/shortcodes";
+import MediaPicker from "./MediaPicker";
 
 interface PostEditorProps {
   content: string;
@@ -40,6 +41,7 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
   const [imgSelected, setImgSelected]   = useState(false);
   const [editImgAlt, setEditImgAlt]     = useState("");
   const [htmlPreview, setHtmlPreview]   = useState(false);
+  const [mediaPicker, setMediaPicker]   = useState(false);
   const imgInputRef  = useRef<HTMLInputElement>(null);
   const imgAltRef    = useRef<HTMLInputElement>(null);
   const editAltRef   = useRef<HTMLInputElement>(null);
@@ -120,6 +122,13 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
     setImgPopover(false);
     setImgUrl("");
     setImgAlt("");
+  };
+
+  /* ── Media library pick fills the URL; alt is still typed by hand ── */
+  const pickFromMedia = (url: string) => {
+    setImgUrl(url);
+    setMediaPicker(false);
+    setTimeout(() => imgAltRef.current?.focus(), 50);
   };
 
   /* ── Edit alt text of selected image ──────────────── */
@@ -412,6 +421,20 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
         {imgPopover && (
           <div className="absolute left-0 right-0 top-full mt-1 z-30 mx-2">
             <div className="flex flex-col gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg p-3">
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); setMediaPicker(true); }}
+                className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 px-3 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-accent hover:bg-accent/5 hover:text-accent dark:border-slate-600 dark:text-slate-300"
+              >
+                <FolderOpen size={15} /> Choose from Media
+              </button>
+              {imgUrl && (
+                <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-1.5 dark:bg-slate-900">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imgUrl} alt="" className="h-10 w-14 shrink-0 rounded object-cover" />
+                  <span className="text-xs text-slate-500">Selected image — add alt text below, then ✓</span>
+                </div>
+              )}
               <input
                 ref={imgInputRef}
                 type="url"
@@ -421,7 +444,7 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
                   if (e.key === "Enter") { e.preventDefault(); insertImage(); }
                   if (e.key === "Escape") setImgPopover(false);
                 }}
-                placeholder="Image URL (required)"
+                placeholder="…or paste an image URL"
                 className="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-accent/50"
               />
               <div className="flex items-center gap-2">
@@ -434,7 +457,7 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
                     if (e.key === "Enter") { e.preventDefault(); insertImage(); }
                     if (e.key === "Escape") setImgPopover(false);
                   }}
-                  placeholder="Alt text (optional)"
+                  placeholder="Alt text — describe the image"
                   className="flex-1 text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-accent/50"
                 />
                 <button type="button" onMouseDown={(e) => { e.preventDefault(); insertImage(); }}
@@ -449,6 +472,8 @@ export default function PostEditor({ content, onChange }: PostEditorProps) {
             </div>
           </div>
         )}
+
+        {mediaPicker && <MediaPicker onPick={pickFromMedia} onClose={() => setMediaPicker(false)} />}
 
         {/* Link popover */}
         <UrlPopover open={linkPopover} onClose={() => setLinkPopover(false)}

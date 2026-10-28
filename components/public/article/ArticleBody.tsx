@@ -3,13 +3,14 @@ import { splitShortcodes } from "@/lib/utils/shortcodes";
 import type { PostProduct } from "@/lib/products";
 import type { AmazonImage } from "@/lib/amazon/creatorsApi";
 import ProductBox from "@/components/public/content/ProductBox";
+import ProductFigure from "@/components/public/content/ProductFigure";
 import TrustBox from "@/components/public/content/TrustBox";
 import BedChart from "@/components/public/content/BedChart";
 import TruckTable from "@/components/public/content/TruckTable";
 import { PILLAR_CATEGORY_SLUG } from "@/lib/articleTypes";
 
 /**
- * Editor HTML rendered with the site's article typography, with [product N], [trustbox],
+ * Editor HTML rendered with the site's article typography, with [product N], [product N image], [trustbox],
  * [bedchart] and [trucktable] shortcodes swapped for components. Everything stays inside one `.prose`
  * wrapper so the table of contents still finds every heading.
  */
@@ -31,7 +32,10 @@ export default function ArticleBody({ html, trucks = [], products = [], images =
             return <div key={i} dangerouslySetInnerHTML={{ __html: processContent(segment.html) }} />;
           case "product": {
             const product = products[segment.number - 1];
-            return product ? <ProductBox key={i} product={product} image={images[product.asin]} /> : null;
+            if (!product) return null;
+            return segment.display === "image"
+              ? <ProductFigure key={i} product={product} image={images[product.asin]} />
+              : <ProductBox key={i} product={product} image={images[product.asin]} />;
           }
           case "trustbox":
             return <TrustBox key={i} />;

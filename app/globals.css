@@ -229,6 +229,12 @@
   border: none !important;
 }
 
+/* Components inside the article (product box/photo) size their images to their own frame. */
+.prose .not-prose img {
+  max-height: 100% !important;
+  margin: 0 !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }

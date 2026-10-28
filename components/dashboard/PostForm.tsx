@@ -14,7 +14,7 @@ import { ARTICLE_TYPES, ARTICLE_TYPE_LABELS, ArticleType, isPillarType, PILLAR_C
 import { articlePath } from "@/lib/urls";
 import { hasHub, TRUCKS } from "@/data/trucks";
 import { extractAsin, MAX_PRODUCTS } from "@/lib/products";
-import { productShortcode } from "@/lib/utils/shortcodes";
+import { productImageShortcode, productShortcode } from "@/lib/utils/shortcodes";
 import { Plus, Check, Loader2, Package } from "lucide-react";
 
 interface Category {
@@ -280,7 +280,7 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
 
   const copyShortcode = (code: string) =>
     navigator.clipboard.writeText(code).then(
-      () => toast.success(`Copied ${code} — paste it in the article where the box should go`),
+      () => toast.success(`Copied ${code} — paste it in the article where it should go`),
       () => toast.error("Copy failed — type it in the article instead")
     );
 
@@ -366,7 +366,8 @@ export default function PostForm({ initial }: { initial?: Partial<PostData> }) {
             <div className="rounded-lg border border-accent/20 bg-accent/5 px-4 py-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
               Products appear as <strong>&quot;Our top picks&quot;</strong> cards at the top of the article, in this order.
               To show a product&apos;s full box inside the article, copy its code (e.g.{" "}
-              <code className="font-mono text-primary dark:text-white">{productShortcode(1)}</code>) into the text.
+              <code className="font-mono text-primary dark:text-white">{productShortcode(1)}</code>) into the text; for just its
+              photo, use <code className="font-mono text-primary dark:text-white">{productImageShortcode(1)}</code>.
               Images come from Amazon automatically; prices are never shown.
             </div>
 

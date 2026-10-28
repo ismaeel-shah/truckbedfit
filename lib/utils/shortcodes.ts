@@ -1,5 +1,6 @@
 // Shortcodes let editors place components inside article HTML from the dashboard editor:
 //   [product 2]                                  full box for product #2 from the post's Products tab
+//   [product 2 image]                            only that product's photo, linked to Amazon
 //   [trustbox]
 //   [bedchart trucks="ford-f-150,ram-1500"]      (trucks optional — defaults to the post's trucks)
 //   [bedchart trucks="ford-f-150" years="2004-2014"]   (years optional — only that generation's rows)
@@ -10,7 +11,7 @@
 export type ContentSegment =
   | { kind: "html"; html: string }
   /** 1-based, as shown in the Products tab */
-  | { kind: "product"; number: number }
+  | { kind: "product"; number: number; display: "box" | "image" }
   | { kind: "trustbox" }
   | { kind: "bedchart"; trucks: string[] | null; years: string | null }
   | { kind: "trucktable"; category: string | null };
@@ -47,7 +48,11 @@ const splitList = (value: string | undefined, sep: string) =>
 function toSegment(name: string, rawAttrs: string): ContentSegment {
   switch (name.toLowerCase()) {
     case "product":
-      return { kind: "product", number: Number(rawAttrs.match(/\d+/)?.[0] ?? 0) };
+      return {
+        kind: "product",
+        number: Number(rawAttrs.match(/\d+/)?.[0] ?? 0),
+        display: /\bimage\b/i.test(rawAttrs) ? "image" : "box",
+      };
     case "trustbox":
       return { kind: "trustbox" };
     case "trucktable":
@@ -75,6 +80,9 @@ export function splitShortcodes(html: string): ContentSegment[] {
 
 /** The shortcode that places product #number (1-based) in the article body. */
 export const productShortcode = (number: number) => `[product ${number}]`;
+
+/** The shortcode that places only product #number's photo in the article body. */
+export const productImageShortcode = (number: number) => `[product ${number} image]`;
 
 /** Templates the editor's "Insert" buttons drop into the article. */
 export const SHORTCODE_TEMPLATES = {

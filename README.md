@@ -91,6 +91,7 @@ Useful checks: `npm run typecheck`, `npm run lint`. Builds fail on type or lint 
 - **Products tab:** "Add product" for each pick — label ("Best overall"), name, ASIN (or paste the Amazon link), a one-line reason and key points. They show as "Our top picks" cards at the top of the article, in the tab's order. Each links to Amazon with `rel="sponsored"` and the `NEXT_PUBLIC_AMAZON_TAG` tag. Product images come from the Amazon Creators API when it is configured (see below); prices are never shown. Publishing is blocked while a product lacks a name or valid ASIN.
 - Shortcodes, each on its own line:
   - `[product 2]` — full box (with key points) for product #2 from the Products tab; copy the code from the product's card.
+  - `[product 2 image]` — only product #2's Amazon photo with a caption and "Check price" link.
   - `[trustbox]` — "How we picked" note linking to `/how-we-research`.
   - `[bedchart trucks="ford-f-150,ram-1500"]` — bed-size table from `data/trucks.ts` (omit `trucks` to use the post's trucks). Add `years="2004-2014"` to show only that generation (older-generation pages).
   - `[trucktable category="tonneau-covers"]` — every truck with its years and bed lengths, linked to that category's published "best list — by truck" page for it ("Coming soon" until it exists; a truck's first published page wins). Without `category` it uses the page's own category (tonneau covers on /trucks pages).

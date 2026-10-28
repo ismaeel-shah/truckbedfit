@@ -2,7 +2,7 @@ import { getD1 } from "./d1";
 import { isPillarType } from "@/lib/articleTypes";
 import { slugify } from "@/lib/utils/slugify";
 import { cleanProducts } from "@/lib/products";
-import { productShortcode, splitShortcodes } from "@/lib/utils/shortcodes";
+import { productImageShortcode, productShortcode, splitShortcodes } from "@/lib/utils/shortcodes";
 import { cleanFaqs, cleanKeywordList, firstIssue, PostRecord, postRecordSchema, todayIsoDate } from "@/lib/validation/post";
 
 /** Everything a create/update needs validated, already merged with the stored post on updates. */
@@ -76,7 +76,7 @@ export async function preparePostWrite(input: PostWriteInput): Promise<PrepareRe
       return {
         ok: false,
         status: 400,
-        error: `The article uses ${productShortcode(missing.number)} but the Products tab has ${productCount} product${productCount === 1 ? "" : "s"}`,
+        error: `The article uses ${(missing.display === "image" ? productImageShortcode : productShortcode)(missing.number)} but the Products tab has ${productCount} product${productCount === 1 ? "" : "s"}`,
       };
     }
   }
