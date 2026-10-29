@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { getD1, nowIso, UserRow } from "@/lib/db/d1";
 import { sendPasswordResetEmail } from "@/lib/utils/email";
+import { SITE_URL } from "@/lib/site";
 
 export async function POST(req: NextRequest) {
   const { email } = await req.json() as { email?: string };
@@ -24,8 +25,7 @@ export async function POST(req: NextRequest) {
     WHERE id = ?
   `).bind(token, expiry, nowIso(), user.id).run();
 
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const resetUrl = `${base}/login/reset-password?token=${token}`;
+  const resetUrl = `${SITE_URL}/login/reset-password?token=${token}`;
 
   try {
     await sendPasswordResetEmail(user.email, resetUrl);
