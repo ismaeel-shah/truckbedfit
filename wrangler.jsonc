@@ -23,12 +23,9 @@
   ],
   // Non-secret runtime config. Secrets (NEXTAUTH_SECRET, RESEND_API_KEY, CONTACT_EMAIL)
   // are set with `npx wrangler secret put <NAME>` — see README.
-  //
-  // TEMPORARY: images still use the bucket's r2.dev URL. Once media.truckbedfit.com is connected
-  // to the bucket (R2 → truckbedfit-uploads → Settings → Custom Domains), set
-  //   R2_PUBLIC_URL → "https://media.truckbedfit.com"
+  // R2_PUBLIC_URL is the bucket's custom domain (R2 → truckbedfit-uploads → Settings → Custom Domains).
   "vars": {
-    "R2_PUBLIC_URL": "https://pub-fb4362b058f04a188d1f820b24b771e5.r2.dev",
+    "R2_PUBLIC_URL": "https://media.truckbedfit.com",
     "NEXTAUTH_URL": "https://truckbedfit.com",
     "RESEND_FROM": "TruckBedFit <noreply@truckbedfit.com>"
   },
