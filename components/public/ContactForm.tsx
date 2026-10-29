@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send } from "lucide-react";
-import toast from "react-hot-toast";
+import { AlertCircle, CheckCircle2, Send } from "lucide-react";
 
 const inputClass =
   "w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-accent";
@@ -10,10 +9,14 @@ const inputClass =
 export default function ContactForm() {
   const [form, setForm]       = useState({ name: "", email: "", message: "" });
   const [loading, setLoading] = useState(false);
+  // After a successful send the form is replaced by a confirmation in the same card.
+  const [sentTo, setSentTo]   = useState<string | null>(null);
+  const [error, setError]     = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(false);
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
@@ -21,14 +24,35 @@ export default function ContactForm() {
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error();
-      toast.success("Message sent! We'll get back to you soon.");
+      setSentTo(form.email);
       setForm({ name: "", email: "", message: "" });
     } catch {
-      toast.error("Failed to send message. Please try again.");
+      setError(true);
     } finally {
       setLoading(false);
     }
   };
+
+  if (sentTo) {
+    return (
+      <div className="card p-8 text-center sm:p-10" role="status">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-green-600">
+          <CheckCircle2 size={30} aria-hidden="true" />
+        </span>
+        <h2 className="mt-5 font-heading text-2xl font-extrabold uppercase text-primary">Message sent</h2>
+        <p className="mx-auto mt-2 max-w-sm text-slate-600">
+          Thanks for reaching out. We&apos;ll reply to <span className="font-semibold text-primary">{sentTo}</span> as soon as we can.
+        </p>
+        <button
+          type="button"
+          onClick={() => setSentTo(null)}
+          className="mt-6 text-sm font-semibold text-accent hover:underline"
+        >
+          Send another message
+        </button>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="card p-8 space-y-5">
@@ -67,6 +91,12 @@ export default function ContactForm() {
           className={`${inputClass} resize-none`}
         />
       </div>
+      {error && (
+        <p role="alert" className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+          Your message couldn&apos;t be sent. Please try again in a moment.
+        </p>
+      )}
       <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
         {loading ? "Sending…" : <><Send size={16} aria-hidden="true" /> Send Message</>}
       </button>
