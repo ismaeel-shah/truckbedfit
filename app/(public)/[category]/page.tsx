@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { articleDates } from "@/lib/utils/articleDates";
-import Link from "next/link";
 import PageHeader from "@/components/public/PageHeader";
 import ArticleGrid from "@/components/public/ArticleGrid";
 import GearTypeGrid from "@/components/public/home/GearTypeGrid";
@@ -18,7 +17,7 @@ import { redirectIfMoved } from "@/lib/db/redirects";
 import { countView } from "@/lib/views";
 import { getProductImages } from "@/lib/amazon/productImages";
 import { CATEGORY_GROUPS, PILLAR_TYPES, UMBRELLA_CATEGORY_SLUG } from "@/lib/articleTypes";
-import { authorPath, categoryPath } from "@/lib/urls";
+import { categoryPath } from "@/lib/urls";
 import { articleSeoTitle, buildCanonical, buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
 import { SITE_NAME } from "@/lib/site";
 
@@ -121,16 +120,8 @@ export default async function CategoryPage({ params }: { params: { category: str
           <article className="max-w-3xl space-y-8">
             {/* The pillar's H1 is in the page header above, so its short answer opens the content. */}
             <ShortAnswer text={pillar.excerpt} />
+            {/* The author is shown in the card at the end of the article. */}
             <p className="text-sm text-slate-500">
-              {pillar.author?.slug && (
-                <>
-                  By{" "}
-                  <Link href={authorPath(pillar.author.slug)} rel="author" className="font-semibold text-primary hover:text-accent">
-                    {pillar.author.name}
-                  </Link>
-                  {" · "}
-                </>
-              )}
               {pillarDates?.updated
                 ? `Published ${pillarDates.published} · Updated ${pillarDates.updated}`
                 : `Published ${pillarDates?.published}`}
