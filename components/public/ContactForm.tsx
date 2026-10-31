@@ -41,7 +41,7 @@ export default function ContactForm() {
         </span>
         <h2 className="mt-5 font-heading text-2xl font-extrabold uppercase text-primary">Message sent</h2>
         <p className="mx-auto mt-2 max-w-sm text-slate-600">
-          Thanks for reaching out. We&apos;ll reply to <span className="font-semibold text-primary">{sentTo}</span> as soon as we can.
+          Thanks for reaching out. I&apos;ll reply to <span className="font-semibold text-primary">{sentTo}</span> as soon as I can.
         </p>
         <button
           type="button"

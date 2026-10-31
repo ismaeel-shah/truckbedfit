@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const meta = await getPageMeta("page_contact");
   const base = staticPageMetadata(
     meta.metaTitle || "Contact",
-    meta.metaDescription || `Questions about a guide, a fitment problem or a product we should review? Get in touch with the ${SITE_NAME} team.`,
+    meta.metaDescription || `Questions about a guide, a fitment problem or a product I should review? Get in touch with ${SITE_NAME}.`,
     "/contact"
   );
   return meta.metaTitle ? { ...base, title: { absolute: meta.metaTitle } } : base;

@@ -9,8 +9,8 @@ export default function ContactPage() {
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Contact" }]}
         path="/contact"
         eyebrow="Get in touch"
-        title="Contact us"
-        lead="Questions about a guide, a fitment problem, or a product we should cover? We'd love to hear from you."
+        title="Contact me"
+        lead="Questions about a guide, a fitment problem, or a product I should cover? I'd love to hear from you."
       />
       <div className="mx-auto max-w-2xl px-4 py-14 sm:px-6">
         <ContactForm />

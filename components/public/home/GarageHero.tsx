@@ -83,7 +83,7 @@ export default function GarageHero({ featured, cta }: GarageHeroProps) {
               <LogoMark id="hero-empty" size={72} />
               <p className="font-heading text-3xl font-bold uppercase">First guides rolling in soon</p>
               <p className="max-w-sm text-sm text-slate-400">
-                We&apos;re researching gear right now. Check back shortly for in-depth truck bed buying guides.
+                I&apos;m researching gear right now. Check back shortly for in-depth truck bed buying guides.
               </p>
             </div>
           )}

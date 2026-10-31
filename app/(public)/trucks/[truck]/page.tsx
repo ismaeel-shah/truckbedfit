@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   // Keep the full <title> (with " | TruckBedFit", 14 chars) within ~60 characters for long truck names.
   const long = `${truck.name} Bed Accessories & Fitment`;
   const title = long.length <= 46 ? long : `${truck.name} Bed Accessories`;
-  const description = `Bed sizes, fitment notes and our guides to tonneau covers, liners, toolboxes and racks for the ${truck.name}.`;
+  const description = `Bed sizes, fitment notes and my guides to tonneau covers, liners, toolboxes and racks for the ${truck.name}.`;
   // An SEO title/description written under Dashboard → Truck pages wins over the generated ones.
   return hubPageMetadata(hub, { title, description }, truckPath(truck.slug));
 }
@@ -65,7 +65,7 @@ export default async function TruckHubPage({ params }: Params) {
         path={truckPath(truck.slug)}
         eyebrow={years ? `${truck.make} · ${years}` : truck.make}
         title={hub?.title || `${truck.name} bed accessories`}
-        lead={`Bed sizes, fitment notes and every guide we've written for the ${truck.name}.`}
+        lead={`Bed sizes, fitment notes and every guide I've written for the ${truck.name}.`}
       />
 
       <div className="mx-auto max-w-7xl space-y-16 px-4 py-14 sm:px-6 lg:px-8">

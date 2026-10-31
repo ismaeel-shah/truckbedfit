@@ -33,8 +33,8 @@ export default function Footer({ categories = [], showTrucks = false }: { catego
               <Logo id="footer" tone="dark" />
             </div>
             <p className="text-slate-400 text-sm leading-relaxed mb-5">
-              Your trusted guide to truck bed gear. We dig into fitment, materials,
-              and real-world use so you buy the right part the first time.
+              Your trusted guide to truck bed gear. I dig into fitment, materials,
+              and owner feedback so you buy the right part the first time.
             </p>
             <a
               href={`mailto:${CONTACT_EMAIL}`}
@@ -111,8 +111,8 @@ export default function Footer({ categories = [], showTrucks = false }: { catego
         {/* Bottom bar */}
         <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-slate-500 text-center sm:text-left">
-            © {new Date().getFullYear()} {SITE_NAME}. As an Amazon Associate, we earn from qualifying purchases.{" "}
-            <Link href="/affiliate-disclosure" className="underline-offset-2 hover:text-accent hover:underline">Read our affiliate disclosure</Link>
+            © {new Date().getFullYear()} {SITE_NAME}. As an Amazon Associate, I earn from qualifying purchases.{" "}
+            <Link href="/affiliate-disclosure" className="underline-offset-2 hover:text-accent hover:underline">Read the affiliate disclosure</Link>
           </p>
           <div className="flex items-center gap-4 text-xs text-slate-500">
             <span className="flex items-center gap-1.5">

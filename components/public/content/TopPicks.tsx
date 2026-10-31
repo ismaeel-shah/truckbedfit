@@ -5,7 +5,7 @@ import ProductImage from "./ProductImage";
 
 // Images only ever come from the Creators API (Amazon policy); never show a price.
 
-/** "Our top picks" cards from the post's Products tab: image, label, name, one-line reason, Amazon button. */
+/** "My top picks" cards from the post's Products tab: image, label, name, one-line reason, Amazon button. */
 export default function TopPicks({ products, images = {} }: {
   products: PostProduct[];
   /** ASIN → Amazon image (from getProductImages) */
@@ -19,7 +19,7 @@ export default function TopPicks({ products, images = {} }: {
   return (
     <section className="mb-10" aria-labelledby="top-picks-heading">
       <p id="top-picks-heading" className="mb-4 flex items-center gap-2 font-heading text-xl font-bold uppercase tracking-wide text-primary">
-        <Star size={20} className="fill-accent text-accent" aria-hidden="true" /> Our top picks
+        <Star size={20} className="fill-accent text-accent" aria-hidden="true" /> My top picks
       </p>
       <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {picks.map((pick, i) => (

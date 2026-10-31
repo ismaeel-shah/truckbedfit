@@ -31,7 +31,7 @@ export default async function TrucksIndexPage() {
         path="/trucks"
         eyebrow="Shop by truck"
         title={hub?.title || defaultHubTitle(TRUCKS_INDEX_PATH)}
-        lead="Bed sizes, fitment notes and every guide we've written for your pickup."
+        lead="Bed sizes, fitment notes and every guide I've written for your pickup."
       />
 
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
