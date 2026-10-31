@@ -23,7 +23,7 @@ export const BUSINESS_NAME = "TruckBedFit";
 export const SITE_DOMAIN = "truckbedfit.com";
 export const CONTACT_EMAIL = "contact@truckbedfit.com";
 /** Shown as "Last updated" on every legal page — bump it when you edit one. */
-export const LEGAL_LAST_UPDATED = "2026-10-20";
+export const LEGAL_LAST_UPDATED = "2026-10-31";
 
 /**
  * Sitemap date for pages whose content lives in code (About, Contact) — bump it when

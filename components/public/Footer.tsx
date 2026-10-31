@@ -12,7 +12,7 @@ export interface FooterCategory {
 
 const BASE_QUICK_LINKS = [
   { label: "About Us",  href: "/about"   },
-  { label: "How We Research", href: "/how-we-research" },
+  { label: "How I Research", href: "/how-we-research" },
   { label: "Contact",   href: "/contact" },
 ];
 

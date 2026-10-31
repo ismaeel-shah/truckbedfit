@@ -13,15 +13,16 @@ export default function DisclaimerPage() {
   return (
     <LegalPage title="Disclaimer" path="/disclaimer">
       <p className="lead">
-        Our reviews and buying guides are for general information only. Every truck is different — always confirm
+        My reviews and buying guides are for general information only. Every truck is different — always confirm
         fitment and follow the manufacturer&apos;s instructions before you buy or install anything.
       </p>
 
       <h2>General information only</h2>
       <p>
-        The content on {BUSINESS_NAME} is based on our research: product specifications, manufacturer fitment information and
-        owner reports. We don&apos;t test products ourselves. It is not professional automotive, mechanical, engineering, legal or safety advice, and it does not
-        replace the guidance of the manufacturer or a qualified installer.
+        The content on {BUSINESS_NAME} is based on my research: product specifications, manufacturer fitment information
+        and owner reports. I don&apos;t install or test products myself. It is not professional automotive, mechanical,
+        engineering, legal or safety advice, and it does not replace the guidance of the manufacturer or a qualified
+        installer.
       </p>
 
       <h2>Fitment and compatibility</h2>
@@ -32,7 +33,7 @@ export default function DisclaimerPage() {
         designs over time.
       </p>
       <p>
-        Fitment notes on our site are a starting point, not a guarantee. <strong>Always verify compatibility with the
+        Fitment notes on this site are a starting point, not a guarantee. <strong>Always verify compatibility with the
         product&apos;s manufacturer or seller before purchasing.</strong> {BUSINESS_NAME} is not responsible for products
         that do not fit, returns, restocking fees or related costs.
       </p>
@@ -53,33 +54,33 @@ export default function DisclaimerPage() {
 
       <h2>Accuracy of information</h2>
       <p>
-        We work to keep our content accurate and up to date, but specifications, prices, availability and product
-        details can change without notice, and errors can happen. We make no guarantees about the completeness or accuracy
-        of any information on the site. If you spot a mistake, please let us know.
+        I work to keep the content accurate and up to date, but specifications, prices, availability and product
+        details can change without notice, and errors can happen. I make no guarantees about the completeness or accuracy
+        of any information on the site. If you spot a mistake, please let me know.
       </p>
 
       <h2>No endorsement by manufacturers</h2>
       <p>
-        {BUSINESS_NAME} is an independent publication. We are not affiliated with, sponsored by or endorsed by any vehicle
-        or accessory manufacturer mentioned on the site, unless we clearly say so. All trademarks belong to their
+        {BUSINESS_NAME} is an independent publication. I am not affiliated with, sponsored by or endorsed by any vehicle
+        or accessory manufacturer mentioned on the site, unless I clearly say so. All trademarks belong to their
         respective owners.
       </p>
 
       <h2>Affiliate links</h2>
       <p>
-        Some links on our site are affiliate links, which means we may earn a commission at no extra cost to you. See our{" "}
+        Some links on this site are affiliate links, which means I may earn a commission at no extra cost to you. See the{" "}
         <Link href="/affiliate-disclosure">Affiliate Disclosure</Link> for details.
       </p>
 
       <h2>External links</h2>
       <p>
-        We link to third-party websites for your convenience. We do not control and are not responsible for their content,
+        I link to third-party websites for your convenience. I do not control and am not responsible for their content,
         products or policies.
       </p>
 
       <h2>Contact</h2>
       <p>
-        Questions about this disclaimer? Email us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. See also our{" "}
+        Questions about this disclaimer? Email me at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. See also the{" "}
         <Link href="/terms">Terms &amp; Conditions</Link> and <Link href="/privacy-policy">Privacy Policy</Link>.
       </p>
     </LegalPage>
