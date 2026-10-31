@@ -1,3 +1,4 @@
+import AuthSessionProvider from "@/components/dashboard/AuthSessionProvider";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { SITE_NAME } from "@/lib/site";
 
@@ -7,5 +8,9 @@ export const metadata = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return (
+    <AuthSessionProvider>
+      <DashboardLayout>{children}</DashboardLayout>
+    </AuthSessionProvider>
+  );
 }
