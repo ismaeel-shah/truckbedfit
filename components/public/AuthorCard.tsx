@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AtSign, Globe, User, ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
-import { authorPath, twitterUrl } from "@/lib/urls";
+import { Globe, User, ChevronDown, ChevronUp, ArrowRight } from "lucide-react";
+import { authorPath, authorProfiles } from "@/lib/urls";
+import BrandIcon from "./BrandIcon";
 
 interface Author {
   name: string;
@@ -12,12 +13,15 @@ interface Author {
   photo?: string;
   twitter?: string;
   website?: string;
+  instagram?: string;
+  facebook?: string;
+  linkedin?: string;
 }
 
 export default function AuthorCard({ author }: { author: Author }) {
   const [expanded, setExpanded] = useState(false);
   const hasBio = !!author.bio;
-  const hasLinks = !!(author.slug || author.twitter || author.website);
+  const hasLinks = !!author.slug || authorProfiles(author).length > 0;
 
   return (
     <div className="mt-12 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
@@ -65,26 +69,7 @@ export default function AuthorCard({ author }: { author: Author }) {
         {hasLinks && (
           <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700 flex flex-wrap items-center gap-4">
             <AllArticlesLink author={author} />
-            {author.twitter && (
-              <a
-                href={twitterUrl(author.twitter)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-accent transition-colors"
-              >
-                <AtSign size={13} /> {author.twitter.replace("@", "")}
-              </a>
-            )}
-            {author.website && (
-              <a
-                href={author.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-accent transition-colors"
-              >
-                <Globe size={13} /> Website
-              </a>
-            )}
+            <ProfileIcons author={author} />
           </div>
         )}
       </div>
@@ -107,28 +92,9 @@ export default function AuthorCard({ author }: { author: Author }) {
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">{author.bio}</p>
           )}
           {hasLinks && (
-            <div className="flex flex-wrap items-center gap-3 mt-3">
+            <div className="flex flex-wrap items-center gap-4 mt-3">
               <AllArticlesLink author={author} />
-              {author.twitter && (
-                <a
-                  href={twitterUrl(author.twitter)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-accent transition-colors"
-                >
-                  <AtSign size={13} /> {author.twitter.replace("@", "")}
-                </a>
-              )}
-              {author.website && (
-                <a
-                  href={author.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-accent transition-colors"
-                >
-                  <Globe size={13} /> Website
-                </a>
-              )}
+              <ProfileIcons author={author} />
             </div>
           )}
         </div>
@@ -145,6 +111,29 @@ function AuthorName({ author }: { author: Author }) {
     <Link href={authorPath(author.slug)} rel="author" className="hover:text-accent transition-colors">
       {author.name}
     </Link>
+  );
+}
+
+/** The author's profiles as small icon links (website, X, Instagram, Facebook, LinkedIn). */
+function ProfileIcons({ author }: { author: Author }) {
+  const profiles = authorProfiles(author);
+  if (!profiles.length) return null;
+  return (
+    <span className="flex items-center gap-3">
+      {profiles.map((profile) => (
+        <a
+          key={profile.network}
+          href={profile.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${author.name} on ${profile.label}`}
+          title={profile.label}
+          className="text-slate-400 transition-colors hover:text-accent"
+        >
+          {profile.network === "website" ? <Globe size={15} aria-hidden="true" /> : <BrandIcon brand={profile.network} size={14} />}
+        </a>
+      ))}
+    </span>
   );
 }
 

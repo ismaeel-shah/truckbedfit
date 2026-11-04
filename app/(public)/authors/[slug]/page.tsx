@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { AtSign, Globe, User } from "lucide-react";
+import { Globe, User } from "lucide-react";
+import BrandIcon from "@/components/public/BrandIcon";
 import PageHeader from "@/components/public/PageHeader";
 import ArticleGrid from "@/components/public/ArticleGrid";
 import TrustStatement from "@/components/public/home/TrustStatement";
 import JsonLd from "@/components/public/JsonLd";
 import { getAuthorBySlug, listPosts } from "@/lib/db/content";
 import { redirectIfMoved } from "@/lib/db/redirects";
-import { authorPath, twitterUrl } from "@/lib/urls";
+import { authorPath, authorProfiles } from "@/lib/urls";
 import { profilePageSchema } from "@/lib/utils/schema";
 import { buildCanonical, buildOpenGraph, buildTwitter, truncate } from "@/lib/utils/seo";
 import { imgLoadingProps } from "@/lib/utils/imageProps";
@@ -60,6 +61,7 @@ export default async function AuthorPage({ params }: Params) {
   const { author, posts } = data;
   // Blank lines (or single line breaks) in the dashboard bio become paragraphs.
   const bio = author.bio.split(/\n+/).map((p) => p.trim()).filter(Boolean);
+  const profiles = authorProfiles(author);
 
   return (
     <div className="bg-background">
@@ -91,19 +93,22 @@ export default async function AuthorPage({ params }: Params) {
                 {bio.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
               </div>
             )}
-            {(author.website || author.twitter) && (
-              <div className="mt-5 flex flex-wrap items-center gap-4 text-sm">
-                {author.website && (
-                  <a href={author.website} target="_blank" rel="noopener noreferrer me" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:text-accent">
-                    <Globe size={15} aria-hidden="true" /> Website
-                  </a>
-                )}
-                {author.twitter && (
-                  <a href={twitterUrl(author.twitter)} target="_blank" rel="noopener noreferrer me" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:text-accent">
-                    <AtSign size={15} aria-hidden="true" /> {author.twitter.replace(/^@/, "").replace(/^https?:\/\/(www\.)?(x|twitter)\.com\//i, "")}
-                  </a>
-                )}
-              </div>
+            {profiles.length > 0 && (
+              <ul className="mt-5 flex flex-wrap items-center gap-2 text-sm">
+                {profiles.map((profile) => (
+                  <li key={profile.network}>
+                    <a
+                      href={profile.href}
+                      target="_blank"
+                      rel="noopener noreferrer me"
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 font-semibold text-primary transition-colors hover:border-accent hover:text-accent"
+                    >
+                      {profile.network === "website" ? <Globe size={15} aria-hidden="true" /> : <BrandIcon brand={profile.network} size={14} />}
+                      {profile.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </section>

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { authorPath } from "@/lib/urls";
-import { Plus, Trash2, Pencil, X, Check, User, AtSign, Globe, ExternalLink } from "lucide-react";
+import { authorPath, authorProfiles } from "@/lib/urls";
+import { Plus, Trash2, Pencil, X, Check, User, Globe, ExternalLink } from "lucide-react";
+import BrandIcon, { type Brand } from "@/components/public/BrandIcon";
 
 interface Author {
   _id: string;
@@ -13,9 +14,43 @@ interface Author {
   photo?: string;
   twitter?: string;
   website?: string;
+  instagram?: string;
+  facebook?: string;
+  linkedin?: string;
 }
 
-const empty = (): Omit<Author, "_id"> => ({ name: "", bio: "", photo: "", twitter: "", website: "" });
+type AuthorForm = Required<Omit<Author, "_id" | "slug">>;
+
+const empty = (): AuthorForm => ({ name: "", bio: "", photo: "", twitter: "", website: "", instagram: "", facebook: "", linkedin: "" });
+
+const PROFILE_FIELDS: { key: "twitter" | "instagram" | "facebook" | "linkedin"; label: string; brand: Brand; placeholder: string }[] = [
+  { key: "twitter",   label: "X (Twitter)", brand: "x",         placeholder: "@username" },
+  { key: "instagram", label: "Instagram",   brand: "instagram", placeholder: "@username" },
+  { key: "facebook",  label: "Facebook",    brand: "facebook",  placeholder: "facebook.com/yourpage" },
+  { key: "linkedin",  label: "LinkedIn",    brand: "linkedin",  placeholder: "linkedin.com/in/yourname" },
+];
+
+/** One profile field: brand icon inside the input, with an accessible label. */
+function ProfileInput({ icon, label, value, onChange, placeholder }: {
+  icon: React.ReactNode; label: string; value: string; onChange: (value: string) => void; placeholder: string;
+}) {
+  return (
+    <label className="block">
+      <span className="sr-only">{label}</span>
+      <span className="relative block">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" title={label}>{icon}</span>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          aria-label={label}
+          className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
+        />
+      </span>
+    </label>
+  );
+}
 
 export default function AuthorsPage() {
   const [authors, setAuthors]   = useState<Author[]>([]);
@@ -38,7 +73,10 @@ export default function AuthorsPage() {
   const openCreate = () => { setForm(empty()); setEditId(null); setShowForm(true); };
 
   const openEdit = (a: Author) => {
-    setForm({ name: a.name, bio: a.bio ?? "", photo: a.photo ?? "", twitter: a.twitter ?? "", website: a.website ?? "" });
+    setForm({
+      name: a.name, bio: a.bio ?? "", photo: a.photo ?? "", twitter: a.twitter ?? "", website: a.website ?? "",
+      instagram: a.instagram ?? "", facebook: a.facebook ?? "", linkedin: a.linkedin ?? "",
+    });
     setEditId(a._id);
     setShowForm(true);
   };
@@ -86,7 +124,7 @@ export default function AuthorsPage() {
       {/* Create / Edit Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg p-6">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-heading font-bold text-primary dark:text-white text-lg">
                 {editId ? "Edit Author" : "New Author"}
@@ -141,26 +179,20 @@ export default function AuthorsPage() {
                 </p>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Twitter / X</label>
-                  <input
-                    type="text"
-                    value={form.twitter}
-                    onChange={(e) => setForm({ ...form, twitter: e.target.value })}
-                    placeholder="@username"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Website</label>
-                  <input
-                    type="url"
-                    value={form.website}
-                    onChange={(e) => setForm({ ...form, website: e.target.value })}
-                    placeholder="https://yoursite.com"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
+              <div>
+                <p className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Profiles</p>
+                <p className="mb-2 text-xs text-slate-400">
+                  A handle (@username) or the full profile link. Leave blank to hide. Shown on the author card and author page.
+                </p>
+                <div className="space-y-3">
+                  <ProfileInput icon={<Globe size={15} />} label="Website" value={form.website}
+                    onChange={(v) => setForm({ ...form, website: v })} placeholder="https://yoursite.com" />
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {PROFILE_FIELDS.map(({ key, label, brand, placeholder }) => (
+                      <ProfileInput key={key} icon={<BrandIcon brand={brand} size={14} />} label={label} value={form[key]}
+                        onChange={(v) => setForm({ ...form, [key]: v })} placeholder={placeholder} />
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -196,18 +228,15 @@ export default function AuthorsPage() {
               <div className="flex-1 min-w-0">
                 <h3 className="font-heading font-bold text-primary dark:text-white text-sm leading-tight">{a.name}</h3>
                 {a.bio && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{a.bio}</p>}
-                <div className="flex items-center gap-3 mt-2">
-                  {a.twitter && (
-                    <span className="flex items-center gap-1 text-xs text-slate-400">
-                      <AtSign size={11} /> {a.twitter.replace("@", "")}
-                    </span>
-                  )}
-                  {a.website && (
-                    <span className="flex items-center gap-1 text-xs text-slate-400">
-                      <Globe size={11} /> Website
-                    </span>
-                  )}
-                </div>
+                {authorProfiles(a).length > 0 && (
+                  <div className="flex items-center gap-2.5 mt-2 text-slate-400">
+                    {authorProfiles(a).map((profile) => (
+                      <a key={profile.network} href={profile.href} target="_blank" rel="noopener noreferrer" title={profile.label} className="hover:text-accent">
+                        {profile.network === "website" ? <Globe size={13} /> : <BrandIcon brand={profile.network} size={12} />}
+                      </a>
+                    ))}
+                  </div>
+                )}
                 {a.slug && (
                   <a
                     href={authorPath(a.slug)}

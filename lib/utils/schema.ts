@@ -1,6 +1,6 @@
 import { SITE_NAME, SITE_URL, SOCIAL_LINKS } from "@/lib/site";
 import { buildCanonical } from "@/lib/utils/seo";
-import { authorPath, twitterUrl } from "@/lib/urls";
+import { authorPath, authorProfiles } from "@/lib/urls";
 
 // schema.org JSON-LD builders. Rendered with <JsonLd />.
 
@@ -52,9 +52,12 @@ export function profilePageSchema(author: {
   photo: string;
   twitter: string;
   website: string;
+  instagram?: string;
+  facebook?: string;
+  linkedin?: string;
 }) {
   const url = buildCanonical(authorPath(author.slug));
-  const sameAs = [author.website, author.twitter && twitterUrl(author.twitter)].filter(Boolean);
+  const sameAs = authorProfiles(author).map((profile) => profile.href);
   return {
     "@context": "https://schema.org",
     "@type": "ProfilePage",

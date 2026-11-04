@@ -16,14 +16,17 @@ export async function PATCH(
 
   await db.prepare(`
     UPDATE authors
-    SET name = ?, bio = ?, photo = ?, twitter = ?, website = ?, updated_at = ?
+    SET name = ?, bio = ?, photo = ?, twitter = ?, website = ?, instagram = ?, facebook = ?, linkedin = ?, updated_at = ?
     WHERE id = ?
   `).bind(
     body.name ?? existing.name,
     body.bio ?? existing.bio,
     body.photo ?? existing.photo,
-    body.twitter ?? existing.twitter,
-    body.website ?? existing.website,
+    body.twitter?.trim() ?? existing.twitter,
+    body.website?.trim() ?? existing.website,
+    body.instagram?.trim() ?? existing.instagram,
+    body.facebook?.trim() ?? existing.facebook,
+    body.linkedin?.trim() ?? existing.linkedin,
     nowIso(),
     params.id
   ).run();

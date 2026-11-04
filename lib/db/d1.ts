@@ -40,6 +40,9 @@ export type AuthorRow = {
   photo: string;
   twitter: string;
   website: string;
+  instagram: string;
+  facebook: string;
+  linkedin: string;
   created_at: string;
   updated_at: string;
 };
@@ -98,6 +101,9 @@ export type PostRow = {
   author_photo?: string | null;
   author_twitter?: string | null;
   author_website?: string | null;
+  author_instagram?: string | null;
+  author_facebook?: string | null;
+  author_linkedin?: string | null;
 };
 
 export type RedirectRow = {
@@ -200,6 +206,9 @@ export function mapAuthor(row: AuthorRow | null | undefined) {
     photo: row.photo ?? "",
     twitter: row.twitter ?? "",
     website: row.website ?? "",
+    instagram: row.instagram ?? "",
+    facebook: row.facebook ?? "",
+    linkedin: row.linkedin ?? "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -253,6 +262,9 @@ export function mapPost(row: PostRow) {
         photo: row.author_photo ?? "",
         twitter: row.author_twitter ?? "",
         website: row.author_website ?? "",
+        instagram: row.author_instagram ?? "",
+        facebook: row.author_facebook ?? "",
+        linkedin: row.author_linkedin ?? "",
       }
     : undefined;
 
@@ -302,7 +314,10 @@ export const postSelect = `
   a.bio AS author_bio,
   a.photo AS author_photo,
   a.twitter AS author_twitter,
-  a.website AS author_website
+  a.website AS author_website,
+  a.instagram AS author_instagram,
+  a.facebook AS author_facebook,
+  a.linkedin AS author_linkedin
 `;
 
 export const postJoins = `

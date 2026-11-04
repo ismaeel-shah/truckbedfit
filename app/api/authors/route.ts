@@ -29,16 +29,19 @@ export async function POST(req: NextRequest) {
     const id = crypto.randomUUID();
     const now = nowIso();
     await db.prepare(`
-      INSERT INTO authors (id, name, slug, bio, photo, twitter, website, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO authors (id, name, slug, bio, photo, twitter, website, instagram, facebook, linkedin, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
       name,
       slug,
       body.bio ?? "",
       body.photo ?? "",
-      body.twitter ?? "",
-      body.website ?? "",
+      body.twitter?.trim() ?? "",
+      body.website?.trim() ?? "",
+      body.instagram?.trim() ?? "",
+      body.facebook?.trim() ?? "",
+      body.linkedin?.trim() ?? "",
       now,
       now
     ).run();

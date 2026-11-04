@@ -33,10 +33,36 @@ export function authorPath(authorSlug: string): string {
   return `/authors/${authorSlug}`;
 }
 
+/** A profile field ("@handle", "handle" or a full URL) → profile URL on the given site. */
+function profileUrl(value: string, base: string): string {
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (/^(www\.)?[a-z0-9-]+\.[a-z]{2,}\//i.test(trimmed)) return `https://${trimmed}`;
+  return `${base}${trimmed.replace(/^@/, "")}`;
+}
+
 /** An author's X/Twitter field ("@handle", "handle" or a full URL) → profile URL. */
 export function twitterUrl(handle: string): string {
-  if (/^https?:\/\//i.test(handle)) return handle;
-  return `https://x.com/${handle.replace(/^@/, "")}`;
+  return profileUrl(handle, "https://x.com/");
+}
+
+export type AuthorProfile = { network: "website" | "x" | "instagram" | "facebook" | "linkedin"; label: string; href: string };
+
+/** An author's filled-in profiles, in display order, as links. */
+export function authorProfiles(author: {
+  website?: string;
+  twitter?: string;
+  instagram?: string;
+  facebook?: string;
+  linkedin?: string;
+}): AuthorProfile[] {
+  const profiles: AuthorProfile[] = [];
+  if (author.website?.trim()) profiles.push({ network: "website", label: "Website", href: profileUrl(author.website, "https://") });
+  if (author.twitter?.trim()) profiles.push({ network: "x", label: "X", href: twitterUrl(author.twitter) });
+  if (author.instagram?.trim()) profiles.push({ network: "instagram", label: "Instagram", href: profileUrl(author.instagram, "https://www.instagram.com/") });
+  if (author.facebook?.trim()) profiles.push({ network: "facebook", label: "Facebook", href: profileUrl(author.facebook, "https://www.facebook.com/") });
+  if (author.linkedin?.trim()) profiles.push({ network: "linkedin", label: "LinkedIn", href: profileUrl(author.linkedin, "https://www.linkedin.com/in/") });
+  return profiles;
 }
 
 export function articlePath(post: {
