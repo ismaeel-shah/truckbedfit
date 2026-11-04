@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from "@/lib/site";
+import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL, X_HANDLE } from "@/lib/site";
 
 export function truncate(str: string, max: number): string {
   return str.length <= max ? str : str.slice(0, max - 3) + "...";
@@ -71,6 +71,7 @@ export function hubPageMetadata(
 export function buildTwitter(twitter: Twitter = {}): Twitter {
   return {
     card: "summary_large_image",
+    site: X_HANDLE,
     images: [DEFAULT_OG_IMAGE.url],
     ...twitter,
   } as Twitter;

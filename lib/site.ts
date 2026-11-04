@@ -42,7 +42,11 @@ export const LEGAL_PAGES = [
 export const SOCIAL_LINKS = [
   { network: "instagram", label: "Instagram", href: "https://www.instagram.com/truckbedfit/" },
   { network: "pinterest", label: "Pinterest", href: "https://www.pinterest.com/truckbedfit/" },
+  { network: "x", label: "X", href: "https://x.com/truckbedfit" },
 ] as const;
+
+/** The site's X account, credited on shared link cards (twitter:site). */
+export const X_HANDLE = "@truckbedfit";
 
 /** 1200×630 share image used when a page or post has none (public/og-default.png). */
 export const DEFAULT_OG_IMAGE = { url: "/og-default.png", width: 1200, height: 630, alt: SITE_NAME };
