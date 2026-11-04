@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Barlow_Condensed, DM_Sans } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-import { CONTACT_EMAIL, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL, SOCIAL_LINKS } from "@/lib/site";
 import { buildOpenGraph, buildTwitter } from "@/lib/utils/seo";
 
 const barlowCondensed = Barlow_Condensed({
@@ -37,6 +37,7 @@ const organizationSchema = {
   logo:        `${SITE_URL}/og-default.png`,
   description: SITE_DESCRIPTION,
   email:       CONTACT_EMAIL,
+  sameAs:      SOCIAL_LINKS.map((link) => link.href),
 };
 
 const websiteSchema = {

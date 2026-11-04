@@ -38,5 +38,11 @@ export const LEGAL_PAGES = [
   { label: "Disclaimer",           href: "/disclaimer" },
 ] as const;
 
+/** The site's social profiles: shown in the footer and listed as `sameAs` in the Organization JSON-LD. */
+export const SOCIAL_LINKS = [
+  { network: "pinterest", label: "Pinterest", href: "https://www.pinterest.com/truckbedfit/" },
+  { network: "instagram", label: "Instagram", href: "https://www.instagram.com/truckbedfit/" },
+] as const;
+
 /** 1200×630 share image used when a page or post has none (public/og-default.png). */
 export const DEFAULT_OG_IMAGE = { url: "/og-default.png", width: 1200, height: 630, alt: SITE_NAME };

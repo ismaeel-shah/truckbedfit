@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import Logo from "@/components/Logo";
+import SocialLinks from "./SocialLinks";
 import { categoryPath } from "@/lib/urls";
 import { CONTACT_EMAIL, LEGAL_PAGES, SITE_NAME } from "@/lib/site";
 
@@ -42,6 +43,7 @@ export default function Footer({ categories = [], showTrucks = false }: { catego
             >
               <Mail size={15} aria-hidden="true" /> {CONTACT_EMAIL}
             </a>
+            <SocialLinks className="mt-4" />
           </div>
 
           {/* Categories */}

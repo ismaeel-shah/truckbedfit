@@ -1,4 +1,4 @@
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_NAME, SITE_URL, SOCIAL_LINKS } from "@/lib/site";
 import { buildCanonical } from "@/lib/utils/seo";
 import { authorPath, twitterUrl } from "@/lib/urls";
 
@@ -9,6 +9,7 @@ const publisher = {
   name: SITE_NAME,
   url: SITE_URL,
   logo: { "@type": "ImageObject", url: `${SITE_URL}/og-default.png` },
+  sameAs: SOCIAL_LINKS.map((link) => link.href),
 };
 
 export function articleSchema(post: {
