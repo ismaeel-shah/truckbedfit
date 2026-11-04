@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Truck } from "lucide-react";
 import PageHeader from "@/components/public/PageHeader";
 import { listLiveTrucks } from "@/lib/db/content";
 import { truckPath } from "@/lib/urls";
 import { truckYears } from "@/data/trucks";
 import { hubPageMetadata } from "@/lib/utils/seo";
 import { defaultHubTitle, getHubPage, TRUCKS_INDEX_PATH } from "@/lib/db/hubPages";
-import { HubFaqs, HubIntro } from "@/components/public/HubContent";
+import { HubArticle, HubFaqs } from "@/components/public/HubContent";
 
 export const dynamic = "force-dynamic";
 
@@ -34,38 +34,58 @@ export default async function TrucksIndexPage() {
         lead="Bed sizes, fitment notes and every guide I've written for your pickup."
       />
 
-      <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
-        <HubIntro hub={hub} />
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto max-w-7xl space-y-16 px-4 py-14 sm:px-6 lg:px-8">
+        <section aria-labelledby="pick-truck">
+          <p className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.25em] text-accent">
+            <span className="h-0.5 w-8 bg-accent" aria-hidden="true" />
+            {trucks.length} {trucks.length === 1 ? "truck" : "trucks"}
+          </p>
+          <h2 id="pick-truck" className="mt-3 font-heading text-3xl font-extrabold uppercase leading-none text-primary md:text-4xl">
+            Pick your truck
+          </h2>
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {trucks.map(({ truck, count }) => {
-              const beds = truck.generations.flatMap((g) => g.beds.map((b) => b.label));
+              const beds = Array.from(new Set(truck.generations.flatMap((g) => g.beds.map((b) => b.label))));
               return (
                 <li key={truck.slug}>
                   <Link
                     href={truckPath(truck.slug)}
-                    className="group flex h-full flex-col rounded-md border-2 border-slate-200 bg-white p-5 transition-colors hover:border-accent"
+                    className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-md"
                   >
-                    <span className="font-heading text-2xl font-extrabold uppercase leading-tight text-primary group-hover:text-accent">
-                      {truck.name}
+                    <span className="absolute inset-x-0 top-0 h-1 bg-accent opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                    <span className="flex items-start justify-between gap-3">
+                      <span>
+                        <span className="block text-xs font-bold uppercase tracking-widest text-slate-400">{truck.make}</span>
+                        <span className="mt-1 block font-heading text-2xl font-extrabold uppercase leading-tight text-primary group-hover:text-accent">
+                          {truck.name}
+                        </span>
+                      </span>
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-accent">
+                        <Truck size={20} aria-hidden="true" />
+                      </span>
                     </span>
-                    {truckYears(truck) && <span className="mt-1 text-sm text-slate-500">{truckYears(truck)}</span>}
+                    {truckYears(truck) && <span className="mt-2 text-sm text-slate-500">{truckYears(truck)}</span>}
                     {beds.length > 0 && (
-                      <span className="mt-3 flex flex-wrap gap-1.5">
-                        {beds.filter((bed, i) => beds.indexOf(bed) === i).map((bed) => (
-                          <span key={bed} className="rounded-sm bg-background px-2 py-0.5 text-xs font-semibold text-slate-600">
+                      <span className="mt-4 flex flex-wrap gap-1.5">
+                        {beds.map((bed) => (
+                          <span key={bed} className="rounded-md border border-slate-200 bg-background px-2 py-0.5 text-xs font-semibold text-slate-600">
                             {bed} bed
                           </span>
                         ))}
                       </span>
                     )}
-                    <span className="mt-auto flex items-center justify-between pt-5 text-xs font-bold uppercase tracking-widest text-primary group-hover:text-accent">
-                      {count} {count === 1 ? "guide" : "guides"} <ArrowRight size={14} aria-hidden="true" />
+                    <span className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4 text-xs font-bold uppercase tracking-widest text-primary group-hover:text-accent">
+                      {count} {count === 1 ? "guide" : "guides"}
+                      <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                     </span>
                   </Link>
                 </li>
               );
             })}
           </ul>
+        </section>
+
+        <HubArticle hub={hub} withShortAnswer />
         <HubFaqs hub={hub} />
       </div>
     </div>

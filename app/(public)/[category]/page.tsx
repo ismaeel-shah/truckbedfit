@@ -10,6 +10,7 @@ import TopPicks from "@/components/public/content/TopPicks";
 import ShortAnswer from "@/components/public/article/ShortAnswer";
 import FaqSection from "@/components/public/article/FaqSection";
 import AuthorCard from "@/components/public/AuthorCard";
+import TableOfContents from "@/components/public/TableOfContents";
 import JsonLd from "@/components/public/JsonLd";
 import { getCategoryBySlug, getCategoryPillar, listLiveCategories, listPosts } from "@/lib/db/content";
 import { articleSchema, faqSchema, itemListSchema } from "@/lib/utils/schema";
@@ -117,20 +118,30 @@ export default async function CategoryPage({ params }: { params: { category: str
 
       <div className="mx-auto max-w-7xl space-y-16 px-4 py-14 sm:px-6 lg:px-8">
         {pillar && (
-          <article className="max-w-3xl space-y-8">
-            {/* The pillar's H1 is in the page header above, so its short answer opens the content. */}
-            <ShortAnswer text={pillar.excerpt} />
-            {/* The author is shown in the card at the end of the article. */}
-            <p className="text-sm text-slate-500">
-              {pillarDates?.updated
-                ? `Published ${pillarDates.published} · Updated ${pillarDates.updated}`
-                : `Published ${pillarDates?.published}`}
-            </p>
-            <AffiliateNotice />
-            <TopPicks products={pillar.products} images={productImages} />
-            <ArticleBody html={pillar.content} trucks={pillar.trucks} products={pillar.products} images={productImages} categorySlug={category.slug} />
-            <FaqSection faqs={pillar.faqs} />
-            {pillar.author && <AuthorCard author={pillar.author} />}
+          <article>
+            <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <div className="min-w-0 max-w-3xl space-y-8">
+                {/* The pillar's H1 is in the page header above, so its short answer opens the content. */}
+                <ShortAnswer text={pillar.excerpt} />
+                {/* The author is shown in the card at the end of the article. */}
+                <p className="text-sm text-slate-500">
+                  {pillarDates?.updated
+                    ? `Published ${pillarDates.published} · Updated ${pillarDates.updated}`
+                    : `Published ${pillarDates?.published}`}
+                </p>
+                <AffiliateNotice />
+                <TopPicks products={pillar.products} images={productImages} />
+                <ArticleBody html={pillar.content} trucks={pillar.trucks} products={pillar.products} images={productImages} categorySlug={category.slug} />
+              </div>
+              {/* Sidebar ends with the article body, so the sticky TOC stops before the FAQs (as on article pages). */}
+              <aside className="hidden lg:block">
+                <TableOfContents />
+              </aside>
+            </div>
+            <div className="mt-12 max-w-3xl space-y-8">
+              <FaqSection faqs={pillar.faqs} />
+              {pillar.author && <AuthorCard author={pillar.author} />}
+            </div>
           </article>
         )}
 

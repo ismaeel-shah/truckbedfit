@@ -14,6 +14,17 @@ function slugify(text: string) {
   );
 }
 
+/**
+ * The headings the TOC lists: the highest level used in the content and the level below it.
+ * Usually H2 + H3; content written with H3/H4 sections (no H2) gets H3 + H4 instead of no TOC.
+ */
+function tocHeadings(): HTMLElement[] {
+  const all = Array.from(document.querySelectorAll<HTMLElement>(".prose h2, .prose h3, .prose h4"));
+  if (!all.length) return [];
+  const top = Math.min(...all.map((el) => Number(el.tagName[1])));
+  return all.filter((el) => Number(el.tagName[1]) <= top + 1);
+}
+
 export default function TableOfContents() {
   const [tree, setTree]     = useState<H2Item[]>([]);
   const [active, setActive] = useState<string>("");
@@ -22,10 +33,9 @@ export default function TableOfContents() {
   /* ── Build tree ─────────────────────────────────────── */
   useEffect(() => {
     const build = () => {
-      const els = Array.from(
-        document.querySelectorAll<HTMLElement>(".prose h2, .prose h3")
-      );
+      const els = tocHeadings();
       if (!els.length) return false;
+      const topTag = `H${Math.min(...els.map((el) => Number(el.tagName[1])))}`;
 
       const usedIds = new Map<string, number>();
       els.forEach((el) => {
@@ -37,9 +47,9 @@ export default function TableOfContents() {
 
       const result: H2Item[] = [];
       els.forEach((el) => {
-        if (el.tagName === "H2") {
+        if (el.tagName === topTag) {
           result.push({ id: el.id, text: el.textContent?.trim() ?? "", children: [] });
-        } else if (el.tagName === "H3" && result.length > 0) {
+        } else if (result.length > 0) {
           result[result.length - 1].children.push({
             id: el.id,
             text: el.textContent?.trim() ?? "",
@@ -63,9 +73,7 @@ export default function TableOfContents() {
     if (!tree.length) return;
 
     const tick = () => {
-      const els = Array.from(
-        document.querySelectorAll<HTMLElement>(".prose h2, .prose h3")
-      );
+      const els = tocHeadings();
       let found = "";
       for (const el of els) {
         if (el.getBoundingClientRect().top < 130) found = el.id;

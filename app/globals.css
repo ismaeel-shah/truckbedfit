@@ -155,46 +155,51 @@
 
 .prose .table-wrapper table {
   display: table !important;
-  width: max-content !important;
-  min-width: 100%;
+  width: 100% !important;
   border-collapse: collapse !important;
   margin: 0 !important;
   font-size: 0.875rem !important;
 }
 
-/* Header row */
-.prose .table-wrapper thead tr {
-  background: #1F2328 !important;
-}
+/* Header cells. The editor puts <th> in the first body row (no <thead>), so the dark
+   background goes on the cells themselves, not on a thead row. */
 .prose .table-wrapper th {
   color: #ffffff !important;
   font-weight: 600 !important;
   text-align: left !important;
-  padding: 12px 18px !important;
+  vertical-align: bottom !important;
+  padding: 12px 16px !important;
   font-size: 0.72rem !important;
   letter-spacing: 0.07em !important;
   text-transform: uppercase !important;
-  white-space: nowrap !important;
   border: none !important;
-  background: transparent !important;
+  background: #1F2328 !important;
 }
-.prose .table-wrapper thead tr th:first-child { border-radius: 11px 0 0 0; }
-.prose .table-wrapper thead tr th:last-child  { border-radius: 0 11px 0 0; }
 
-/* Body cells */
+/* Body cells wrap long text; a minimum width keeps narrow columns readable, and the
+   wrapper scrolls sideways on small screens instead of squeezing them. */
 .prose .table-wrapper td {
-  padding: 11px 18px !important;
+  padding: 10px 16px !important;
   border: none !important;
   border-bottom: 1px solid #f1f5f9 !important;
-  vertical-align: middle !important;
+  vertical-align: top !important;
   color: #374151 !important;
-  white-space: nowrap;
+  min-width: 7.5rem;
+  line-height: 1.5 !important;
+}
+
+/* The editor wraps cell text in <p>; drop prose paragraph spacing inside cells. */
+.prose .table-wrapper td p,
+.prose .table-wrapper th p {
+  margin: 0 !important;
 }
 .dark .prose .table-wrapper td {
   border-bottom-color: #1e293b !important;
   color: #cbd5e1 !important;
 }
 .prose .table-wrapper tbody tr:last-child td { border-bottom: none !important; }
+.prose .table-wrapper tr:first-child th:first-child { border-top-left-radius: 11px; }
+.prose .table-wrapper tr:first-child th:last-child { border-top-right-radius: 11px; }
 
 /* Alternating rows */
 .prose .table-wrapper tbody tr:nth-child(even) td {

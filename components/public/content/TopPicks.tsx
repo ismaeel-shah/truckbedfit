@@ -21,9 +21,13 @@ export default function TopPicks({ products, images = {} }: {
       <p id="top-picks-heading" className="mb-4 flex items-center gap-2 font-heading text-xl font-bold uppercase tracking-wide text-primary">
         <Star size={20} className="fill-accent text-accent" aria-hidden="true" /> My top picks
       </p>
-      <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Flex-wrap rather than grid so a short last row is centred instead of left hanging. */}
+      <ol className="flex flex-wrap justify-center gap-4">
         {picks.map((pick, i) => (
-          <li key={i} className="flex flex-col rounded-md border-2 border-slate-200 bg-white p-5">
+          <li
+            key={i}
+            className="flex w-full flex-col rounded-md border-2 border-slate-200 bg-white p-5 sm:w-[calc(50%-0.5rem)] lg:w-[calc((100%-2rem)/3)]"
+          >
             {images[pick.asin] ? (
               <ProductImage image={images[pick.asin]} asin={pick.asin} alt={pick.name} className="mb-4 h-40 w-full" />
             ) : anyImage && (
