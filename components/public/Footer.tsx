@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { Mail } from "lucide-react";
 import Logo from "@/components/Logo";
 import SocialLinks from "./SocialLinks";
 import { categoryPath } from "@/lib/urls";
-import { CONTACT_EMAIL, LEGAL_PAGES, SITE_NAME } from "@/lib/site";
+import { LEGAL_PAGES, SITE_NAME } from "@/lib/site";
 
 export interface FooterCategory {
   name: string;
@@ -37,13 +36,7 @@ export default function Footer({ categories = [], showTrucks = false }: { catego
               Your trusted guide to truck bed gear. I dig into fitment, materials,
               and owner feedback so you buy the right part the first time.
             </p>
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition-all duration-200 hover:border-accent hover:bg-accent hover:text-primary"
-            >
-              <Mail size={15} aria-hidden="true" /> {CONTACT_EMAIL}
-            </a>
-            <SocialLinks className="mt-4" />
+            <SocialLinks />
           </div>
 
           {/* Categories */}

@@ -21,7 +21,7 @@ export const AMAZON_TAG = process.env.NEXT_PUBLIC_AMAZON_TAG ?? "";
 // ── Legal ────────────────────────────────────────────────────────
 export const BUSINESS_NAME = "TruckBedFit";
 export const SITE_DOMAIN = "truckbedfit.com";
-export const CONTACT_EMAIL = "contact@truckbedfit.com";
+export const CONTACT_EMAIL = "contactismaeel69@gmail.com";
 /** Shown as "Last updated" on every legal page — bump it when you edit one. */
 export const LEGAL_LAST_UPDATED = "2026-10-31";
 
