@@ -8,6 +8,7 @@ import WeeklyColumns from "@/components/dashboard/charts/WeeklyColumns";
 import DonutChart from "@/components/dashboard/charts/DonutChart";
 import Histogram from "@/components/dashboard/charts/Histogram";
 import CoverageGrid from "@/components/dashboard/charts/CoverageGrid";
+import { AmazonClicks, CountryViews } from "@/components/dashboard/CountryStats";
 import { getSessionUser } from "@/lib/auth";
 import { DashboardData, getDashboardData, RHYTHM_WEEKS, TARGET_WORDS } from "@/lib/db/dashboardStats";
 
@@ -66,6 +67,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
             >
               <ViewsTrendChart data={viewsInRange} />
             </ChartCard>
+          </div>
+
+          <div className="grid items-start gap-6 lg:grid-cols-2">
+            <CountryViews rows={data.countryViews} range={range} />
+            <AmazonClicks rows={data.amazonClicks} range={range} pageTitles={data.pageTitles} />
           </div>
 
           <div className="grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">

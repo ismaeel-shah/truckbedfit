@@ -68,6 +68,22 @@ export async function incrementPostViews(id: string) {
   ]);
 }
 
+/** One reader view from a country (2-letter code), for the dashboard's "Readers by country". */
+export async function incrementCountryViews(country: string) {
+  await getD1().prepare(`
+    INSERT INTO views_by_country_daily (day, country, views) VALUES (?, ?, 1)
+    ON CONFLICT(day, country) DO UPDATE SET views = views + 1
+  `).bind(new Date().toISOString().slice(0, 10), country).run();
+}
+
+/** One click on an Amazon link: which page, which product, from which country. */
+export async function incrementAmazonClick(country: string, path: string, asin: string) {
+  await getD1().prepare(`
+    INSERT INTO amazon_clicks_daily (day, country, path, asin, clicks) VALUES (?, ?, ?, ?, 1)
+    ON CONFLICT(day, country, path, asin) DO UPDATE SET clicks = clicks + 1
+  `).bind(new Date().toISOString().slice(0, 10), country, path, asin).run();
+}
+
 export async function listCategories() {
   const db = getD1();
   const { results = [] } = await db.prepare(`

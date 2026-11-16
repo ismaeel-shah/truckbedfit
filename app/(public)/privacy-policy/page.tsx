@@ -34,8 +34,14 @@ export default function PrivacyPolicyPage() {
           request. This is used to deliver the Site, keep it secure and prevent abuse.
         </li>
         <li>
-          <strong>Article view counts.</strong> I keep a simple count of how many times each article is viewed so I know
-          which guides are popular. This count is not linked to you and contains no personal information.
+          <strong>Article view counts.</strong> I keep a simple count of how many times each article is viewed, and from
+          which country, so I know which guides are popular and where readers are. The country comes from the Site&apos;s
+          hosting provider (Cloudflare); your IP address is not stored. These counts are not linked to you and contain no
+          personal information.
+        </li>
+        <li>
+          <strong>Amazon link clicks.</strong> When you click a link to Amazon, I count the click with the page, the
+          product and your country only. The count is not linked to you, and the link still takes you straight to Amazon.
         </li>
       </ul>
       <p>

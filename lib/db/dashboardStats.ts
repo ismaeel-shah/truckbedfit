@@ -4,7 +4,7 @@ import { listHubPages, TRUCKS_INDEX_PATH } from "./hubPages";
 import { hasHub, TRUCKS } from "@/data/trucks";
 import { CATEGORY_GROUPS, PILLAR_TYPES } from "@/lib/articleTypes";
 import { AMAZON_TAG } from "@/lib/site";
-import { truckPath } from "@/lib/urls";
+import { articlePath, truckPath } from "@/lib/urls";
 import { wordCount } from "@/lib/utils/seo";
 
 // Everything the dashboard home shows, computed in D1 (UTC days throughout).
@@ -46,6 +46,12 @@ export interface DashboardData {
   /** Oldest → newest; weeks start on Monday */
   publishedPerWeek: { weekStart: string; count: number }[];
   upNext: UpNextItem[];
+  /** Reader views per day and country, last VIEW_HISTORY_DAYS (the page sums the selected range) */
+  countryViews: { day: string; country: string; views: number }[];
+  /** Amazon-link clicks per day, country, page and product, last VIEW_HISTORY_DAYS */
+  amazonClicks: { day: string; country: string; path: string; asin: string; clicks: number }[];
+  /** Site path → page title, for naming the pages Amazon clicks came from */
+  pageTitles: Record<string, string>;
   /** "Get started" checklist (shown until the first article is published) */
   onboarding: { hasAuthor: boolean; hasPillar: boolean; hasPublished: boolean; trucksIntro: boolean; amazonTag: boolean };
 }
@@ -76,6 +82,20 @@ export async function getDashboardData(): Promise<DashboardData> {
   const historyStart = isoDay(now - (VIEW_HISTORY_DAYS - 1) * DAY_MS);
   const firstWeek = weekStart(now) - (RHYTHM_WEEKS - 1) * 7 * DAY_MS;
   const staleBefore = isoDay(now - STALE_AFTER_DAYS * DAY_MS);
+
+  // Country stats come from migration 0010; until it's applied they're just empty.
+  const noRows = { results: [] as never[] };
+  const [countryRows, clickRows, pathRows] = await Promise.all([
+    db.prepare(`SELECT day, country, views FROM views_by_country_daily WHERE day >= ?`)
+      .bind(historyStart).all<DashboardData["countryViews"][number]>().catch(() => noRows),
+    db.prepare(`SELECT day, country, path, asin, clicks FROM amazon_clicks_daily WHERE day >= ?`)
+      .bind(historyStart).all<DashboardData["amazonClicks"][number]>().catch(() => noRows),
+    db.prepare(`
+      SELECT p.title, p.slug, p.type, c.slug AS category_slug
+      FROM posts p JOIN categories c ON c.id = p.category_id
+      WHERE p.status = 'published'
+    `).all<{ title: string; slug: string; type: string; category_slug: string }>(),
+  ]);
 
   const [counts, dailyRows, topRows, truckRows, categories, publishedRows, liveRows, draftRows, scheduledRows, authorRow, hubs, liveTrucks] =
     await Promise.all([
@@ -192,8 +212,17 @@ export async function getDashboardData(): Promise<DashboardData> {
     })),
   ].slice(0, UP_NEXT_LIMIT);
 
+  const pageTitles: Record<string, string> = { "/": "Home page", [TRUCKS_INDEX_PATH]: "All trucks (/trucks)" };
+  for (const row of pathRows.results ?? []) {
+    pageTitles[articlePath({ slug: row.slug, type: row.type, category: { slug: row.category_slug } })] = row.title;
+  }
+  for (const { truck } of liveTrucks) pageTitles[truckPath(truck.slug)] = `${truck.name} (truck page)`;
+
   return {
     counts: counts ?? { total: 0, published: 0, drafts: 0, scheduled: 0, views: 0, views30: 0 },
+    countryViews: countryRows.results ?? [],
+    amazonClicks: clickRows.results ?? [],
+    pageTitles,
     viewsByDay,
     topPosts: (topRows.results ?? []).map(mapPost).map((post) => ({ id: post._id, title: post.title, views: post.views })),
     trucks: TRUCKS.filter(hasHub).map((truck) => ({ name: truck.name, slug: truck.slug, count: truckCounts.get(truck.slug) ?? 0 })),

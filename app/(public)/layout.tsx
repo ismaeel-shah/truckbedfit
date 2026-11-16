@@ -1,5 +1,6 @@
 import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
+import AmazonClickTracker from "@/components/public/AmazonClickTracker";
 import { getNavData, NavData } from "@/lib/db/content";
 
 // Navbar/footer menus come from D1 at request time.
@@ -28,6 +29,7 @@ export default async function PublicLayout({
       <Navbar nav={nav} />
       <main>{children}</main>
       <Footer categories={nav.categories} showTrucks={nav.trucks.length > 0} />
+      <AmazonClickTracker />
     </>
   );
 }
